@@ -111,10 +111,11 @@ count =0
 for k in range(S):
   count += 1
   #print(count)
-  if count == 7:
+  if count == 7: #per ogni data indisponibilità poli e domeniche faccio la sommatoria per tutti gli esami
     #print(s[(i, k)].x)
     prob += xsum(s[(i, k)] for i in range(N)) == 0
     count=0
+  #per ogni esame, controllo se la data corrente appartiene all'array delle indisponibilità del prof
 
 print("indisponibilità constraints set")
 
