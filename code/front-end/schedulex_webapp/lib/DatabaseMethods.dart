@@ -7,7 +7,7 @@ void saveStartDate(String userId, String startDate, String endDate) async {
       'http://' + SERVER_URL + '/setStartEndDate/$userId/$startDate/$endDate';
 
   try {
-    final response = await http.get(Uri.parse(url));
+    final response = await http.post(Uri.parse(url));
 
     if (response.statusCode == 200) {
       print('Dates saved successfully.');

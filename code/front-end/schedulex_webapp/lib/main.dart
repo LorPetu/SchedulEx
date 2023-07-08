@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'dart:math';
+import 'package:schedulex_webapp/LoginPage.dart';
+import 'SelectPage.dart';
+
 import 'utils.dart';
 
 import 'Unavailpage.dart';
@@ -20,10 +22,12 @@ class MyApp extends StatelessWidget {
       create: (context) => MyAppState(),
       child: MaterialApp(
         title: 'Namer App',
-        initialRoute: '/',
+        initialRoute: '/login',
         routes: {
-          '/': (context) => Homepage(),
-          '/unavail': (context) => UnavailPage(),
+          '/login': (context) => LoginPage(),
+          '/select': (context) => SelectPage(),
+          '/problemSession': (context) => ProblemSessionPage(),
+          '/unavail': (context) => UnavailPage()
         },
       ),
     );
@@ -32,7 +36,22 @@ class MyApp extends StatelessWidget {
 
 class MyAppState extends ChangeNotifier {
   List<Unavail> unavailList = generateRandomUnavailList(10);
-  final userID = '123ABC';
+  List<ProblemSession> ProblemSessionList = generateRandomProblemSessionList(3);
+  List<FakeElement> elements = generateRandomElementList(10);
+  String problemSessionID = '';
+  String userID = '';
+
+  void setUserID(String id) {
+    userID = id;
+    print(userID);
+    notifyListeners();
+  }
+
+  void setProblemSessionID(String id) {
+    problemSessionID = id;
+    print(userID + ' has clicked ' + problemSessionID);
+    notifyListeners();
+  }
 
   void addUnavail(unavail) {
     unavailList.add(unavail);
@@ -51,13 +70,40 @@ class MyAppState extends ChangeNotifier {
 }
 
 //******HOMEPAGE*******/
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
-class Homepage extends StatefulWidget {
   @override
-  _HomepageState createState() => _HomepageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _HomepageState extends State<Homepage> {
+class _HomePageState extends State<HomePage> {
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+    var problemSessionList = appState.ProblemSessionList;
+    //return Placeholder();
+    return Column(
+      children: [
+        ProblemSessionViewer(
+          ProblemSessionList: problemSessionList,
+          onItemClick: () {
+            print('test');
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class ProblemSessionPage extends StatefulWidget {
+  const ProblemSessionPage({super.key});
+
+  @override
+  State<ProblemSessionPage> createState() => _ProblemSessionPageState();
+}
+
+class _ProblemSessionPageState extends State<ProblemSessionPage> {
   DateTime? startDate;
   DateTime? endDate;
 
@@ -87,6 +133,41 @@ class _HomepageState extends State<Homepage> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class ProblemSessionViewer extends StatelessWidget {
+  final List<ProblemSession> ProblemSessionList;
+  final Function() onItemClick;
+
+  const ProblemSessionViewer({
+    required this.ProblemSessionList,
+    required this.onItemClick,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            itemCount: ProblemSessionList.length,
+            itemBuilder: (context, index) {
+              return ListTile(
+                title: Text(ProblemSessionList[index].school),
+                onTap: onItemClick,
+              );
+            },
+          ),
+        ),
+        FloatingActionButton.small(
+          child: Icon(Icons.add),
+          onPressed: () {
+            print('FLOAT PRESSED');
+          },
+        ),
+      ],
     );
   }
 }
@@ -181,31 +262,4 @@ class UnavailViewer extends StatelessWidget {
       ],
     );
   }
-}
-
-List<Unavail> generateRandomUnavailList(int count) {
-  final random = Random();
-  List<Unavail> unavailList = [];
-
-  for (int i = 0; i < count; i++) {
-    String id = 'Unavail-${i + 1}';
-    int type = random.nextInt(3); // Generates random type: 0, 1, or 2
-    List<DateTime> dates = [
-      DateTime.now().add(Duration(
-          days: random.nextInt(30))), // Random date within the next 30 days
-      DateTime.now().add(Duration(days: random.nextInt(30))),
-    ];
-    String professor = 'Professor ${i + 1}';
-
-    Unavail unavail = Unavail(
-      id: id,
-      type: type,
-      dates: dates,
-      professor: professor,
-    );
-
-    unavailList.add(unavail);
-  }
-
-  return unavailList;
 }
