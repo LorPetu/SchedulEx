@@ -2,12 +2,22 @@ import 'package:http/http.dart' as http;
 
 const SERVER_URL = "127.0.0.1:5000";
 
-void saveStartDate(String userId, String startDate, String endDate) async {
-  String url =
-      'http://' + SERVER_URL + '/setStartEndDate/$userId/$startDate/$endDate';
+void saveStartDate({
+  required String userId,
+  required String startDate,
+  required String endDate,
+}) async {
+  String url = 'http://' + SERVER_URL + '/setStartEndDate';
 
   try {
-    final response = await http.post(Uri.parse(url));
+    final response = await http.post(
+      Uri.parse(url),
+      body: {
+        'userId': userId,
+        'startDate': startDate,
+        'endDate': endDate,
+      },
+    );
 
     if (response.statusCode == 200) {
       print('Dates saved successfully.');

@@ -13,22 +13,51 @@ class SelectPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Select Page'),
       ),
-      body: ListView.builder(
-        itemCount: appState.ProblemSessionList.length,
-        itemBuilder: (context, index) {
-          final element = appState.ProblemSessionList[index];
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: ElevatedButton(
+              child: const SizedBox(
+                width: 100,
+                child: Row(
+                  children: [Icon(Icons.add), Text('new session')],
+                ),
+              ),
+              onPressed: () {
+                // Set the ProblemSessionID in MyAppState
+                appState.setProblemSessionID('');
+                // #BACKEND createSession
+                //########
 
-          return ListTile(
-            title: Text(element.id),
-            onTap: () {
-              // Set the ProblemSessionID in MyAppState
-              appState.setProblemSessionID(element.id);
-
-              // Navigate to the ProblemSession Page
-              Navigator.pushNamed(context, '/problemSession');
-            },
-          );
-        },
+                //########
+                // Navigate to the ProblemSession Page
+                Navigator.pushNamed(context, '/problemSession');
+                print(appState.userID + ' create a new session');
+              },
+            ),
+          ),
+          Expanded(
+            child: appState.ProblemSessionList.isEmpty
+                ? Center(
+                    child: Text('No data available'),
+                  )
+                : ListView.builder(
+                    itemCount: appState.ProblemSessionList.length,
+                    itemBuilder: (context, index) {
+                      final element = appState.ProblemSessionList[index];
+                      return ListTile(
+                        title: Text(element.id),
+                        onTap: () {
+                          appState.setProblemSessionID(element.id);
+                          Navigator.pushNamed(context, '/problemSession');
+                        },
+                      );
+                    },
+                  ),
+          )
+        ],
       ),
     );
   }

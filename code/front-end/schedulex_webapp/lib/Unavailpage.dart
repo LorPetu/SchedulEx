@@ -4,15 +4,15 @@ import 'main.dart';
 import 'utils.dart';
 
 class UnavailPage extends StatelessWidget {
-  TextEditingController idController = TextEditingController();
-  TextEditingController typeController = TextEditingController();
-  TextEditingController datesController = TextEditingController();
-  TextEditingController professorController = TextEditingController();
+  final TextEditingController idController = TextEditingController();
+  final TextEditingController typeController = TextEditingController();
+  final TextEditingController datesController = TextEditingController();
+  final TextEditingController professorController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<MyAppState>(context);
-    final unavailList = appState.unavailList;
+    //final unavailList = appState.unavailList;
     final Unavail? unavail =
         ModalRoute.of(context)?.settings.arguments as Unavail?;
 
@@ -62,7 +62,7 @@ class UnavailPage extends StatelessWidget {
 
                 Navigator.pop(context);
               },
-              child: Text('Save'),
+              child: const Text('Save'),
             ),
           ],
         ),

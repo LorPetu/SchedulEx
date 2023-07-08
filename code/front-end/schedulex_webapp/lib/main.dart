@@ -6,7 +6,7 @@ import 'SelectPage.dart';
 import 'utils.dart';
 
 import 'Unavailpage.dart';
-import 'DatabaseMethods.dart';
+import 'BackEndMethods.dart';
 
 void main() {
   runApp(const MyApp());
@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
       child: MaterialApp(
-        title: 'Namer App',
+        title: 'SchedulEx',
         initialRoute: '/login',
         routes: {
           '/login': (context) => LoginPage(),
@@ -35,21 +35,45 @@ class MyApp extends StatelessWidget {
 }
 
 class MyAppState extends ChangeNotifier {
-  List<Unavail> unavailList = generateRandomUnavailList(10);
-  List<ProblemSession> ProblemSessionList = generateRandomProblemSessionList(3);
-  List<FakeElement> elements = generateRandomElementList(10);
-  String problemSessionID = '';
   String userID = '';
+  String problemSessionID = '';
+
+  //SelectpageSession
+  List<ProblemSession> ProblemSessionList = generateRandomProblemSessionList(5);
+
+  //unavailPage states
+  DateTime? startDate;
+  DateTime? endDate;
+  String school = 'Option 1';
+  List<Unavail> unavailList = generateRandomUnavailList(10);
 
   void setUserID(String id) {
     userID = id;
-    print(userID);
+    print(userID + ' logged in');
     notifyListeners();
   }
 
   void setProblemSessionID(String id) {
-    problemSessionID = id;
-    print(userID + ' has clicked ' + problemSessionID);
+    if (id.isEmpty) {
+      print('no problemSessionID');
+      //#####
+      //Backend call to set all the other information
+      //#####
+    } else {
+      problemSessionID = id;
+      print(userID + ' select ' + problemSessionID);
+
+      //#####
+      //Backend call to set all the other information
+      //#####
+    }
+
+    notifyListeners();
+  }
+
+  void setSchool(selectedeSchool) {
+    print(selectedeSchool);
+    school = selectedeSchool;
     notifyListeners();
   }
 
@@ -66,33 +90,6 @@ class MyAppState extends ChangeNotifier {
 
   void deleteUnavail(id) {
     //functionality
-  }
-}
-
-//******HOMEPAGE*******/
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
-
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  @override
-  Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-    var problemSessionList = appState.ProblemSessionList;
-    //return Placeholder();
-    return Column(
-      children: [
-        ProblemSessionViewer(
-          ProblemSessionList: problemSessionList,
-          onItemClick: () {
-            print('test');
-          },
-        ),
-      ],
-    );
   }
 }
 
@@ -116,6 +113,25 @@ class _ProblemSessionPageState extends State<ProblemSessionPage> {
       appBar: AppBar(title: Text('Homepage')),
       body: Column(
         children: [
+          DropdownButton(
+              value: appState.school,
+              items: const [
+                DropdownMenuItem(
+                  value: 'Option 1',
+                  child: Text('Option 1'),
+                ),
+                DropdownMenuItem(
+                  value: 'Option 2',
+                  child: Text('Option 2'),
+                ),
+                DropdownMenuItem(
+                  value: 'Option 3',
+                  child: Text('Option 3'),
+                ),
+              ],
+              onChanged: (newValue) {
+                appState.setSchool(newValue);
+              }),
           MainDateSelector(),
           UnavailViewer(
               unavailList: unavailList,
@@ -133,41 +149,6 @@ class _ProblemSessionPageState extends State<ProblemSessionPage> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class ProblemSessionViewer extends StatelessWidget {
-  final List<ProblemSession> ProblemSessionList;
-  final Function() onItemClick;
-
-  const ProblemSessionViewer({
-    required this.ProblemSessionList,
-    required this.onItemClick,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-          child: ListView.builder(
-            itemCount: ProblemSessionList.length,
-            itemBuilder: (context, index) {
-              return ListTile(
-                title: Text(ProblemSessionList[index].school),
-                onTap: onItemClick,
-              );
-            },
-          ),
-        ),
-        FloatingActionButton.small(
-          child: Icon(Icons.add),
-          onPressed: () {
-            print('FLOAT PRESSED');
-          },
-        ),
-      ],
     );
   }
 }
@@ -202,7 +183,7 @@ class _MainDateSelectorState extends State<MainDateSelector> {
             ),
           ),
           ElevatedButton(
-            child: const Text("Choose Date"),
+            child: const Text("Choose Dates"),
             onPressed: () async {
               final DateTimeRange? dateTimeRange = await showDateRangePicker(
                 context: context,
@@ -214,8 +195,11 @@ class _MainDateSelectorState extends State<MainDateSelector> {
                   selectedDates = dateTimeRange;
                   //Back-end call
                   print(appState.userID);
-                  saveStartDate(appState.userID, selectedDates.start.toString(),
-                      selectedDates.end.toString());
+
+                  saveStartDate(
+                      userId: appState.userID,
+                      startDate: selectedDates.start.toString(),
+                      endDate: selectedDates.end.toString());
                 });
               }
             },
