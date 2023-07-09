@@ -7,7 +7,7 @@ void saveStartDate({
   required String startDate,
   required String endDate,
 }) async {
-  String url = 'http://' + SERVER_URL + '/setStartEndDate';
+  String url = 'http://$SERVER_URL/setStartEndDate';
 
   try {
     final response = await http.post(
@@ -30,7 +30,7 @@ void saveStartDate({
 }
 
 void startOptimization(String userId) async {
-  String url = 'http://' + SERVER_URL + '/startOptimization/$userId';
+  String url = 'http://$SERVER_URL/startOptimization/$userId';
 
   try {
     final response = await http.get(Uri.parse(url));

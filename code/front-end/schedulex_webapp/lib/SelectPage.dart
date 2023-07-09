@@ -34,19 +34,19 @@ class SelectPage extends StatelessWidget {
                 //########
                 // Navigate to the ProblemSession Page
                 Navigator.pushNamed(context, '/problemSession');
-                print(appState.userID + ' create a new session');
+                print('${appState.userID} create a new session');
               },
             ),
           ),
           Expanded(
-            child: appState.ProblemSessionList.isEmpty
-                ? Center(
+            child: appState.problemSessionList.isEmpty
+                ? const Center(
                     child: Text('No data available'),
                   )
                 : ListView.builder(
-                    itemCount: appState.ProblemSessionList.length,
+                    itemCount: appState.problemSessionList.length,
                     itemBuilder: (context, index) {
-                      final element = appState.ProblemSessionList[index];
+                      final element = appState.problemSessionList[index];
                       return ListTile(
                         title: Text(element.id),
                         onTap: () {

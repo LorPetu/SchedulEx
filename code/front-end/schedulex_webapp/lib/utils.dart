@@ -1,19 +1,16 @@
 import 'dart:math';
 
 class Unavail {
-  final String id;
-  final int type;
-  final List<DateTime> dates;
-  final String professor;
-  final List<String> classroom;
+  String id;
+  int type;
+  List<DateTime> dates;
+  String professor;
 
-  Unavail({
-    required this.id,
-    required this.type,
-    required this.dates,
-    this.professor = '',
-    this.classroom = const [],
-  });
+  Unavail(
+      {required this.id,
+      required this.type,
+      required this.dates,
+      this.professor = ''});
 }
 
 class ProblemSession {
@@ -29,24 +26,6 @@ class ProblemSession {
       this.status = "NOT STARTED",
       this.description = "",
       this.users = const []});
-}
-
-class FakeElement {
-  final String id;
-
-  FakeElement(this.id);
-}
-
-List<FakeElement> generateRandomElementList(int count) {
-  final List<FakeElement> elements = [];
-
-  for (int i = 0; i < count; i++) {
-    final id = 'Element ${i + 1}';
-    final element = FakeElement(id);
-    elements.add(element);
-  }
-
-  return elements;
 }
 
 List<ProblemSession> generateRandomProblemSessionList(int count) {
@@ -86,7 +65,8 @@ List<Unavail> generateRandomUnavailList(int count) {
 
   for (int i = 0; i < count; i++) {
     String id = 'Unavail-${i + 1}';
-    int type = random.nextInt(3); // Generates random type: 0, 1, or 2
+    //var types = ['Professor, Politecnico'];
+    int type = random.nextInt(2); // Generates random type: 0, 1, or 2
     List<DateTime> dates = [
       DateTime.now().add(Duration(
           days: random.nextInt(30))), // Random date within the next 30 days
