@@ -27,21 +27,35 @@ app = Flask(__name__)
 
 # API Route
 
+@app.route("/setUserID/<string:sessionID>/<string:userID>")
+
+def setStartEndDate(sessionID, userID):
+    print(sessionID, userID)
+
+    # Crea un nuovo nodo nel database con sessionID come chiave 
+    ref.child(sessionID).set({
+        'userID': userID
+    })
+
+    print(userID + 'for' + sessionID)
+
+    return 'Start date saved successfully.'
+
 @app.route("/setStartEndDate/<string:userID>/<string:startDate>/<string:endDate>")
 
-def setStartEndDate(ProblemSessionID, userID, startDate, endDate):
-    print(userID, startDate, endDate)
+def setStartEndDate(sessionID, startDate, endDate):
+    print(sessionID, startDate, endDate)
     # Converti la data in formato stringa in un oggetto datetime
     startDateObj = datetime.strptime(startDate, "%Y-%m-%d %H:%M:%S.%f")
     endtDateObj = datetime.strptime(endDate, "%Y-%m-%d %H:%M:%S.%f")
 
-    # Crea un nuovo nodo nel database con l'userID come chiave e la start_date come valore
-    ref.child(ProblemSessionID).set({
+    # Crea un nuovo nodo nel database con sessionID come chiave e la start_date come valore
+    ref.child(sessionID).set({
         'startDate': startDateObj.isoformat(),  # Salva la data in formato ISO8601
         'endDate': endtDateObj.isoformat()
     })
 
-    print(userID+' updates start end date for: '+ ProblemSessionID)
+    print(userID+' updates start end date for: '+ sessionID)
     print(startDateObj, type(startDateObj))
     print(endtDateObj, type(endtDateObj))
 
@@ -53,10 +67,10 @@ def runWeightBuilder():
 #def runOptimizationAlgorithm():
 #    os.system("python Optimization_Manager.py")
 
-@app.route("/startOptimization/<string:userID>")
-def startOptimization(ProblemSessionID,userID):
+@app.route("/startOptimization/<string:sessionID>")
+def startOptimization(sessionID,):
     #get per UserId
-    ProblemData = ref.child(userID).get()
+    ProblemData = ref.child(sessionID).get()
     print(ProblemData['endDate'])
 
     #get per tutti gli esami

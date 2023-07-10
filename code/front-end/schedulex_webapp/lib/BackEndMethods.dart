@@ -1,10 +1,27 @@
-<<<<<<< HEAD:code/front-end/schedulex_webapp/lib/DatabaseMethods.dart
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 const SERVER_URL = "127.0.0.1:5000";
 
-void saveStartDate(String sessionID, String startDate, String endDate) async {
+
+void saveUserID({required String sessionID, required String userID}) async {
+  String url =
+      'http://' + SERVER_URL + '/setUserID/$sessionID/$userID';
+
+  try {
+    final response = await http.post(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      print('Dates saved successfully.');
+    } else {
+      print('Failed to save dates. Error: ${response.statusCode}');
+    }
+  } catch (e) {
+    print('Exception occurred while saving start date: $e');
+  }
+}
+
+void saveStartEndDate({required String sessionID, required String startDate, required String endDate}) async {
   String url =
       'http://' + SERVER_URL + '/setStartEndDate/$sessionID/$startDate/$endDate';
 
@@ -21,7 +38,7 @@ void saveStartDate(String sessionID, String startDate, String endDate) async {
   }
 }
 
-void saveSettings(String sessionID, String distCalls, String distExams) async {
+void saveSettings({required String sessionID, required String distCalls, required String distExams}) async {
   String url =
       'http://' + SERVER_URL + '/setSettings/$sessionID/$distCalls/$distExams';
 
@@ -39,7 +56,7 @@ void saveSettings(String sessionID, String distCalls, String distExams) async {
 }
 
 
-void saveUnavailability(String sessionID, String name, List<String> dates) async {
+void saveUnavailability({required String sessionID, required String name, required List<String> dates}) async {
   String url = 'http://' + SERVER_URL + '/setUnavailability/$sessionID/$name/${dates.join('/')}';
 
   try {
@@ -64,7 +81,7 @@ void saveUnavailability(String sessionID, String name, List<String> dates) async
 }
 
 
-void startOptimization(String sessionID) async {
+void startOptimization({required String sessionID}) async {
   String url = 'http://' + SERVER_URL + '/startOptimization/$sessionID';
 
   try {
@@ -103,7 +120,7 @@ Future<List<String>> getSessionList() async {
 }
 
 
-Future<Map<String, dynamic>> getSessionData(String sessionId) async {
+Future<Map<String, dynamic>> getSessionData({required String sessionId}) async {
   String url = 'http://' + SERVER_URL + '/getSessionData/$sessionId';
 
   try {
@@ -123,52 +140,3 @@ Future<Map<String, dynamic>> getSessionData(String sessionId) async {
   }
 }
 
-
-=======
-import 'package:http/http.dart' as http;
-
-const SERVER_URL = "127.0.0.1:5000";
-
-void saveStartDate({
-  required String userId,
-  required String startDate,
-  required String endDate,
-}) async {
-  String url = 'http://$SERVER_URL/setStartEndDate';
-
-  try {
-    final response = await http.post(
-      Uri.parse(url),
-      body: {
-        'userId': userId,
-        'startDate': startDate,
-        'endDate': endDate,
-      },
-    );
-
-    if (response.statusCode == 200) {
-      print('Dates saved successfully.');
-    } else {
-      print('Failed to save dates. Error: ${response.statusCode}');
-    }
-  } catch (e) {
-    print('Exception occurred while saving start date: $e');
-  }
-}
-
-void startOptimization(String userId) async {
-  String url = 'http://$SERVER_URL/startOptimization/$userId';
-
-  try {
-    final response = await http.get(Uri.parse(url));
-
-    if (response.statusCode == 200) {
-      print('Scheduling started successfully.');
-    } else {
-      print('Failed to start schedule. Error: ${response.statusCode}');
-    }
-  } catch (e) {
-    print('Exception occurred while starting scheduling: $e');
-  }
-}
->>>>>>> master:code/front-end/schedulex_webapp/lib/BackEndMethods.dart
