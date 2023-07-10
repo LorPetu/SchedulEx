@@ -19,7 +19,7 @@ class _UnavailPageState extends State<UnavailPage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    //final appState = Provider.of<MyAppState>(context, listen: false);
+    final appState = Provider.of<MyAppState>(context, listen: false);
     final Unavail? unavail =
         ModalRoute.of(context)?.settings.arguments as Unavail?;
 
@@ -84,6 +84,7 @@ class _UnavailPageState extends State<UnavailPage> {
                   dates: [],
                 );
                 if (unavail != null) {
+                  print(name);
                   appState.updateUnavail(newUnavail);
                   Navigator.pop(context);
                 } else {

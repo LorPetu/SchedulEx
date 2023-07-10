@@ -49,6 +49,7 @@ class MyAppState extends ChangeNotifier {
   void setUserID(String id) {
     userID = id;
     print('$userID logged in');
+    notifyListeners();
   }
 
   void setProblemSessionID(String id) {
@@ -65,11 +66,13 @@ class MyAppState extends ChangeNotifier {
       //Backend call to set all the other information
       //#####
     }
+    notifyListeners();
   }
 
   void setSchool(selectedeSchool) {
     print(selectedeSchool);
     school = selectedeSchool;
+    notifyListeners();
   }
 
   void setStartEndDate(daterange) {
@@ -80,6 +83,7 @@ class MyAppState extends ChangeNotifier {
           startDate: sessionDates!.start.toString(),
           endDate: sessionDates!.end.toString());
     }
+    notifyListeners();
   }
 
   void addUnavail(Unavail unavail) {
@@ -87,6 +91,8 @@ class MyAppState extends ChangeNotifier {
     int newlenght = unavailList.length + 1;
     unavail.id = "Unavail-" + newlenght.toString();
     unavailList.add(unavail);
+
+    notifyListeners();
   }
 
   void updateUnavail(Unavail updatedUnavail) {
@@ -97,7 +103,7 @@ class MyAppState extends ChangeNotifier {
     } else {
       print('unavail' + updatedUnavail.id + 'not found ');
     }
-
+    notifyListeners();
     //print(unavailList[index].professor);
   }
 
