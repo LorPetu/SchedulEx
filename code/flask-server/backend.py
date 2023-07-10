@@ -7,6 +7,17 @@ from firebase_admin import db
 # from threading import Thread
 import os
 import pandas as pd
+import subprocess # per far partire Optimization_Manager
+
+@app.route("/startOptimization/<string:sessionID>")
+def startOptimization(sessionID):
+    # Componi il comando per invocare lo script Optimization_Manager con sessionID come argomento
+    comando = ["python", "Optimization_Manager.py", sessionID]
+
+    # Esegui il comando utilizzando subprocess
+    subprocess.run(comando)
+
+    return 'Start process'
 
 # import Optimization_Manager
 
@@ -20,7 +31,6 @@ cred_obj = firebase_admin.credentials.Certificate("./schedulex-723a8-firebase-ad
 default_app = firebase_admin.initialize_app(cred_obj, {
 	'databaseURL':'https://schedulex-723a8-default-rtdb.firebaseio.com/'
 	})
-
 
 # Ottieni un riferimento al percorso del database dove desideri salvare i dati
 ref = db.reference("/")
@@ -89,6 +99,16 @@ def startOptimization(sessionID):
     #thread2.start()
 
     #Start optimizer.py con i suoi input
+    return 'Start process'
+
+@app.route("/startOptimization/<string:sessionID>")
+def startOptimizationNEW(sessionID):
+    # Componi il comando per invocare lo script Optimization_Manager con sessionID come argomento
+    comando = ["python", "Optimization_Manager.py", sessionID]
+
+    # Esegui il comando utilizzando subprocess
+    subprocess.run(comando)
+
     return 'Start process'
 
 ### IMPLEMENTED
