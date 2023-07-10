@@ -63,8 +63,9 @@ class MyAppState extends ChangeNotifier {
       print('$userID select $problemSessionID');
 
       //#####
-      //Backend call to set all the other information
+      saveUserID(sessionID: problemSessionID, userID: userID);
       //#####
+      //var data = getSessionData(sessionId: problemSessionID);
     }
     notifyListeners();
   }
@@ -90,6 +91,7 @@ class MyAppState extends ChangeNotifier {
     print("this is new");
     int newlenght = unavailList.length + 1;
     unavail.id = "Unavail-" + newlenght.toString();
+    saveUnavailability(sessionID: problemSessionID, unavail: unavail);
     unavailList.add(unavail);
 
     notifyListeners();
@@ -99,6 +101,8 @@ class MyAppState extends ChangeNotifier {
     final index =
         unavailList.indexWhere((element) => element.id == updatedUnavail.id);
     if (index != -1) {
+      print(updatedUnavail.dates);
+      saveUnavailability(sessionID: problemSessionID, unavail: updatedUnavail);
       unavailList[index] = updatedUnavail;
     } else {
       print('unavail' + updatedUnavail.id + 'not found ');

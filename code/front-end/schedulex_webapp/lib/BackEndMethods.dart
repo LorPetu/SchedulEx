@@ -1,12 +1,33 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'package:schedulex_webapp/utils.dart';
+
 const SERVER_URL = "127.0.0.1:5000";
 
-
 void saveUserID({required String sessionID, required String userID}) async {
-  String url =
-      'http://' + SERVER_URL + '/setUserID/$sessionID/$userID';
+  String url = 'http://' + SERVER_URL + '/setUserID/$sessionID/$userID';
+
+  try {
+    final response = await http.post(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      print('UserID saved successfully.');
+    } else {
+      print('Failed to save userID. Error: ${response.statusCode}');
+    }
+  } catch (e) {
+    print('Exception occurred while saving UserID: $e');
+  }
+}
+
+void saveStartEndDate(
+    {required String sessionID,
+    required String startDate,
+    required String endDate}) async {
+  String url = 'http://' +
+      SERVER_URL +
+      '/setStartEndDate/$sessionID/$startDate/$endDate';
 
   try {
     final response = await http.post(Uri.parse(url));
@@ -21,24 +42,10 @@ void saveUserID({required String sessionID, required String userID}) async {
   }
 }
 
-void saveStartEndDate({required String sessionID, required String startDate, required String endDate}) async {
-  String url =
-      'http://' + SERVER_URL + '/setStartEndDate/$sessionID/$startDate/$endDate';
-
-  try {
-    final response = await http.post(Uri.parse(url));
-
-    if (response.statusCode == 200) {
-      print('Dates saved successfully.');
-    } else {
-      print('Failed to save dates. Error: ${response.statusCode}');
-    }
-  } catch (e) {
-    print('Exception occurred while saving start date: $e');
-  }
-}
-
-void saveSettings({required String sessionID, required String distCalls, required String distExams}) async {
+void saveSettings(
+    {required String sessionID,
+    required String distCalls,
+    required String distExams}) async {
   String url =
       'http://' + SERVER_URL + '/setSettings/$sessionID/$distCalls/$distExams';
 
@@ -55,14 +62,19 @@ void saveSettings({required String sessionID, required String distCalls, require
   }
 }
 
-
-void saveUnavailability({required String sessionID, required String name, required List<String> dates}) async {
-  String url = 'http://' + SERVER_URL + '/setUnavailability/$sessionID/$name/${dates.join('/')}';
+void saveUnavailability(
+    {required String sessionID, required Unavail unavail}) async {
+  String unavailID = unavail.id;
+  String type = unavail.type.toString();
+  String name = unavail.professor;
+  List<String> dates = unavail.dates.map((e) => e.toString()).toList();
+  String url = 'http://' +
+      SERVER_URL +
+      '/setUnavailability/$sessionID/$unavailID/$type/$name/${dates.join('/')}';
 
   try {
-    final List<Map<String, String>> requestBody = dates
-        .map((date) => {'date': date})
-        .toList();
+    final List<Map<String, String>> requestBody =
+        dates.map((date) => {'date': date}).toList();
 
     final response = await http.post(
       Uri.parse(url),
@@ -79,7 +91,6 @@ void saveUnavailability({required String sessionID, required String name, requir
     print('Exception occurred while saving unavailability: $e');
   }
 }
-
 
 void startOptimization({required String sessionID}) async {
   String url = 'http://' + SERVER_URL + '/startOptimization/$sessionID';
@@ -104,10 +115,12 @@ Future<List<String>> getSessionList() async {
 
     if (response.statusCode == 200) {
       print('getSessionList_OK.');
-      print(response.body); // Stampa il corpo della risposta per verificare i dati ricevuti
+      print(response
+          .body); // Stampa il corpo della risposta per verificare i dati ricevuti
       final dynamic responseData = json.decode(response.body);
       print(responseData);
-      final List<String> sessionIDs = List<String>.from(responseData.map((item) => item.toString()));
+      final List<String> sessionIDs =
+          List<String>.from(responseData.map((item) => item.toString()));
       return sessionIDs;
     } else {
       print('Failed getSessionList. Error: ${response.statusCode}');
@@ -118,7 +131,6 @@ Future<List<String>> getSessionList() async {
     return [];
   }
 }
-
 
 Future<Map<String, dynamic>> getSessionData({required String sessionId}) async {
   String url = 'http://' + SERVER_URL + '/getSessionData/$sessionId';
@@ -139,4 +151,3 @@ Future<Map<String, dynamic>> getSessionData({required String sessionId}) async {
     throw Exception('Exception occurred for getSessionData: $e');
   }
 }
-

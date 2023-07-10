@@ -1,14 +1,11 @@
 class Unavail:
-    def __init__(self, id, type, dates, professor_or_classroom):
+    def __init__(self, id, type, dates, name):
         self.id = id
         self.type = type
         self.dates = dates
+        self.name=name
         
-        if type == 0:
-            self.professor = professor_or_classroom
-        elif type == 1:
-            self.classroom = professor_or_classroom
-
+        
 # {
 #     userID: '',
 #     problemData: {

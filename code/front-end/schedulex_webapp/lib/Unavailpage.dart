@@ -81,7 +81,7 @@ class _UnavailPageState extends State<UnavailPage> {
                   id: unavail?.id ?? '',
                   type: type,
                   professor: name,
-                  dates: [],
+                  dates: [DateTime(2023, 7, 10)],
                 );
                 if (unavail != null) {
                   print(name);
