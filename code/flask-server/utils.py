@@ -5,7 +5,14 @@ class Unavail:
         self.dates = dates
         self.name=name
         
-        
+class ProblemSession:
+    def __init__(self,id,school,status,description,user):
+        self.id =id
+        self.school=school
+        self.status=status
+        self.description=description
+        self.user=user
+           
 # {
 #     userID: '',
 #     problemData: {

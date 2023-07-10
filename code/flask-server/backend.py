@@ -1,4 +1,5 @@
 import json
+from utils import *
 from flask import Flask, jsonify
 import firebase_admin
 from datetime import datetime
@@ -33,7 +34,7 @@ def setUserID(sessionID, userID):
     print(sessionID, userID)
 
     # Crea un nuovo nodo nel database con sessionID come chiave 
-    ref.child(sessionID).set({
+    ref.child(sessionID).update({
         'userID': userID
     })
 
@@ -46,9 +47,7 @@ def setSchoolID(sessionID, schoolID):
     print(sessionID, schoolID)
 
     # Crea un nuovo nodo nel database con sessionID come chiave 
-    ref.child(sessionID).set({
-        'schoolID': schoolID
-    })
+    ref.child(sessionID).update(schoolID)
 
     return 'School saved successfully.'
 
@@ -60,7 +59,7 @@ def setStartEndDate(sessionID, startDate, endDate):
     endtDateObj = datetime.strptime(endDate, "%Y-%m-%d %H:%M:%S.%f")
 
     # Crea un nuovo nodo nel database con sessionID come chiave e la start_date come valore
-    ref.child(sessionID).set({
+    ref.child(sessionID).update({
         'startDate': startDateObj.isoformat(),  # Salva la data in formato ISO8601
         'endDate': endtDateObj.isoformat()
     })
@@ -70,12 +69,6 @@ def setStartEndDate(sessionID, startDate, endDate):
     print(endtDateObj, type(endtDateObj))
 
     return 'Start date saved successfully.'
-
-def runWeightBuilder():
-    os.system("python WeightBuilder.py")
-
-#def runOptimizationAlgorithm():
-#    os.system("python Optimization_Manager.py")
 
 @app.route("/startOptimization/<string:sessionID>")
 def startOptimization(sessionID):
@@ -98,12 +91,25 @@ def startOptimization(sessionID):
     #Start optimizer.py con i suoi input
     return 'Start process'
 
+
 @app.route("/getSessionList")
 def getSessionList():
-    # get per sessionID
-    session_list = list(ref.get().keys())
+    session_list = list(ref.get().keys())  # Get per sessionID
 
-    response = json.dumps(session_list)  # Converti la lista in una stringa JSON
+    problem_sessions = []
+    for session_id in session_list:
+        
+        session_data = {
+            "id": session_id,
+            "school": ref.child(session_id).child('school').get(),
+            "status": ref.child(session_id).child('status').get(),
+            "description": ref.child(session_id).child('description').get(),
+            "user": ref.child(session_id).child('userID').get(),
+        }
+        problem_session = ProblemSession(**session_data)  # Create a ProblemSession object
+        problem_sessions.append(problem_session)
+
+    response = json.dumps([ps.__dict__ for ps in problem_sessions])  # Convert the list of ProblemSession objects to JSON
     return response
 
 @app.route("/getSessionData/<string:sessionID>")
@@ -122,7 +128,7 @@ def setSettings(sessionID, distCalls, distExams):
     distExamsObj = int(distExams)
 
     # Crea un nuovo nodo nel database con l'sessionID come chiave e la start_date come valore
-    ref.child(sessionID).set({
+    ref.child(sessionID).update({
         'startDate': distCallsObj,
         'endDate': distExamsObj
     })
@@ -144,7 +150,7 @@ def setUnavailibility(sessionID, unavailID, type, name, dates):
     date_obj_list = [datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S.%f").isoformat() for date_str in date_list]
 
     # Crea un nuovo nodo nel database con l'sessionID come chiave e la lista di date come valore
-    ref.child(sessionID).child('unavailList').child(unavailID).set({
+    ref.child(sessionID).child('unavailList').child(unavailID).update({
         'name': name,
         'type': type,
         'dates': date_obj_list

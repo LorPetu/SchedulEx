@@ -1,5 +1,6 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'utils.dart';
 
 import 'package:schedulex_webapp/utils.dart';
 
@@ -119,7 +120,8 @@ void saveUnavailability(
   }
 }
 
-void deleteUnavail({required String sessionID, required Unavail unavail}) async {
+void deleteUnavail(
+    {required String sessionID, required Unavail unavail}) async {
   String unavailID = unavail.id;
   String url = 'http://' + SERVER_URL + '/setUserID/$sessionID/$unavailID';
 
@@ -135,7 +137,6 @@ void deleteUnavail({required String sessionID, required Unavail unavail}) async 
     print('Exception occurred while saving UserID: $e');
   }
 }
-
 
 void startOptimization({required String sessionID}) async {
   String url = 'http://' + SERVER_URL + '/startOptimization/$sessionID';
@@ -153,20 +154,26 @@ void startOptimization({required String sessionID}) async {
   }
 }
 
-Future<List<String>> getSessionList() async {
+Future<List<ProblemSession>> getSessionList() async {
   String url = 'http://' + SERVER_URL + '/getSessionList';
   try {
     final response = await http.get(Uri.parse(url));
 
     if (response.statusCode == 200) {
       print('getSessionList_OK.');
-      print(response
-          .body); // Stampa il corpo della risposta per verificare i dati ricevuti
+      print(response.body);
       final dynamic responseData = json.decode(response.body);
-      print(responseData);
-      final List<String> sessionIDs =
-          List<String>.from(responseData.map((item) => item.toString()));
-      return sessionIDs;
+      final List<ProblemSession> sessions =
+          responseData.map<ProblemSession>((item) {
+        return ProblemSession(
+          id: item['id'],
+          school: item['school'] ?? '',
+          status: item['status'] ?? '',
+          description: item['description'] ?? '',
+          user: item['users'] ?? '',
+        );
+      }).toList();
+      return sessions;
     } else {
       print('Failed getSessionList. Error: ${response.statusCode}');
       return [];
@@ -177,7 +184,7 @@ Future<List<String>> getSessionList() async {
   }
 }
 
-Future<Map<String, dynamic>> getSessionData({required String sessionId}) async {
+Future<List<Unavail>> getSessionData({required String sessionId}) async {
   String url = 'http://' + SERVER_URL + '/getSessionData/$sessionId';
 
   try {
@@ -186,7 +193,23 @@ Future<Map<String, dynamic>> getSessionData({required String sessionId}) async {
     if (response.statusCode == 200) {
       print('getSessionData_OK.');
       final responseData = json.decode(response.body);
-      return responseData;
+      Map<String, dynamic> unavailData = responseData['unavailList'];
+      List<Unavail> results = [];
+
+      for (var entry in unavailData.entries) {
+        String id = entry.key;
+        dynamic data = entry.value;
+        int type = int.parse(data['type'].toString());
+        String professor = data['name'];
+
+        List<DateTime> dates = List<DateTime>.from(
+            data['dates'].map((dateString) => DateTime.parse(dateString)));
+
+        results.add(
+            Unavail(id: id, type: type, professor: professor, dates: dates));
+      }
+
+      return results;
     } else {
       print('Failed getSessionData. Error: ${response.statusCode}');
       throw Exception('Failed getSessionData. Error: ${response.statusCode}');

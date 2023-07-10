@@ -18,14 +18,14 @@ class ProblemSession {
   final String school;
   final String status;
   final String description;
-  final List<String> users;
+  final String user;
 
   ProblemSession(
       {required this.id,
       required this.school,
       this.status = "NOT STARTED",
       this.description = "",
-      this.users = const []});
+      this.user = ""});
 }
 
 List<ProblemSession> generateRandomProblemSessionList(int count) {
@@ -38,19 +38,15 @@ List<ProblemSession> generateRandomProblemSessionList(int count) {
   for (int i = 0; i < count; i++) {
     String id = 'Session-${i + 1}';
     String school = schools[random.nextInt(schools.length)];
-    List<String> users = [];
+    String user = "pippo";
 
     int numUsers = random.nextInt(availableUsers.length +
         1); // Random number of users (0 to availableUsers.length)
 
-    for (int j = 0; j < numUsers; j++) {
-      users.add(availableUsers[random.nextInt(availableUsers.length)]);
-    }
-
     ProblemSession problemSession = ProblemSession(
       id: id,
       school: school,
-      users: users,
+      user: user,
     );
 
     problemSessions.add(problemSession);

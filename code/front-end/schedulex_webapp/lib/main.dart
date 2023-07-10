@@ -39,33 +39,40 @@ class MyAppState extends ChangeNotifier {
   String problemSessionID = '';
 
   //SelectpageSession
-  List<ProblemSession> problemSessionList = generateRandomProblemSessionList(5);
+  List<ProblemSession> problemSessionList = [];
 
   //unavailPage states
   DateTimeRange? sessionDates;
   String school = 'Option 1';
-  List<Unavail> unavailList = generateRandomUnavailList(10);
+  List<Unavail> unavailList = [];
 
   void setUserID(String id) {
     userID = id;
     print('$userID logged in');
-    notifyListeners();
+    getSessionList().then((value) {
+      problemSessionList = value;
+      notifyListeners();
+    });
+    print(problemSessionList);
   }
 
   void setProblemSessionID(String id) {
     if (id.isEmpty) {
       print('no problemSessionID');
       //#####
-      //Backend call to set all the other information
-      //#####
+      //saveUserID(sessionID: problemSessionID, userID: userID);
     } else {
       problemSessionID = id;
       print('$userID select $problemSessionID');
-
-      //#####
+      getSessionData(sessionId: id).then((value) {
+        unavailList = value;
+        notifyListeners();
+      }).catchError((error) {
+        // Handle any error that occurred during the Future execution
+        print('Error: $error');
+      });
       saveUserID(sessionID: problemSessionID, userID: userID);
       //#####
-      //var data = getSessionData(sessionId: problemSessionID);
     }
     notifyListeners();
   }
@@ -102,7 +109,7 @@ class MyAppState extends ChangeNotifier {
         unavailList.indexWhere((element) => element.id == updatedUnavail.id);
     if (index != -1) {
       print(updatedUnavail.dates);
-      //saveUnavailability(sessionID: problemSessionID, unavail: updatedUnavail);
+      saveUnavailability(sessionID: problemSessionID, unavail: updatedUnavail);
       unavailList[index] = updatedUnavail;
     } else {
       print('unavail' + updatedUnavail.id + 'not found ');
@@ -114,12 +121,12 @@ class MyAppState extends ChangeNotifier {
   void deleteUnavail(id) {
     unavailList.removeWhere((element) => element.id == id);
 
-    void createProblemSession() {}
-
-    void deleteProblemSession(problemSessionID) {}
-
     notifyListeners();
   }
+
+  void createProblemSession() {}
+
+  void deleteProblemSession(problemSessionID) {}
 }
 
 class ProblemSessionPage extends StatefulWidget {
