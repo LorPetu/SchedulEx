@@ -28,7 +28,7 @@ ref = db.reference("/")
 app = Flask(__name__)
 
 # API Route
-
+### IMPLEMENTED
 @app.route("/setUserID/<string:sessionID>/<string:userID>", methods=['POST'])
 def setUserID(sessionID, userID):
     print(sessionID, userID)
@@ -50,7 +50,7 @@ def setSchoolID(sessionID, schoolID):
     ref.child(sessionID).update(schoolID)
 
     return 'School saved successfully.'
-
+### IMPLEMENTED
 @app.route("/setStartEndDate/<string:sessionID>/<string:startDate>/<string:endDate>", methods=['POST'])
 def setStartEndDate(sessionID, startDate, endDate):
     print(sessionID, startDate, endDate)
@@ -69,7 +69,7 @@ def setStartEndDate(sessionID, startDate, endDate):
     print(endtDateObj, type(endtDateObj))
 
     return 'Start date saved successfully.'
-
+### IMPLEMENTED
 @app.route("/startOptimization/<string:sessionID>")
 def startOptimization(sessionID):
     #get per UserId
@@ -91,7 +91,7 @@ def startOptimization(sessionID):
     #Start optimizer.py con i suoi input
     return 'Start process'
 
-
+### IMPLEMENTED
 @app.route("/getSessionList")
 def getSessionList():
     session_list = list(ref.get().keys())  # Get per sessionID
@@ -111,7 +111,7 @@ def getSessionList():
 
     response = json.dumps([ps.__dict__ for ps in problem_sessions])  # Convert the list of ProblemSession objects to JSON
     return response
-
+### IMPLEMENTED
 @app.route("/getSessionData/<string:sessionID>")
 def getSessionData(sessionID):
     #get per sessionID
@@ -139,41 +139,60 @@ def setSettings(sessionID, distCalls, distExams):
 
     return 'Settings saved successfully.'
 
-@app.route("/setUnavailability/<string:sessionID>/<string:unavailID>/<string:type>/<string:name>/<path:dates>", methods=['POST'])
+### IMPLEMENTED
+@app.route("/setUnavailability/<string:sessionID>/<string:type>/<string:name>/<path:dates>/<string:unavailID>", methods=['POST'])
 def setUnavailibility(sessionID, unavailID, type, name, dates):
-    print(sessionID, name, dates)
+    print(unavailID, sessionID, name, dates)
 
     # Converti la stringa di date separata da "/" in una lista di stringhe
     date_list = dates.split("/")
 
     # Converti la lista di stringhe in una lista di oggetti datetime
     date_obj_list = [datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S.%f").isoformat() for date_str in date_list]
-
-    # Crea un nuovo nodo nel database con l'sessionID come chiave e la lista di date come valore
     ref.child(sessionID).child('unavailList').child(unavailID).update({
         'name': name,
         'type': type,
         'dates': date_obj_list
-    }
-    )
+    })
 
     print('Sto salvando dati per: ' + sessionID)
     #print(date_obj_list, type(date_obj_list))
 
     return 'Unavailability saved successfully.'
 
+@app.route("/addUnavailability/<string:sessionID>/<string:type>/<string:name>/<path:dates>/", methods=['POST'])
+def addUnavailibility(sessionID, type, name, dates):
+    
 
-@app.route("/delete_unavail/<string:sessionID>/<string:unavailID>", methods=['POST'])
+    # Converti la stringa di date separata da "/" in una lista di stringhe
+    date_list = dates.split("/")
+
+    # Converti la lista di stringhe in una lista di oggetti datetime
+    date_obj_list = [datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S.%f").isoformat() for date_str in date_list]
+    unavail_node = ref.child(sessionID).child('unavailList')
+    
+    unavail_node = unavail_node.push()
+    print(unavail_node.key)
+    # Aggiorna i dati nel nodo unavailList
+    unavail_node.update({
+        'name': name,
+        'type': type,
+        'dates': date_obj_list
+    })
+
+    print('Sto salvando dati per: ' + sessionID)
+    #print(date_obj_list, type(date_obj_list))
+
+    return 'Unavailability saved successfully.'
+
+##IMPLEMENTED
+@app.route("/delete_unavail/<string:sessionID>/<string:unavailID>")
 def deleteUnavailability(sessionID, unavailID):
-    try:
-        
-        # Elimina l'intero blocco "unavailID" dal database
-        doc_ref = db.reference(sessionID).child(unavailID)
-        doc_ref.delete()
-        
-        return jsonify({'success': True, 'message': 'Blocco "unavailID" eliminato correttamente.'})
-    except Exception as e:
-        return jsonify({'success': False, 'message': str(e)})
+
+    # Elimina l'intero blocco "unavailID" dal database
+    ref.child(sessionID).child('unavailList').child(unavailID).delete()
+    
+    return 'Unavailability deleted succesfully'
 
 @app.route("/getProfessorList")
 def getProfessorList():

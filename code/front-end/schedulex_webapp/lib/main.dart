@@ -96,9 +96,9 @@ class MyAppState extends ChangeNotifier {
 
   void addUnavail(Unavail unavail) {
     print("this is new");
-    int newlenght = unavailList.length + 1;
-    unavail.id = "Unavail-" + newlenght.toString();
-    saveUnavailability(sessionID: problemSessionID, unavail: unavail);
+    //int newlenght = unavailList.length + 1;
+    //unavail.id = 'null';
+    addUnavailability(sessionID: problemSessionID, unavail: unavail);
     unavailList.add(unavail);
 
     notifyListeners();
@@ -118,9 +118,9 @@ class MyAppState extends ChangeNotifier {
     //print(unavailList[index].professor);
   }
 
-  void deleteUnavail(id) {
-    unavailList.removeWhere((element) => element.id == id);
-
+  void deleteUnavail(Unavail deletedUnavail) {
+    unavailList.removeWhere((element) => element.id == deletedUnavail.id);
+    deleteUnavail_end(sessionID: problemSessionID, unavail: deletedUnavail);
     notifyListeners();
   }
 
@@ -169,8 +169,12 @@ class _ProblemSessionPageState extends State<ProblemSessionPage> {
           UnavailViewer(
               unavailList: unavailList,
               onItemClick: (unavail) {
-                print('${appState.userID}select unavail ${unavail.id}');
+                print('${appState.userID} select unavail ${unavail.id}');
                 Navigator.pushNamed(context, '/unavail', arguments: unavail);
+              },
+              onItemDelete: (unavail) {
+                print('${appState.userID} delete unavail ${unavail.id}');
+                appState.deleteUnavail(unavail);
               }),
           Padding(
             padding: const EdgeInsets.all(20.0),
@@ -258,12 +262,13 @@ class _MainDateSelectorState extends State<MainDateSelector> {
 class UnavailViewer extends StatelessWidget {
   final List<Unavail> unavailList;
   final Function(Unavail) onItemClick;
+  final Function(Unavail) onItemDelete;
 
-  const UnavailViewer({
-    super.key,
-    required this.unavailList,
-    required this.onItemClick,
-  });
+  const UnavailViewer(
+      {super.key,
+      required this.unavailList,
+      required this.onItemClick,
+      required this.onItemDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -275,6 +280,12 @@ class UnavailViewer extends StatelessWidget {
             itemCount: unavailList.length,
             itemBuilder: (context, index) {
               return ListTile(
+                trailing: IconButton(
+                  icon: Icon(Icons.delete),
+                  onPressed: () {
+                    onItemDelete(unavailList[index]);
+                  },
+                ),
                 title: Text(unavailList[index].professor),
                 onTap: () {
                   onItemClick(unavailList[index]);

@@ -98,7 +98,7 @@ void saveUnavailability(
   List<String> dates = unavail.dates.map((e) => e.toString()).toList();
   String url = 'http://' +
       SERVER_URL +
-      '/setUnavailability/$sessionID/$unavailID/$type/$name/${dates.join('/')}';
+      '/setUnavailability/$sessionID/$type/$name/${dates.join('/')}/$unavailID';
 
   try {
     final List<Map<String, String>> requestBody =
@@ -120,16 +120,45 @@ void saveUnavailability(
   }
 }
 
-void deleteUnavail(
+void addUnavailability(
     {required String sessionID, required Unavail unavail}) async {
-  String unavailID = unavail.id;
-  String url = 'http://' + SERVER_URL + '/setUserID/$sessionID/$unavailID';
+  String type = unavail.type.toString();
+  String name = unavail.professor;
+  List<String> dates = unavail.dates.map((e) => e.toString()).toList();
+  String url = 'http://' +
+      SERVER_URL +
+      '/addUnavailability/$sessionID/$type/$name/${dates.join('/')}';
 
   try {
-    final response = await http.post(Uri.parse(url));
+    final List<Map<String, String>> requestBody =
+        dates.map((date) => {'date': date}).toList();
+
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(requestBody),
+    );
 
     if (response.statusCode == 200) {
-      print('UserID saved successfully.');
+      print('Unavailability saved successfully.');
+    } else {
+      print('Failed to save unavailability. Error: ${response.statusCode}');
+    }
+  } catch (e) {
+    print('Exception occurred while saving unavailability: $e');
+  }
+}
+
+void deleteUnavail_end(
+    {required String sessionID, required Unavail unavail}) async {
+  String unavailID = unavail.id;
+  String url = 'http://' + SERVER_URL + '/delete_unavail/$sessionID/$unavailID';
+
+  try {
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      print('unavail deleted successfully.');
     } else {
       print('Failed to save userID. Error: ${response.statusCode}');
     }
