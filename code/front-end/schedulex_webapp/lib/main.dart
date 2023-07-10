@@ -78,8 +78,8 @@ class MyAppState extends ChangeNotifier {
   void setStartEndDate(daterange) {
     sessionDates = daterange;
     if (sessionDates != null) {
-      saveStartDate(
-          userId: userID,
+      saveStartEndDate(
+          sessionID: problemSessionID,
           startDate: sessionDates!.start.toString(),
           endDate: sessionDates!.end.toString());
     }
@@ -165,7 +165,7 @@ class _ProblemSessionPageState extends State<ProblemSessionPage> {
             padding: const EdgeInsets.all(20.0),
             child: ElevatedButton(
                 onPressed: () => {
-                      startOptimization(appState.userID),
+                      startOptimization(sessionID: appState.problemSessionID),
                       print('startOptimization triggered')
                     },
                 child: const Text('start')),
