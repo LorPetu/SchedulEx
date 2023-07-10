@@ -146,7 +146,7 @@ class AutoCompleteProfessor extends StatelessWidget {
   }
 }
 
-class DateTimeListWidget extends StatelessWidget {
+class DateTimeListWidget extends StatefulWidget {
   final Function(List<DateTime> newdates) onDatesChange;
   final List<DateTime> dateTimeList;
 
@@ -156,19 +156,29 @@ class DateTimeListWidget extends StatelessWidget {
     required this.onDatesChange,
   }) : super(key: key);
 
+  @override
+  _DateTimeListWidgetState createState() => _DateTimeListWidgetState();
+}
+
+class _DateTimeListWidgetState extends State<DateTimeListWidget> {
   void addSingleDay(DateTime date) {
-    onDatesChange(dateTimeList);
+    List<DateTime> newDates = List.from(widget.dateTimeList);
+    newDates.add(date);
+    widget.onDatesChange(newDates);
   }
 
   void addDateRange(DateTime startDate, DateTime endDate) {
+    List<DateTime> newDates = List.from(widget.dateTimeList);
     for (var date = startDate;
         date.isBefore(endDate);
-        date = date.add(const Duration(days: 1))) {}
-
-    onDatesChange(dateTimeList);
+        date = date.add(const Duration(days: 1))) {
+      newDates.add(date);
+    }
+    widget.onDatesChange(newDates);
   }
 
   void addRecurrentDaysOfWeek(List<int> daysOfWeek) {
+    List<DateTime> newDates = List.from(widget.dateTimeList);
     final currentDate = DateTime.now();
     final firstDayOfWeek =
         currentDate.subtract(Duration(days: currentDate.weekday - 1));
@@ -178,9 +188,10 @@ class DateTimeListWidget extends StatelessWidget {
         date.isBefore(lastDayOfWeek);
         date = date.add(const Duration(days: 1))) {
       if (daysOfWeek.contains(date.weekday)) {
-        onDatesChange(dateTimeList);
+        newDates.add(date);
       }
     }
+    widget.onDatesChange(newDates);
   }
 
   @override
@@ -200,7 +211,9 @@ class DateTimeListWidget extends StatelessWidget {
                 lastDate: appState.sessionDates!.end,
               );
               if (currentDate != null) {
-                addSingleDay(currentDate);
+                setState(() {
+                  addSingleDay(currentDate);
+                });
               }
             },
             child: const Text('Single Day'),
@@ -227,7 +240,9 @@ class DateTimeListWidget extends StatelessWidget {
                 },
               );
               if (dateTimeRange != null) {
-                addDateRange(dateTimeRange.start, dateTimeRange.end);
+                setState(() {
+                  addDateRange(dateTimeRange.start, dateTimeRange.end);
+                });
               }
             },
             child: const Text('Date Range'),
@@ -239,7 +254,9 @@ class DateTimeListWidget extends StatelessWidget {
                 DateTime.wednesday,
                 DateTime.friday
               ];
-              addRecurrentDaysOfWeek(daysOfWeek);
+              setState(() {
+                addRecurrentDaysOfWeek(daysOfWeek);
+              });
             },
             child: const Text('Recurrent Day'),
           ),
@@ -250,9 +267,9 @@ class DateTimeListWidget extends StatelessWidget {
           height: 200,
           child: ListView.builder(
             shrinkWrap: true,
-            itemCount: dateTimeList.length,
+            itemCount: widget.dateTimeList.length,
             itemBuilder: (context, index) {
-              final dateTime = dateTimeList[index];
+              final dateTime = widget.dateTimeList[index];
               return Row(
                 children: [
                   Text(
@@ -261,11 +278,17 @@ class DateTimeListWidget extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: ElevatedButton(
-                        onPressed: () {
-                          print(dateTime);
-                        },
-                        child: Icon(Icons.delete_outlined)),
-                  )
+                      onPressed: () {
+                        setState(() {
+                          List<DateTime> newDates =
+                              List.from(widget.dateTimeList);
+                          newDates.removeAt(index);
+                          widget.onDatesChange(newDates);
+                        });
+                      },
+                      child: Icon(Icons.delete_outlined),
+                    ),
+                  ),
                 ],
               );
             },
