@@ -102,7 +102,7 @@ class MyAppState extends ChangeNotifier {
         unavailList.indexWhere((element) => element.id == updatedUnavail.id);
     if (index != -1) {
       print(updatedUnavail.dates);
-      saveUnavailability(sessionID: problemSessionID, unavail: updatedUnavail);
+      //saveUnavailability(sessionID: problemSessionID, unavail: updatedUnavail);
       unavailList[index] = updatedUnavail;
     } else {
       print('unavail' + updatedUnavail.id + 'not found ');

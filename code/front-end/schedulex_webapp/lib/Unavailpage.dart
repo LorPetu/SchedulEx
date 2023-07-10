@@ -27,6 +27,7 @@ class _UnavailPageState extends State<UnavailPage> {
       setState(() {
         type = unavail.type;
         name = unavail.professor;
+        dates = unavail.dates;
       });
     }
   }
@@ -74,17 +75,24 @@ class _UnavailPageState extends State<UnavailPage> {
                 },
               ),
             ),
-            DateTimeListWidget(),
+            DateTimeListWidget(
+                dateTimeList: dates,
+                onDatesChange: (newdates) {
+                  setState(() {
+                    print(newdates);
+                    dates = newdates;
+                  });
+                }),
             ElevatedButton(
               onPressed: () {
                 final Unavail newUnavail = Unavail(
                   id: unavail?.id ?? '',
                   type: type,
                   professor: name,
-                  dates: [DateTime(2023, 7, 10)],
+                  dates: dates,
                 );
                 if (unavail != null) {
-                  print(name);
+                  print(newUnavail.dates);
                   appState.updateUnavail(newUnavail);
                   Navigator.pop(context);
                 } else {
@@ -138,28 +146,26 @@ class AutoCompleteProfessor extends StatelessWidget {
   }
 }
 
-class DateTimeListWidget extends StatefulWidget {
-  @override
-  _DateTimeListWidgetState createState() => _DateTimeListWidgetState();
-}
+class DateTimeListWidget extends StatelessWidget {
+  final Function(List<DateTime> newdates) onDatesChange;
+  final List<DateTime> dateTimeList;
 
-class _DateTimeListWidgetState extends State<DateTimeListWidget> {
-  List<DateTime> dateTimeList = [];
+  const DateTimeListWidget({
+    Key? key,
+    required this.dateTimeList,
+    required this.onDatesChange,
+  }) : super(key: key);
 
   void addSingleDay(DateTime date) {
-    setState(() {
-      dateTimeList.add(date);
-    });
+    onDatesChange(dateTimeList);
   }
 
   void addDateRange(DateTime startDate, DateTime endDate) {
     for (var date = startDate;
         date.isBefore(endDate);
-        date = date.add(const Duration(days: 1))) {
-      setState(() {
-        dateTimeList.add(date);
-      });
-    }
+        date = date.add(const Duration(days: 1))) {}
+
+    onDatesChange(dateTimeList);
   }
 
   void addRecurrentDaysOfWeek(List<int> daysOfWeek) {
@@ -172,9 +178,7 @@ class _DateTimeListWidgetState extends State<DateTimeListWidget> {
         date.isBefore(lastDayOfWeek);
         date = date.add(const Duration(days: 1))) {
       if (daysOfWeek.contains(date.weekday)) {
-        setState(() {
-          dateTimeList.add(date);
-        });
+        onDatesChange(dateTimeList);
       }
     }
   }
@@ -249,7 +253,21 @@ class _DateTimeListWidgetState extends State<DateTimeListWidget> {
             itemCount: dateTimeList.length,
             itemBuilder: (context, index) {
               final dateTime = dateTimeList[index];
-              return Text(dateTime.toString());
+              return Row(
+                children: [
+                  Text(
+                      '${dateTime.day} - ${dateTime.month} - ${dateTime.year}'),
+                  SizedBox(width: 20),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: ElevatedButton(
+                        onPressed: () {
+                          print(dateTime);
+                        },
+                        child: Icon(Icons.delete_outlined)),
+                  )
+                ],
+              );
             },
           ),
         ),
