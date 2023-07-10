@@ -5,6 +5,7 @@ from datetime import datetime
 from firebase_admin import db
 # from threading import Thread
 import os
+import pandas as pd
 
 # import Optimization_Manager
 
@@ -28,7 +29,6 @@ app = Flask(__name__)
 # API Route
 
 @app.route("/setUserID/<string:sessionID>/<string:userID>", methods=['POST'])
-
 def setUserID(sessionID, userID):
     print(sessionID, userID)
 
@@ -41,8 +41,18 @@ def setUserID(sessionID, userID):
 
     return 'UserID saved successfully.'
 
-@app.route("/setStartEndDate/<string:sessionID>/<string:startDate>/<string:endDate>", methods=['POST'])
+@app.route("/setSchoolID/<string:sessionID>/<string:schoolID>", methods=['POST'])
+def setSchoolID(sessionID, schoolID):
+    print(sessionID, schoolID)
 
+    # Crea un nuovo nodo nel database con sessionID come chiave 
+    ref.child(sessionID).set({
+        'schoolID': schoolID
+    })
+
+    return 'School saved successfully.'
+
+@app.route("/setStartEndDate/<string:sessionID>/<string:startDate>/<string:endDate>", methods=['POST'])
 def setStartEndDate(sessionID, startDate, endDate):
     print(sessionID, startDate, endDate)
     # Converti la data in formato stringa in un oggetto datetime
@@ -96,7 +106,6 @@ def getSessionList():
     response = json.dumps(session_list)  # Converti la lista in una stringa JSON
     return response
 
-
 @app.route("/getSessionData/<string:sessionID>")
 def getSessionData(sessionID):
     #get per sessionID
@@ -148,6 +157,35 @@ def setUnavailibility(sessionID, unavailID, type, name, dates):
     return 'Unavailability saved successfully.'
 
 
+@app.route("/delete_unavail/<string:sessionID>/<string:unavailID>", methods=['POST'])
+def deleteUnavailability(sessionID, unavailID):
+    try:
+        
+        # Elimina l'intero blocco "unavailID" dal database
+        doc_ref = db.reference(sessionID).child(unavailID)
+        doc_ref.delete()
+        
+        return jsonify({'success': True, 'message': 'Blocco "unavailID" eliminato correttamente.'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route("/getProfessorList")
+def getProfessorList():
+    # Carica il file Excel
+    df = pd.read_excel("C:\\Users\\Utente\\Desktop\\SchedulEx\\code\\flask-server\\Database esami.xlsx")
+
+    # Cerca l'indice della colonna in cui l'elemento della sua prima riga è la parola "Docenti"
+    indice_docenti = df.columns.get_loc('Docenti')
+
+    # Seleziona gli elementi dalla seconda riga in poi nella colonna "Docenti"
+    elementi_docente = df.iloc[1:, indice_docenti].values.flatten()
+
+    # Rimuovi gli elementi duplicati e spazi bianchi iniziali/finali
+    elementi_unici = [docente.strip() for docente in elementi_docente if isinstance(docente, str)]
+    elementi_unici = list(set(elementi_unici)).tolist()
+
+    response = json.dumps(elementi_unici)  # Converti la lista in una stringa JSON
+    return response
 
 if __name__== "__main__":
     app.run(debug=True)

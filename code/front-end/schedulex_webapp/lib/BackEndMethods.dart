@@ -21,6 +21,33 @@ void saveUserID({required String sessionID, required String userID}) async {
   }
 }
 
+void saveSchoolID({required String sessionID, required String schoolID}) async {
+  String baseUrl = 'http://' + SERVER_URL;
+  Uri uri = Uri.parse('$baseUrl/setSchoolID');
+
+  // Dati da inviare nel corpo della richiesta
+  Map<String, dynamic> requestBody = {
+    'sessionID': sessionID,
+    'schoolID': schoolID,
+  };
+
+  try {
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(requestBody),
+    );
+
+    if (response.statusCode == 200) {
+      print('schoolID saved successfully.');
+    } else {
+      print('Failed to save schoolID. Error: ${response.statusCode}');
+    }
+  } catch (e) {
+    print('Exception occurred while saving schoolID: $e');
+  }
+}
+
 void saveStartEndDate(
     {required String sessionID,
     required String startDate,
@@ -91,6 +118,24 @@ void saveUnavailability(
     print('Exception occurred while saving unavailability: $e');
   }
 }
+
+void deleteUnavail({required String sessionID, required Unavail unavail}) async {
+  String unavailID = unavail.id;
+  String url = 'http://' + SERVER_URL + '/setUserID/$sessionID/$unavailID';
+
+  try {
+    final response = await http.post(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      print('UserID saved successfully.');
+    } else {
+      print('Failed to save userID. Error: ${response.statusCode}');
+    }
+  } catch (e) {
+    print('Exception occurred while saving UserID: $e');
+  }
+}
+
 
 void startOptimization({required String sessionID}) async {
   String url = 'http://' + SERVER_URL + '/startOptimization/$sessionID';
