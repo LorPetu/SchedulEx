@@ -1,4 +1,5 @@
-i=0
+# i=0
 
-while(i<100):
-    print("Hello pisci")
+# while(i<100):
+#     print("Hello Paolo")
+#     i=i+1

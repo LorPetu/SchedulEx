@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'dart:math';
+import 'package:schedulex_webapp/LoginPage.dart';
+import 'SelectPage.dart';
+
 import 'utils.dart';
 
 import 'Unavailpage.dart';
-import 'DatabaseMethods.dart';
+import 'BackEndMethods.dart';
 
 void main() {
   runApp(const MyApp());
@@ -19,11 +21,13 @@ class MyApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
       child: MaterialApp(
-        title: 'Namer App',
-        initialRoute: '/',
+        title: 'SchedulEx',
+        initialRoute: '/login',
         routes: {
-          '/': (context) => Homepage(),
-          '/unavail': (context) => UnavailPage(),
+          '/login': (context) => const LoginPage(),
+          '/select': (context) => const SelectPage(),
+          '/problemSession': (context) => const ProblemSessionPage(),
+          '/unavail': (context) => const UnavailPage()
         },
       ),
     );
@@ -31,49 +35,124 @@ class MyApp extends StatelessWidget {
 }
 
 class MyAppState extends ChangeNotifier {
-  List<Unavail> unavailList = generateRandomUnavailList(10);
-  final userID = '123ABC';
+  String userID = '';
+  String problemSessionID = '';
 
-  void addUnavail(unavail) {
-    unavailList.add(unavail);
-    print("this is new");
-    notifyListeners();
+  //SelectpageSession
+  List<ProblemSession> problemSessionList = generateRandomProblemSessionList(5);
+
+  //unavailPage states
+  DateTimeRange? sessionDates;
+  String school = 'Option 1';
+  List<Unavail> unavailList = generateRandomUnavailList(10);
+
+  void setUserID(String id) {
+    userID = id;
+    print('$userID logged in');
   }
 
-  void modifyUnavail(Unavail unavail) {
-    var index = unavailList.indexOf(unavail);
-    print(index);
+  void setProblemSessionID(String id) {
+    if (id.isEmpty) {
+      print('no problemSessionID');
+      //#####
+      //Backend call to set all the other information
+      //#####
+    } else {
+      problemSessionID = id;
+      print('$userID select $problemSessionID');
+
+      //#####
+      //Backend call to set all the other information
+      //#####
+    }
+  }
+
+  void setSchool(selectedeSchool) {
+    print(selectedeSchool);
+    school = selectedeSchool;
+  }
+
+  void setStartEndDate(daterange) {
+    sessionDates = daterange;
+    if (sessionDates != null) {
+      saveStartDate(
+          userId: userID,
+          startDate: sessionDates!.start.toString(),
+          endDate: sessionDates!.end.toString());
+    }
+  }
+
+  void addUnavail(Unavail unavail) {
+    print("this is new");
+    int newlenght = unavailList.length + 1;
+    unavail.id = "Unavail-" + newlenght.toString();
+    unavailList.add(unavail);
+  }
+
+  void updateUnavail(Unavail updatedUnavail) {
+    final index =
+        unavailList.indexWhere((element) => element.id == updatedUnavail.id);
+    if (index != -1) {
+      unavailList[index] = updatedUnavail;
+    } else {
+      print('unavail' + updatedUnavail.id + 'not found ');
+    }
+
+    //print(unavailList[index].professor);
   }
 
   void deleteUnavail(id) {
-    //functionality
+    unavailList.removeWhere((element) => element.id == id);
+
+    void createProblemSession() {}
+
+    void deleteProblemSession(problemSessionID) {}
+
+    notifyListeners();
   }
 }
 
-//******HOMEPAGE*******/
+class ProblemSessionPage extends StatefulWidget {
+  const ProblemSessionPage({super.key});
 
-class Homepage extends StatefulWidget {
   @override
-  _HomepageState createState() => _HomepageState();
+  State<ProblemSessionPage> createState() => _ProblemSessionPageState();
 }
 
-class _HomepageState extends State<Homepage> {
-  DateTime? startDate;
-  DateTime? endDate;
-
+class _ProblemSessionPageState extends State<ProblemSessionPage> {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     var unavailList = appState.unavailList;
 
     return Scaffold(
-      appBar: AppBar(title: Text('Homepage')),
+      appBar: AppBar(title: const Text('Homepage')),
       body: Column(
         children: [
+          DropdownButton(
+              value: appState.school,
+              items: const [
+                DropdownMenuItem(
+                  value: 'Option 1',
+                  child: Text('Option 1'),
+                ),
+                DropdownMenuItem(
+                  value: 'Option 2',
+                  child: Text('Option 2'),
+                ),
+                DropdownMenuItem(
+                  value: 'Option 3',
+                  child: Text('Option 3'),
+                ),
+              ],
+              onChanged: (newValue) {
+                appState.setSchool(newValue);
+              }),
           MainDateSelector(),
           UnavailViewer(
               unavailList: unavailList,
               onItemClick: (unavail) {
+                print('${appState.userID}select unavail ${unavail.id}');
                 Navigator.pushNamed(context, '/unavail', arguments: unavail);
               }),
           Padding(
@@ -83,7 +162,7 @@ class _HomepageState extends State<Homepage> {
                       startOptimization(appState.userID),
                       print('startOptimization triggered')
                     },
-                child: Text('start')),
+                child: const Text('start')),
           ),
         ],
       ),
@@ -92,6 +171,8 @@ class _HomepageState extends State<Homepage> {
 }
 
 class MainDateSelector extends StatefulWidget {
+  const MainDateSelector({super.key});
+
   @override
   _MainDateSelectorState createState() => _MainDateSelectorState();
 }
@@ -114,27 +195,39 @@ class _MainDateSelectorState extends State<MainDateSelector> {
               children: [
                 Text(
                     '${selectedDates.start.day} - ${selectedDates.start.month} - ${selectedDates.start.year}'),
-                SizedBox(width: 20),
+                const SizedBox(width: 20),
                 Text(
                     '${selectedDates.end.day} - ${selectedDates.end.month} - ${selectedDates.end.year}')
               ],
             ),
           ),
           ElevatedButton(
-            child: const Text("Choose Date"),
+            child: const Text("Choose Dates"),
             onPressed: () async {
               final DateTimeRange? dateTimeRange = await showDateRangePicker(
                 context: context,
                 firstDate: DateTime(2000),
                 lastDate: DateTime(2100),
+                builder: (context, child) {
+                  return Column(
+                    children: <Widget>[
+                      Padding(
+                        padding: const EdgeInsets.only(top: 50.0),
+                        child: Container(
+                          height: 450,
+                          width: 500,
+                          child: child,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               );
               if (dateTimeRange != null) {
                 setState(() {
                   selectedDates = dateTimeRange;
                   //Back-end call
-                  print(appState.userID);
-                  saveStartDate(appState.userID, selectedDates.start.toString(),
-                      selectedDates.end.toString());
+                  appState.setStartEndDate(selectedDates);
                 });
               }
             },
@@ -150,6 +243,7 @@ class UnavailViewer extends StatelessWidget {
   final Function(Unavail) onItemClick;
 
   const UnavailViewer({
+    super.key,
     required this.unavailList,
     required this.onItemClick,
   });
@@ -164,48 +258,20 @@ class UnavailViewer extends StatelessWidget {
             itemCount: unavailList.length,
             itemBuilder: (context, index) {
               return ListTile(
-                title: Text('${unavailList[index].professor}'),
+                title: Text(unavailList[index].professor),
                 onTap: () {
                   onItemClick(unavailList[index]);
-                  //print(unavailList.map((e) => e.professor));
                 },
               );
             },
           ),
         ),
         FloatingActionButton.small(
-            child: Icon(Icons.add),
+            child: const Icon(Icons.add),
             onPressed: () {
               Navigator.pushNamed(context, '/unavail');
             }),
       ],
     );
   }
-}
-
-List<Unavail> generateRandomUnavailList(int count) {
-  final random = Random();
-  List<Unavail> unavailList = [];
-
-  for (int i = 0; i < count; i++) {
-    String id = 'Unavail-${i + 1}';
-    int type = random.nextInt(3); // Generates random type: 0, 1, or 2
-    List<DateTime> dates = [
-      DateTime.now().add(Duration(
-          days: random.nextInt(30))), // Random date within the next 30 days
-      DateTime.now().add(Duration(days: random.nextInt(30))),
-    ];
-    String professor = 'Professor ${i + 1}';
-
-    Unavail unavail = Unavail(
-      id: id,
-      type: type,
-      dates: dates,
-      professor: professor,
-    );
-
-    unavailList.add(unavail);
-  }
-
-  return unavailList;
 }

@@ -3,7 +3,7 @@ from flask import Flask, jsonify
 import firebase_admin
 from datetime import datetime
 from firebase_admin import db
-from threading import Thread
+# from threading import Thread
 import os
 
 # import Optimization_Manager
@@ -29,19 +29,19 @@ app = Flask(__name__)
 
 @app.route("/setStartEndDate/<string:userID>/<string:startDate>/<string:endDate>")
 
-def setStartEndDate(userID, startDate, endDate):
+def setStartEndDate(ProblemSessionID, userID, startDate, endDate):
     print(userID, startDate, endDate)
     # Converti la data in formato stringa in un oggetto datetime
     startDateObj = datetime.strptime(startDate, "%Y-%m-%d %H:%M:%S.%f")
     endtDateObj = datetime.strptime(endDate, "%Y-%m-%d %H:%M:%S.%f")
 
     # Crea un nuovo nodo nel database con l'userID come chiave e la start_date come valore
-    ref.child(userID).set({
+    ref.child(ProblemSessionID).set({
         'startDate': startDateObj.isoformat(),  # Salva la data in formato ISO8601
         'endDate': endtDateObj.isoformat()
     })
 
-    print('Sto salvando dati per: ' + userID)
+    print(userID+' updates start end date for: '+ ProblemSessionID)
     print(startDateObj, type(startDateObj))
     print(endtDateObj, type(endtDateObj))
 
@@ -54,7 +54,7 @@ def runWeightBuilder():
 #    os.system("python Optimization_Manager.py")
 
 @app.route("/startOptimization/<string:userID>")
-def startOptimization(userID):
+def startOptimization(ProblemSessionID,userID):
     #get per UserId
     ProblemData = ref.child(userID).get()
     print(ProblemData['endDate'])
@@ -63,8 +63,8 @@ def startOptimization(userID):
     #ProblemData['ProgrammeStudy']
 
     #Call weightBuilder
-    thread= Thread(target= runWeightBuilder)
-    thread.start()
+    # thread= Thread(target= runWeightBuilder)
+    # thread.start()
 
     #thread.join()
 
@@ -134,3 +134,4 @@ def setSettings(sessionID, name, date):
 
 if __name__== "__main__":
     app.run(debug=True)
+    
