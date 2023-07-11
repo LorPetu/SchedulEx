@@ -93,10 +93,12 @@ class _UnavailPageState extends State<UnavailPage> {
                 );
                 if (unavail != null) {
                   print(newUnavail.dates);
-                  appState.updateUnavail(newUnavail);
+                  appState.addUnavail(newUnavail);
+                  //appState.updateUnavail(newUnavail);
                   Navigator.pop(context);
                 } else {
                   appState.addUnavail(newUnavail);
+                  Navigator.pop(context);
                 }
               },
               child: const Text('Save'),

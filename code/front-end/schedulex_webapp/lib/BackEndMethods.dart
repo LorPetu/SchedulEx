@@ -1,3 +1,5 @@
+//import 'dart:js_util';
+
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'utils.dart';
@@ -90,66 +92,45 @@ void saveSettings(
   }
 }
 
-void saveUnavailability(
+Future<dynamic> saveUnavailability(
     {required String sessionID, required Unavail unavail}) async {
-  String unavailID = unavail.id;
-  String type = unavail.type.toString();
-  String name = unavail.professor;
+  String url = 'http://$SERVER_URL/saveUnavailability/';
+  String txt = 'unavailability';
+  String action = 'save';
+
   List<String> dates = unavail.dates.map((e) => e.toString()).toList();
-  String url = 'http://' +
-      SERVER_URL +
-      '/setUnavailability/$sessionID/$type/$name/${dates.join('/')}/$unavailID';
+
+  Map<String, String> requestbody = {
+    'sessionID': sessionID,
+    'type': unavail.type.toString(),
+    'name': unavail.professor,
+    'dates': dates.join('/')
+  };
+
+  if (unavail.id.isNotEmpty) {
+    requestbody.addAll({'unavailID': unavail.id});
+  }
 
   try {
-    final List<Map<String, String>> requestBody =
-        dates.map((date) => {'date': date}).toList();
-
     final response = await http.post(
       Uri.parse(url),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(requestBody),
+      body: jsonEncode(requestbody),
     );
 
     if (response.statusCode == 200) {
-      print('Unavailability saved successfully.');
+      print('$txt $action successfully.');
+
+      return jsonDecode(response.body);
     } else {
-      print('Failed to save unavailability. Error: ${response.statusCode}');
+      print('Failed to $action $txt. Error: ${response.statusCode}');
     }
   } catch (e) {
-    print('Exception occurred while saving unavailability: $e');
+    print('Exception occurred while $action $txt: $e');
   }
 }
 
-void addUnavailability(
-    {required String sessionID, required Unavail unavail}) async {
-  String type = unavail.type.toString();
-  String name = unavail.professor;
-  List<String> dates = unavail.dates.map((e) => e.toString()).toList();
-  String url = 'http://' +
-      SERVER_URL +
-      '/addUnavailability/$sessionID/$type/$name/${dates.join('/')}';
-
-  try {
-    final List<Map<String, String>> requestBody =
-        dates.map((date) => {'date': date}).toList();
-
-    final response = await http.post(
-      Uri.parse(url),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(requestBody),
-    );
-
-    if (response.statusCode == 200) {
-      print('Unavailability saved successfully.');
-    } else {
-      print('Failed to save unavailability. Error: ${response.statusCode}');
-    }
-  } catch (e) {
-    print('Exception occurred while saving unavailability: $e');
-  }
-}
-
-void deleteUnavail_end(
+void deleteUnavailability(
     {required String sessionID, required Unavail unavail}) async {
   String unavailID = unavail.id;
   String url = 'http://' + SERVER_URL + '/delete_unavail/$sessionID/$unavailID';
@@ -180,6 +161,43 @@ void startOptimization({required String sessionID}) async {
     }
   } catch (e) {
     print('Exception occurred while starting scheduling: $e');
+  }
+}
+
+Future<dynamic> saveSession(
+    {required String sessionID, required Map<String, dynamic> payload}) async {
+  String url = 'http://$SERVER_URL/saveSession/';
+  String txt = 'Session';
+  String action = 'save';
+  Map<String, String> requestbody = {};
+
+  if (sessionID.isNotEmpty) {
+    requestbody.addAll({'sessionID': sessionID});
+  }
+
+  if (payload['userID'].isNotEmpty) {
+    requestbody.addAll({'userID': sessionID});
+  }
+
+  //print(requestbody);
+
+  try {
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(requestbody),
+    );
+
+    if (response.statusCode == 200) {
+      print('$txt $action successfully.');
+      //print(response.body);
+
+      return jsonDecode(response.body);
+    } else {
+      print('Failed to $action $txt. Error: ${response.statusCode}');
+    }
+  } catch (e) {
+    print('Exception occurred while $action $txt: $e');
   }
 }
 

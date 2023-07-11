@@ -58,9 +58,9 @@ class MyAppState extends ChangeNotifier {
 
   void setProblemSessionID(String id) {
     if (id.isEmpty) {
-      print('no problemSessionID');
-      //#####
-      //saveUserID(sessionID: problemSessionID, userID: userID);
+      saveSession(sessionID: problemSessionID, payload: {'userID': userID})
+          .then((value) => problemSessionID = value['id']);
+      print('');
     } else {
       problemSessionID = id;
       print('$userID select $problemSessionID');
@@ -72,14 +72,20 @@ class MyAppState extends ChangeNotifier {
         print('Error: $error');
       });
       saveUserID(sessionID: problemSessionID, userID: userID);
+
       //#####
     }
     notifyListeners();
   }
 
-  void setSchool(selectedeSchool) {
-    print(selectedeSchool);
-    school = selectedeSchool;
+  void setSchool(selectedSchool) {
+    saveSession(
+        sessionID: problemSessionID,
+        payload: {'school': selectedSchool}).then((value) {
+      print(selectedSchool);
+      school = selectedSchool;
+    });
+
     notifyListeners();
   }
 
@@ -96,9 +102,8 @@ class MyAppState extends ChangeNotifier {
 
   void addUnavail(Unavail unavail) {
     print("this is new");
-    //int newlenght = unavailList.length + 1;
-    //unavail.id = 'null';
-    addUnavailability(sessionID: problemSessionID, unavail: unavail);
+    saveUnavailability(sessionID: problemSessionID, unavail: unavail)
+        .then((value) => unavail.id = value['id']);
     unavailList.add(unavail);
 
     notifyListeners();
@@ -120,7 +125,7 @@ class MyAppState extends ChangeNotifier {
 
   void deleteUnavail(Unavail deletedUnavail) {
     unavailList.removeWhere((element) => element.id == deletedUnavail.id);
-    deleteUnavail_end(sessionID: problemSessionID, unavail: deletedUnavail);
+    deleteUnavailability(sessionID: problemSessionID, unavail: deletedUnavail);
     notifyListeners();
   }
 

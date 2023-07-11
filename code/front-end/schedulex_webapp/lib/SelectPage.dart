@@ -28,11 +28,7 @@ class SelectPage extends StatelessWidget {
               onPressed: () {
                 // Set the ProblemSessionID in MyAppState
                 appState.setProblemSessionID('');
-                // #BACKEND createSession
-                //########
 
-                //########
-                // Navigate to the ProblemSession Page
                 Navigator.pushNamed(context, '/problemSession');
                 print('${appState.userID} create a new session');
               },

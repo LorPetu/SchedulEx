@@ -76,7 +76,7 @@ def setStartEndDate(sessionID, startDate, endDate):
     #print(userID+' updates start end date for: '+ sessionID)
     print(startDateObj, type(startDateObj))
     print(endtDateObj, type(endtDateObj))
-
+    
     return 'Start date saved successfully.'
 ### IMPLEMENTED
 # @app.route("/startOptimization/<string:sessionID>")
@@ -168,7 +168,7 @@ def saveUnavailability():
     
     date_list = request_data['dates'].split("/")
     date_obj_list = [datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S.%f").isoformat() for date_str in date_list]
-    
+
     unavail_node = ref.child(request_data['sessionID']).child('unavailList')
 
     if('unavailID' not in  request_data ):
@@ -186,7 +186,7 @@ def saveUnavailability():
 
     #print('Sto salvando dati per: ' + sessionID)
 
-    return f'{txt} {action} successfully.'
+    return {'status': f'{txt} {action} successfully.', 'id':unavail_node.key}
 
 
 ##IMPLEMENTED
@@ -224,18 +224,18 @@ def saveSession():
     request_data = request.get_json()
 
     if('sessionID' not in  request_data ):
-        session_node = session_node.push()
+        session_node = ref.push()
         print(session_node.key)
     else:
         print(request_data['sessionID'])
-        session_node = session_node.child(request_data['unavailID'])
+        session_node = ref.child(request_data['unavailID'])
     for key in request_data:
         print(key)
-    session_node.update({})
+    session_node.update(request_data)
 
     #print('Sto salvando dati per: ' + sessionID)
-
-    return f'{txt} {action} successfully.'
+    value = session_node.key
+    return {'status': f'{txt} {action} successfully.', 'id':value}
 if __name__== "__main__":
     app.run(debug=True)
     

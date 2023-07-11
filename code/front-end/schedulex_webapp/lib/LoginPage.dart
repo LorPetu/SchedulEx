@@ -32,31 +32,36 @@ class _LoginPageState extends State<LoginPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextField(
-              controller: _userIDController,
-              decoration: const InputDecoration(
-                labelText: 'User ID',
-              ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                // Get the user ID from the text field
-                final userID = _userIDController.text;
+        child: Center(
+          child: Container(
+            width: 200,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextField(
+                  controller: _userIDController,
+                  decoration: const InputDecoration(
+                    labelText: 'User ID',
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    // Get the user ID from the text field
+                    final userID = _userIDController.text;
 
-                // Set the user ID in MyAppState
-                Provider.of<MyAppState>(context, listen: false)
-                    .setUserID(userID);
+                    // Set the user ID in MyAppState
+                    Provider.of<MyAppState>(context, listen: false)
+                        .setUserID(userID);
 
-                // Navigate to the Select Page
-                Navigator.pushNamed(context, '/select');
-              },
-              child: const Text('Login'),
+                    // Navigate to the Select Page
+                    Navigator.pushNamed(context, '/select');
+                  },
+                  child: const Text('Login'),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
