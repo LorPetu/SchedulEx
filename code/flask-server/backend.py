@@ -1,23 +1,12 @@
 import json
 from utils import *
-from flask import Flask, jsonify
+from flask import Flask, request
 import firebase_admin
 from datetime import datetime
 from firebase_admin import db
-# from threading import Thread
-import os
 import pandas as pd
 import subprocess # per far partire Optimization_Manager
 
-@app.route("/startOptimization/<string:sessionID>")
-def startOptimization(sessionID):
-    # Componi il comando per invocare lo script Optimization_Manager con sessionID come argomento
-    comando = ["python", "Optimization_Manager.py", sessionID]
-
-    # Esegui il comando utilizzando subprocess
-    subprocess.run(comando)
-
-    return 'Start process'
 
 # import Optimization_Manager
 
@@ -25,7 +14,6 @@ cred_obj = firebase_admin.credentials.Certificate("./schedulex-723a8-firebase-ad
 
 #json_file_path = "C:\\Users\\Utente\\Desktop\\SchedulEx\\code\\flask-server\\schedulex-723a8-firebase-adminsdk-mau2x-c93019364b.json"
 #cred_obj = firebase_admin.credentials.Certificate(json_file_path)
-
 
 
 default_app = firebase_admin.initialize_app(cred_obj, {
@@ -38,6 +26,17 @@ ref = db.reference("/")
 app = Flask(__name__)
 
 # API Route
+@app.route("/startOptimization/<string:sessionID>")
+def startOptimization(sessionID):
+    # Componi il comando per invocare lo script Optimization_Manager con sessionID come argomento
+    comando = ["python", "Optimization_Manager.py", sessionID]
+
+    # Esegui il comando utilizzando subprocess
+    subprocess.run(comando)
+
+    return 'Start process'
+
+
 ### IMPLEMENTED
 @app.route("/setUserID/<string:sessionID>/<string:userID>", methods=['POST'])
 def setUserID(sessionID, userID):
@@ -80,26 +79,26 @@ def setStartEndDate(sessionID, startDate, endDate):
 
     return 'Start date saved successfully.'
 ### IMPLEMENTED
-@app.route("/startOptimization/<string:sessionID>")
-def startOptimization(sessionID):
-    #get per UserId
-    ProblemData = ref.child(sessionID).get()
-    print(ProblemData['endDate'])
+# @app.route("/startOptimization/<string:sessionID>")
+# def startOptimization(sessionID):
+#     #get per UserId
+#     ProblemData = ref.child(sessionID).get()
+#     print(ProblemData['endDate'])
 
-    #get per tutti gli esami
-    #ProblemData['ProgrammeStudy']
+#     #get per tutti gli esami
+#     #ProblemData['ProgrammeStudy']
 
-    #Call weightBuilder
-    # thread= Thread(target= runWeightBuilder)
-    # thread.start()
+#     #Call weightBuilder
+#     # thread= Thread(target= runWeightBuilder)
+#     # thread.start()
 
-    #thread.join()
+#     #thread.join()
 
-    #thread2 = Thread(target= runOptimizationAlgorithm)
-    #thread2.start()
+#     #thread2 = Thread(target= runOptimizationAlgorithm)
+#     #thread2.start()
 
-    #Start optimizer.py con i suoi input
-    return 'Start process'
+#     #Start optimizer.py con i suoi input
+#     return 'Start process'
 
 @app.route("/startOptimization/<string:sessionID>")
 def startOptimizationNEW(sessionID):
@@ -160,50 +159,35 @@ def setSettings(sessionID, distCalls, distExams):
     return 'Settings saved successfully.'
 
 ### IMPLEMENTED
-@app.route("/setUnavailability/<string:sessionID>/<string:type>/<string:name>/<path:dates>/<string:unavailID>", methods=['POST'])
-def setUnavailibility(sessionID, unavailID, type, name, dates):
-    print(unavailID, sessionID, name, dates)
 
-    # Converti la stringa di date separata da "/" in una lista di stringhe
-    date_list = dates.split("/")
-
-    # Converti la lista di stringhe in una lista di oggetti datetime
-    date_obj_list = [datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S.%f").isoformat() for date_str in date_list]
-    ref.child(sessionID).child('unavailList').child(unavailID).update({
-        'name': name,
-        'type': type,
-        'dates': date_obj_list
-    })
-
-    print('Sto salvando dati per: ' + sessionID)
-    #print(date_obj_list, type(date_obj_list))
-
-    return 'Unavailability saved successfully.'
-
-@app.route("/addUnavailability/<string:sessionID>/<string:type>/<string:name>/<path:dates>/", methods=['POST'])
-def addUnavailibility(sessionID, type, name, dates):
+@app.route("/saveUnavailability/", methods=['POST'])
+def saveUnavailability():
+    txt='unavailability'
+    action='saved'
+    request_data = request.get_json()
     
-
-    # Converti la stringa di date separata da "/" in una lista di stringhe
-    date_list = dates.split("/")
-
-    # Converti la lista di stringhe in una lista di oggetti datetime
+    date_list = request_data['dates'].split("/")
     date_obj_list = [datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S.%f").isoformat() for date_str in date_list]
-    unavail_node = ref.child(sessionID).child('unavailList')
     
-    unavail_node = unavail_node.push()
-    print(unavail_node.key)
-    # Aggiorna i dati nel nodo unavailList
+    unavail_node = ref.child(request_data['sessionID']).child('unavailList')
+
+    if('unavailID' not in  request_data ):
+        unavail_node = unavail_node.push()
+        print(unavail_node.key)
+    else:
+        print(request_data['unavailID'])
+        unavail_node = unavail_node.child(request_data['unavailID'])
+
     unavail_node.update({
-        'name': name,
-        'type': type,
+        'name': request_data['name'],
+        'type': request_data['type'],
         'dates': date_obj_list
     })
 
-    print('Sto salvando dati per: ' + sessionID)
-    #print(date_obj_list, type(date_obj_list))
+    #print('Sto salvando dati per: ' + sessionID)
 
-    return 'Unavailability saved successfully.'
+    return f'{txt} {action} successfully.'
+
 
 ##IMPLEMENTED
 @app.route("/delete_unavail/<string:sessionID>/<string:unavailID>")
@@ -232,6 +216,26 @@ def getProfessorList():
     response = json.dumps(elementi_unici)  # Converti la lista in una stringa JSON
     return response
 
+
+@app.route("/saveSession/",methods=['POST'])
+def saveSession():
+    txt='session'
+    action='saved'
+    request_data = request.get_json()
+
+    if('sessionID' not in  request_data ):
+        session_node = session_node.push()
+        print(session_node.key)
+    else:
+        print(request_data['sessionID'])
+        session_node = session_node.child(request_data['unavailID'])
+    for key in request_data:
+        print(key)
+    session_node.update({})
+
+    #print('Sto salvando dati per: ' + sessionID)
+
+    return f'{txt} {action} successfully.'
 if __name__== "__main__":
     app.run(debug=True)
     

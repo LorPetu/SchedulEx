@@ -1,10 +1,10 @@
 import pandas as pd
 import json
-
+df = pd.read_excel("C:\\Users\\Utente\\Desktop\\SchedulEx\\code\\flask-server\\Database esami.xlsx")
 def countColumns():
     # Carica il file Excel utilizzando pandas
-    df = pd.read_excel("C:\\Users\\Utente\\Desktop\\SchedulEx\\code\\flask-server\\Database esami.xlsx")
-
+    
+    #df.columns
     numero_celle = 0
 
     # Itera sulle celle della prima riga

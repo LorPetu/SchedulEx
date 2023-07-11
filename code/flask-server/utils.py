@@ -13,12 +13,4 @@ class ProblemSession:
         self.description=description
         self.user=user
            
-# {
-#     userID: '',
-#     problemData: {
-#         StartDate:,
-#         EndDate:,
-#         UnavailList: List<Unavail> [],
-#         ProgrammeStudy: ''
-#     }
-# }
+
