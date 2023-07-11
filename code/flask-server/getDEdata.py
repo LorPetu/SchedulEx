@@ -72,7 +72,7 @@ def createObjects():
 
 def main():
     # Chiamata alla funzione createObjects()
-    oggetti = createObjects()
+    # oggetti = createObjects()
     # Converti la lista in formato JSON
     #json_data = json.dumps(oggetti)
 
@@ -80,6 +80,8 @@ def main():
     # Stampa gli oggetti
     #for oggetto in oggetti:
     #print(oggetti)
+    print(df)
+    print(type(df))
 
 if __name__ == "__main__":
     main()
