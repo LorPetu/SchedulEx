@@ -2,25 +2,28 @@ from mip import Model, xsum, BINARY
 import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
-from utils import optStatus, verify
+from utils import *
 
 GUROBI_HOME = 'C:/gurobi1001/'
 
-def solveScheduling(exams: list, startDate, endDate, status: optStatus):
+current_status= optStatus('null','123abc')
+
+
+def solveScheduling(exams: list, startDate: datetime, endDate: datetime, status: optStatus):
 
     D = 15 # 25  # Numero di giorni disponibili # 51 giorni per la sessione estiva
     ## Define the days that are available from start to end date
-    availDays = []
+    availDates = []
     current_date=startDate
     while current_date <= endDate:
-        availDays.append(current_date)
+        availDates.append(current_date)
         current_date += timedelta(days=1)
 
     ## Define current semester in which session is scheduling
     curr = 1  # Semestre corrente
 
     ## Create time weight respect all couples of exams
-    w = [[int(2**(-0.3*abs(exams[i].exam.sem - exams[j].exam.sem))*1000)/100 + 10 * verify(exams[i].exam.sem==curr)*verify(exams[j].exam.sem==curr) for j in len(exams) ] for i in len(exams)]  # Pesi  
+    w = [[int(2**(-0.3*abs(exam_i.exam.sem - exam_j.exam.sem))*1000)/100 + 10*((exam_i.exam.sem==curr).real)*((exam_j.exam.sem==curr).real) for j,exam_j in enumerate(exams) ] for i,exam_i in enumerate(exams)]  
     print(w)
     print("parameters set ok")
     num_appelli = 2#input("NUMERO APPELLI: ")
@@ -31,19 +34,21 @@ def solveScheduling(exams: list, startDate, endDate, status: optStatus):
 
     # Creazione del problema di programmazione lineare
     prob = Model("EsameScheduler", sense='maximize', solver_name='GUROBI')
-    # Creazione delle variabili
+
+    # Optimization problme variables initialization
     s = {}  # Slot per assegnare agli esami
     x = {}  # Slot per assegnare due esami diversi
-    for i in len(exams): #for all exams
-        for k in len(availDays): #for all days
+
+    for i, exam_i in enumerate(exams): 
+        for k, date_k in enumerate(availDates): 
             # VARIABLE s_i_k: indicates if the exam i has a date assigned in the day k. BINARY    
 
             s[(i, k)] = prob.add_var(var_type=BINARY, name='s_%i_%i' % (i, k))
 
             # Now i'm interested in all the possible couple of exam and their assigned dates
-            for j in len(exams):
+            for j, exam_j in enumerate(exams):
                 #if j != i:
-                    for t in len(availDays):
+                    for t, date_t in enumerate(availDates):
                         if k < t:
                             # VARIABLE x_i_k_j_t: indicates if the exam i is assigned in day k AND exam j in day t. BINARY
 
@@ -53,11 +58,11 @@ def solveScheduling(exams: list, startDate, endDate, status: optStatus):
 
     # Creazione della funzione obiettivo
     objective = []
-    for i in len(exams):
-        for j in len(exams):
+    for i, exam_i in enumerate(exams):
+        for j, exam_j in enumerate(exams):
             if j!=i:
-                for t in len(availDays):
-                    for k in len(availDays):
+                for t, date_t in enumerate(availDates):
+                    for k, date_k in enumerate(availDates):
                         if k < t:
                             objective.append(w[i][j] * (t - k) * x[(i, k, j, t)])
 
@@ -66,11 +71,11 @@ def solveScheduling(exams: list, startDate, endDate, status: optStatus):
     status.setStatus("Objective function created")
 
     # LOGIC Constraints: in this way we define the logical port AND for the x variables, and connect with the relative s variables
-    for i in len(exams):
-        for j in len(exams):
+    for i, exam_i in enumerate(exams):
+        for j, exam_j in enumerate(exams):
             #if j!=i:
-                for k in len(availDays):
-                    for t in len(availDays):
+                for k, date_k in enumerate(availDates):
+                    for t, date_t in enumerate(availDates):
                         if t > k:
                             prob += s[(i, k)] + s[(j, t)] - 2*x[(i, k, j, t)] <=1
                             prob += s[(i, k)] + s[(j, t)] - 2*x[(i, k, j, t)] >=0
@@ -78,22 +83,22 @@ def solveScheduling(exams: list, startDate, endDate, status: optStatus):
                             prob += s[(i, k)] + s[(j, t)] <=1 #per ogni giorno io non voglio avere gli esami lo stesso giorno, o uno o l'altro
     
     # Here we set that for each exam we want to have just num_appelli of date assignation
-    for i in len(exams):
+    for i, exam_i in enumerate(exams):
         print(s[(i, k)])
-        prob += xsum(s[(i, k)] for k in len(availDays)) == num_appelli
+        prob += xsum(s[(i, k)] for k, date_k in enumerate(availDates)) == num_appelli
 
     status.setStatus("Logic constraints set")
 
     ## Time constraint
 
-    for i in len(exams):
-        for j in len(exams):
+    for i, exam_i in enumerate(exams):
+        for j, exam_j in enumerate(exams):
             if j!=i:
-                for k in len(availDays):  
-                    for t in len(availDays):                                
+                for k, date_k in enumerate(availDates):  
+                    for t, date_t in enumerate(availDates):                                
                         if t > k: 
                             # Check if exams are in the same semester
-                            if exams[i].exam.sem == exams[j].exam.sem:
+                            if exam_i.exam.sem == exam_j.exam.sem:
                                 if t-k!=distanza_1:
                                     # Set the distance greater than the minimum required for all the combinations of dates with these exams 
                                     # eq1 x_i_k_j_t*(t-k)>=x_i_k_j_t*(distanza_1)
@@ -104,9 +109,9 @@ def solveScheduling(exams: list, startDate, endDate, status: optStatus):
 
 
     if num_appelli>1:
-        for i in len(exams):
-                for k in len(availDays):
-                    for t in len(availDays):                    
+        for i, exam_i in enumerate(exams):
+                for k, date_k in enumerate(availDates):
+                    for t, date_t in enumerate(availDates):                    
                             if t > k:
                                 if t-k!=distanza_2:
                                     # Set the distance greater than the minimum required for all the combinations of dates with these exams 
@@ -120,56 +125,68 @@ def solveScheduling(exams: list, startDate, endDate, status: optStatus):
 
     ## Unavailability constraints
 
-    count =0
-    for k in len(availDays):
-        count += 1
-        #print(count)
-        if count == 7: #per ogni data indisponibilità poli e domeniche faccio la sommatoria per tutti gli esami
-            #print(s[(i, k)].x)
-            prob += xsum(s[(i, k)] for i in len(exams)) == 0
-            count=0
-        #per ogni esame, controllo se la data corrente appartiene all'array delle indisponibilità del prof
+    for k, date_k in enumerate(availDates):
 
-    status.setStatus("indisponibilità constraints set")
+        #per ogni data indisponibilità poli e domeniche faccio la sommatoria per tutti gli esami
+        if date_k.weekday()==6: 
+            prob += xsum(s[(i, k)] for i, exam_i in enumerate(exams)) == 0
+            
+        #per ogni esame, controllo se la data corrente appartiene all'array delle indisponibilità del prof
+        for i, exam_i in enumerate(exams):
+            if date_k in exam_i.unavailDates:
+               prob += s[(i, k)] == 0
+
+    status.setStatus("Unavailability constraints set")
 
 
 
     # Be careful, the output will be huge
     #print(prob)
     prob.write("ExamScheduler.lp")
-    print('🤔 The problem has successfully formulated')
+    status.setStatus('The problem has successfully formulated')
     # Last updated objective and time
     # prob._cur_obj = float('inf')
     # prob._time = time.time()
     # Risoluzione del problema di programmazione lineare intera
-    prob.optimize() #callback=cb)
+    status.setStatus('Start optimization')
+    prob.optimize() #callback=mycallback)
     prob.store_search_progress_log
     print(prob.status.value)
 
     #for i in range(len(prob.vars)):
     #    print(f"{prob.vars[i].name} = {prob.vars[i].x}")
     # Stampa dei risultati
-
-    M=np.zeros([N,S])
+    M=np.zeros([len(exams),len(availDates)])
     print("## MATRIX CALENDAR ##")
-    for i in len(exams):
-        count=0
-        for k in len(availDays):
-            count += 1
-            #M[i][k]= 1 if s[(i, k)].x==1 else 0
-            if(count!=7):
+    for i, exam_i in enumerate(exams):
+        for k, date_k in enumerate(availDates):
+            
+            if date_k in exam_i.unavailDates:
+                
+                M[i][k]= '#' if s[(i, k)].x==1 else 0                
+
+            if(date_k.weekday()!=6):
+                
                 M[i][k]= 1 if s[(i, k)].x==1 else 0
             else:
                 M[i][k]= 7
-                count=0
+                
     print(M)
-        
-    # Definisci la data di inizio e fine
-    data_inizio = datetime.date(2023, 1, 1)
+    print("\n\n\n\n\n\n")
 
-    # Crea un elenco di date corrispondenti come header delle colonne
-    date_colonne = [data_inizio + datetime.timedelta(days=S) for i in len(availDays)]
+    
+    for i, exam_i in enumerate(exams):
+        for k, date_k in enumerate(availDates):
+            exam_i.assignedDates.append(date_k)            
+            
+            
+    return exams
 
 
-    DF = pd.DataFrame(M, columns=date_colonne)
-    DF.to_csv("calendar.csv") 
+if __name__=="__main__":
+    unprocessedExams = create_random_optexams_list(5)
+    unprocessedExams[1].exam
+    results = solveScheduling(exams=unprocessedExams,startDate=datetime(2023,6,1),endDate=datetime(2023,6,16),status=current_status)
+    for optexam in results:
+        print(optexam.exam.sem, optexam.exam.professor, optexam.unavailDates, optexam.effortWeight, optexam.assignedDates)
+
