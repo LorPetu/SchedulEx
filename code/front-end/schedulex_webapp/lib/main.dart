@@ -58,8 +58,11 @@ class MyAppState extends ChangeNotifier {
 
   void setProblemSessionID(String id) {
     if (id.isEmpty) {
-      saveSession(sessionID: problemSessionID, payload: {'userID': userID})
+      saveSession(
+              sessionID: problemSessionID,
+              payload: {'userID': userID, 'status': 'NOT STARTED'})
           .then((value) => problemSessionID = value['id']);
+      problemSessionList.add(ProblemSession(id: problemSessionID, school: ''));
       print('');
     } else {
       problemSessionID = id;
@@ -79,12 +82,12 @@ class MyAppState extends ChangeNotifier {
   }
 
   void setSchool(selectedSchool) {
+    print(problemSessionID);
     saveSession(
-        sessionID: problemSessionID,
-        payload: {'school': selectedSchool}).then((value) {
-      print(selectedSchool);
-      school = selectedSchool;
-    });
+        sessionID: problemSessionID, payload: {'school': selectedSchool});
+
+    print(selectedSchool);
+    school = selectedSchool;
 
     notifyListeners();
   }
@@ -129,9 +132,9 @@ class MyAppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void createProblemSession() {}
-
-  void deleteProblemSession(problemSessionID) {}
+  void deleteProblemSession(sessionID) {
+    print('session to delete $sessionID');
+  }
 }
 
 class ProblemSessionPage extends StatefulWidget {

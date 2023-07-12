@@ -1,10 +1,6 @@
-//import 'dart:js_util';
-
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'utils.dart';
-
-import 'package:schedulex_webapp/utils.dart';
 
 const SERVER_URL = "127.0.0.1:5000";
 
@@ -175,11 +171,7 @@ Future<dynamic> saveSession(
     requestbody.addAll({'sessionID': sessionID});
   }
 
-  if (payload['userID'].isNotEmpty) {
-    requestbody.addAll({'userID': sessionID});
-  }
-
-  //print(requestbody);
+  payload.forEach((k, v) => requestbody.addAll({k: v.toString()}));
 
   try {
     final response = await http.post(

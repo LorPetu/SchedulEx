@@ -228,7 +228,7 @@ def saveSession():
         print(session_node.key)
     else:
         print(request_data['sessionID'])
-        session_node = ref.child(request_data['unavailID'])
+        session_node = ref.child(request_data['sessionID'])
     for key in request_data:
         print(key)
     session_node.update(request_data)

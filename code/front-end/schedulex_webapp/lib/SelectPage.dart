@@ -44,7 +44,18 @@ class SelectPage extends StatelessWidget {
                     itemBuilder: (context, index) {
                       final element = appState.problemSessionList[index];
                       return ListTile(
-                        title: Text(element.id),
+                        leading: (element.status == 'NOT STARTED')
+                            ? Icon(Icons.not_started, color: Colors.yellow)
+                            : Icon(Icons.settings_backup_restore_outlined,
+                                color: Colors.green),
+                        trailing: IconButton(
+                          icon: Icon(Icons.delete),
+                          onPressed: () {
+                            appState.deleteProblemSession(
+                                appState.problemSessionID);
+                          },
+                        ),
+                        title: Text(element.school),
                         onTap: () {
                           appState.setProblemSessionID(element.id);
                           Navigator.pushNamed(context, '/problemSession');

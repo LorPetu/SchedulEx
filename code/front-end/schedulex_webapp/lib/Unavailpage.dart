@@ -60,7 +60,6 @@ class _UnavailPageState extends State<UnavailPage> {
                 setState(() {
                   type = newValue!;
                 });
-                print(type);
               },
               hint: const Text('Select Type'),
             ),
