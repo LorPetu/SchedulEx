@@ -103,15 +103,6 @@ class MyAppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addUnavail(Unavail unavail) {
-    print("this is new");
-    saveUnavailability(sessionID: problemSessionID, unavail: unavail)
-        .then((value) => unavail.id = value['id']);
-    unavailList.add(unavail);
-
-    notifyListeners();
-  }
-
   void updateUnavail(Unavail updatedUnavail) {
     final index =
         unavailList.indexWhere((element) => element.id == updatedUnavail.id);
@@ -120,7 +111,10 @@ class MyAppState extends ChangeNotifier {
       saveUnavailability(sessionID: problemSessionID, unavail: updatedUnavail);
       unavailList[index] = updatedUnavail;
     } else {
-      print('unavail' + updatedUnavail.id + 'not found ');
+      saveUnavailability(sessionID: problemSessionID, unavail: updatedUnavail)
+          .then((value) => updatedUnavail.id = value['id']);
+      unavailList.add(updatedUnavail);
+      print('unavail' + updatedUnavail.id + ' added ');
     }
     notifyListeners();
     //print(unavailList[index].professor);
@@ -187,12 +181,24 @@ class _ProblemSessionPageState extends State<ProblemSessionPage> {
           Padding(
             padding: const EdgeInsets.all(20.0),
             child: ElevatedButton(
-                onPressed: () => {
-                      startOptimization(sessionID: appState.problemSessionID),
-                      print('startOptimization triggered')
-                    },
+                onPressed: () {
+                  startOptimization(sessionID: appState.problemSessionID);
+                  saveSession(
+                      sessionID: appState.problemSessionID,
+                      payload: {'status': 'STARTED'});
+                  print('startOptimization triggered');
+                },
                 child: const Text('start')),
           ),
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: ElevatedButton(
+                onPressed: () {
+                  downloadExcel();
+                  print('download excel');
+                },
+                child: const Text('start')),
+          )
         ],
       ),
     );

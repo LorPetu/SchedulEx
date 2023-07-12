@@ -9,7 +9,6 @@ exam = {
     
 
 }
-
 # Definizione dei parametri
 D = 15 # 25  # Numero di giorni disponibili # 51 giorni per la sessione estiva
 F = 3  # Numero di fasce orarie

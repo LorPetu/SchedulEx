@@ -213,8 +213,8 @@ def saveSession():
     session_node.update(request_data)
 
     #print('Sto salvando dati per: ' + sessionID)
-    value = session_node.key
-    return {'status': f'{txt} {action} successfully.', 'id':value}
+
+    return f'{txt} {action} successfully.'
 if __name__== "__main__":
     app.run(debug=True)
     

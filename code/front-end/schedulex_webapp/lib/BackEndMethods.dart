@@ -1,5 +1,6 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:io';
 import 'utils.dart';
 
 const SERVER_URL = "127.0.0.1:5000";
@@ -257,4 +258,11 @@ Future<List<Unavail>> getSessionData({required String sessionId}) async {
     print('Exception occurred for getSessionData: $e');
     throw Exception('Exception occurred for getSessionData: $e');
   }
+}
+
+Future<void> downloadExcel() async {
+  var url = 'https://$SERVER_URL/Database_esami.xlsx';
+  var response = await http.get(Uri.parse(url));
+  var bytes = response.bodyBytes;
+  await File('Database_esami.xlsx').writeAsBytes(bytes);
 }

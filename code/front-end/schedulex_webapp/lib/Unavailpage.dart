@@ -92,11 +92,11 @@ class _UnavailPageState extends State<UnavailPage> {
                 );
                 if (unavail != null) {
                   print(newUnavail.dates);
-                  appState.addUnavail(newUnavail);
+                  appState.updateUnavail(newUnavail);
                   //appState.updateUnavail(newUnavail);
                   Navigator.pop(context);
                 } else {
-                  appState.addUnavail(newUnavail);
+                  appState.updateUnavail(newUnavail);
                   Navigator.pop(context);
                 }
               },
