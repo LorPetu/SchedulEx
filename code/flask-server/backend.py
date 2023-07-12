@@ -5,10 +5,10 @@ import firebase_admin
 from datetime import datetime
 from firebase_admin import db
 import pandas as pd
-import subprocess # per far partire Optimization_Manager
+from threading  import Thread
+from Optimization_Manager import *
+from queueManager import flag_queue
 
-
-# import Optimization_Manager
 
 cred_obj = firebase_admin.credentials.Certificate("./schedulex-723a8-firebase-adminsdk-mau2x-c93019364b.json")
 
@@ -16,26 +16,28 @@ cred_obj = firebase_admin.credentials.Certificate("./schedulex-723a8-firebase-ad
 #cred_obj = firebase_admin.credentials.Certificate(json_file_path)
 
 
-default_app = firebase_admin.initialize_app(cred_obj, {
-	'databaseURL':'https://schedulex-723a8-default-rtdb.firebaseio.com/'
-	})
+default_app = firebase_admin.initialize_app(cred_obj, {'databaseURL':'https://schedulex-723a8-default-rtdb.firebaseio.com/'})
 
-# Ottieni un riferimento al percorso del database dove desideri salvare i dati
-ref = db.reference("/")
+ref = db.reference("/") # Ottieni un riferimento al percorso del database dove desideri salvare i dati
 
 app = Flask(__name__)
 
-# API Route
-@app.route("/startOptimization/<string:sessionID>")
-def startOptimization(sessionID):
-    # Componi il comando per invocare lo script Optimization_Manager con sessionID come argomento
-    comando = ["python", "Optimization_Manager.py", sessionID]
+@app.route("/test")
+def test():
+    print('test ok')
+    return 'test'
 
-    # Esegui il comando utilizzando subprocess
-    subprocess.run(comando)
+@app.route("/askStatus")
+def askStatus():
+    if not flag_queue.empty():
+        flag = flag_queue.get()
+        print(flag)
+        flag_queue.put(flag)
+    else:
+        print("La coda è vuota")
 
-    return 'Start process'
-
+    # Restituisci la risposta HTTP al browser
+    return "Response"
 
 ### IMPLEMENTED
 @app.route("/setUserID/<string:sessionID>/<string:userID>", methods=['POST'])
@@ -59,6 +61,7 @@ def setSchoolID(sessionID, schoolID):
     ref.child(sessionID).update(schoolID)
 
     return 'School saved successfully.'
+
 ### IMPLEMENTED
 @app.route("/setStartEndDate/<string:sessionID>/<string:startDate>/<string:endDate>", methods=['POST'])
 def setStartEndDate(sessionID, startDate, endDate):
@@ -78,35 +81,13 @@ def setStartEndDate(sessionID, startDate, endDate):
     print(endtDateObj, type(endtDateObj))
     
     return 'Start date saved successfully.'
+
 ### IMPLEMENTED
-# @app.route("/startOptimization/<string:sessionID>")
-# def startOptimization(sessionID):
-#     #get per UserId
-#     ProblemData = ref.child(sessionID).get()
-#     print(ProblemData['endDate'])
-
-#     #get per tutti gli esami
-#     #ProblemData['ProgrammeStudy']
-
-#     #Call weightBuilder
-#     # thread= Thread(target= runWeightBuilder)
-#     # thread.start()
-
-#     #thread.join()
-
-#     #thread2 = Thread(target= runOptimizationAlgorithm)
-#     #thread2.start()
-
-#     #Start optimizer.py con i suoi input
-#     return 'Start process'
-
 @app.route("/startOptimization/<string:sessionID>")
-def startOptimizationNEW(sessionID):
-    # Componi il comando per invocare lo script Optimization_Manager con sessionID come argomento
-    comando = ["python", "Optimization_Manager.py", sessionID]
-
-    # Esegui il comando utilizzando subprocess
-    subprocess.run(comando)
+def startOptimization(sessionID):
+    # Call
+    OptimizationManager = Thread(target=runOptimizationManager, args=(flag_queue,))
+    OptimizationManager.start()
 
     return 'Start process'
 
@@ -130,6 +111,7 @@ def getSessionList():
 
     response = json.dumps([ps.__dict__ for ps in problem_sessions])  # Convert the list of ProblemSession objects to JSON
     return response
+
 ### IMPLEMENTED
 @app.route("/getSessionData/<string:sessionID>")
 def getSessionData(sessionID):
@@ -159,7 +141,6 @@ def setSettings(sessionID, distCalls, distExams):
     return 'Settings saved successfully.'
 
 ### IMPLEMENTED
-
 @app.route("/saveUnavailability/", methods=['POST'])
 def saveUnavailability():
     txt='unavailability'
@@ -188,7 +169,6 @@ def saveUnavailability():
 
     return {'status': f'{txt} {action} successfully.', 'id':unavail_node.key}
 
-
 ##IMPLEMENTED
 @app.route("/delete_unavail/<string:sessionID>/<string:unavailID>")
 def deleteUnavailability(sessionID, unavailID):
@@ -215,7 +195,6 @@ def getProfessorList():
 
     response = json.dumps(elementi_unici)  # Converti la lista in una stringa JSON
     return response
-
 
 @app.route("/saveSession/",methods=['POST'])
 def saveSession():
