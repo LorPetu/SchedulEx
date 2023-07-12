@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
@@ -134,6 +136,7 @@ void deleteUnavailability(
 
   try {
     final response = await http.get(Uri.parse(url));
+    print(response.request);
 
     if (response.statusCode == 200) {
       print('unavail deleted successfully.');
@@ -142,6 +145,23 @@ void deleteUnavailability(
     }
   } catch (e) {
     print('Exception occurred while saving UserID: $e');
+  }
+}
+
+void deleteSession({required String sessionID}) async {
+  String url = 'http://' + SERVER_URL + '/deleteSession/$sessionID';
+
+  try {
+    final response = await http.get(Uri.parse(url));
+    print(url);
+
+    if (response.statusCode == 200) {
+      print('Session $sessionID deleted successfully.');
+    } else {
+      print('Failed to start schedule. Error: ${response.statusCode}');
+    }
+  } catch (e) {
+    print('Exception occurred while starting scheduling: $e');
   }
 }
 
@@ -172,8 +192,11 @@ Future<dynamic> saveSession(
     requestbody.addAll({'sessionID': sessionID});
   }
 
+  print(requestbody);
+
   payload.forEach((k, v) => requestbody.addAll({k: v.toString()}));
 
+  print(payload);
   try {
     final response = await http.post(
       Uri.parse(url),

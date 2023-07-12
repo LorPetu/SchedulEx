@@ -51,8 +51,7 @@ class SelectPage extends StatelessWidget {
                         trailing: IconButton(
                           icon: Icon(Icons.delete),
                           onPressed: () {
-                            appState.deleteProblemSession(
-                                appState.problemSessionID);
+                            appState.deleteProblemSession(element.id);
                           },
                         ),
                         title: Text(element.school),

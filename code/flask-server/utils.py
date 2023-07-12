@@ -14,3 +14,27 @@ class ProblemSession:
         self.user=user
            
 
+class optStatus:
+    def __init__(self, status, sessionID):
+        self.__status = status
+        self.sessionID = sessionID
+    
+    def getStatus(self)-> str:
+        return self.__status
+
+    def setStatus(self,new_status):
+        self.__status=new_status
+
+if __name__ == "__main__":
+    status=optStatus("NOT STARTED")
+
+    print(status.getStatus())
+    status.setStatus('STARTED')
+
+    print(status.getStatus())
+
+def verify(condition):
+    if condition== True:
+        return 1
+    else:
+        return 0

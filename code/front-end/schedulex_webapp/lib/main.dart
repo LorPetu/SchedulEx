@@ -43,7 +43,7 @@ class MyAppState extends ChangeNotifier {
 
   //unavailPage states
   DateTimeRange? sessionDates;
-  String school = 'Option 1';
+  String school = 'Ing_Ind_Inf';
   List<Unavail> unavailList = [];
 
   void setUserID(String id) {
@@ -128,6 +128,10 @@ class MyAppState extends ChangeNotifier {
 
   void deleteProblemSession(sessionID) {
     print('session to delete $sessionID');
+    deleteSession(sessionID: sessionID);
+    problemSessionList.removeWhere((element) => element.id == sessionID);
+
+    notifyListeners();
   }
 }
 
@@ -152,16 +156,20 @@ class _ProblemSessionPageState extends State<ProblemSessionPage> {
               value: appState.school,
               items: const [
                 DropdownMenuItem(
-                  value: 'Option 1',
-                  child: Text('Option 1'),
+                  value: 'AUIC',
+                  child: Text('AUIC'),
                 ),
                 DropdownMenuItem(
-                  value: 'Option 2',
-                  child: Text('Option 2'),
+                  value: 'Ing_Ind_Inf',
+                  child: Text('Ing Ind Inf'),
                 ),
                 DropdownMenuItem(
-                  value: 'Option 3',
-                  child: Text('Option 3'),
+                  value: 'ICAT',
+                  child: Text('ICAT'),
+                ),
+                DropdownMenuItem(
+                  value: 'Design',
+                  child: Text('Design'),
                 ),
               ],
               onChanged: (newValue) {
@@ -197,7 +205,7 @@ class _ProblemSessionPageState extends State<ProblemSessionPage> {
                   downloadExcel();
                   print('download excel');
                 },
-                child: const Text('start')),
+                child: const Text('download excel')),
           )
         ],
       ),

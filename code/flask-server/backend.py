@@ -53,15 +53,6 @@ def setUserID(sessionID, userID):
 
     return 'UserID saved successfully.'
 
-@app.route("/setSchoolID/<string:sessionID>/<string:schoolID>", methods=['POST'])
-def setSchoolID(sessionID, schoolID):
-    print(sessionID, schoolID)
-
-    # Crea un nuovo nodo nel database con sessionID come chiave 
-    ref.child(sessionID).update(schoolID)
-
-    return 'School saved successfully.'
-
 ### IMPLEMENTED
 @app.route("/setStartEndDate/<string:sessionID>/<string:startDate>/<string:endDate>", methods=['POST'])
 def setStartEndDate(sessionID, startDate, endDate):
@@ -208,13 +199,27 @@ def saveSession():
     else:
         print(request_data['sessionID'])
         session_node = ref.child(request_data['sessionID'])
+        
+    del request_data['sessionID']
+
     for key in request_data:
         print(key)
     session_node.update(request_data)
 
-    #print('Sto salvando dati per: ' + sessionID)
+    return {'status': f'{txt} {action} successfully.', 'id':session_node.key}
 
-    return f'{txt} {action} successfully.'
+@app.route("/deleteSession/<string:sessionID>")
+def deleteSession(sessionID):
+    txt='session'
+    action='delete'
+    #request_data = request.get_json()
+
+    ref.child(sessionID).delete()
+
+
+    return f'{txt} {sessionID} {action} successfully.'
+
+
 if __name__== "__main__":
     app.run(debug=True)
     
