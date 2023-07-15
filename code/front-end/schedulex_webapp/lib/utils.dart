@@ -4,13 +4,13 @@ class Unavail {
   String id;
   int type;
   List<DateTime> dates;
-  String professor;
+  String name;
 
   Unavail(
       {required this.id,
       required this.type,
       required this.dates,
-      this.professor = ''});
+      this.name = ''});
 }
 
 class ProblemSession {
@@ -74,7 +74,7 @@ List<Unavail> generateRandomUnavailList(int count) {
       id: id,
       type: type,
       dates: dates,
-      professor: professor,
+      name: professor,
     );
 
     unavailList.add(unavail);

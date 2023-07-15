@@ -19,12 +19,13 @@ class Exam:
         self.sem = sem
         self.professor = professor
 
-class optExam:
-    def __init__(self,exam,unavailDates,effortWeight,assignedDates):
-        self.exam=exam
-        self.unavailDates=unavailDates
-        self.effortWeight=effortWeight
-        self.assignedDates=assignedDates
+class optExam(Exam):
+    def __init__(self, *args, unavailDates, effortWeight, assignedDates, **kwargs):
+        super().__init__(*args, **kwargs)  # Call the parent class' __init__ method
+
+        self.unavailDates = unavailDates
+        self.effortWeight = effortWeight
+        self.assignedDates = assignedDates
          
 
 class optStatus:
@@ -37,14 +38,7 @@ class optStatus:
 
     def setStatus(self,new_status):
         self.__status=new_status
-
-if __name__ == "__main__":
-    status=optStatus("NOT STARTED")
-
-    print(status.getStatus())
-    status.setStatus('STARTED')
-
-    print(status.getStatus())
+ 
 
     
 import random
@@ -66,9 +60,13 @@ def create_random_optexams_list(size):
         effort_weight = random.choice(effort_weights)
         assigned_date = random.choices(assigned_dates, k=random.randint(1, len(assigned_dates)))
 
-        optexams = optExam(exam, unavail_date, effort_weight, assigned_date)
+        optexams = optExam(**vars(exam),unavailDates=unavail_date,effortWeight=effort_weight,assignedDates=assigned_date)
         optexams_list.append(optexams)
 
     return optexams_list
 
 
+
+if __name__ == "__main__":
+    print(create_random_optexams_list(5)[1].sem)
+   

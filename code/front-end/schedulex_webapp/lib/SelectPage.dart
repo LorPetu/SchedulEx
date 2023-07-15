@@ -45,11 +45,11 @@ class SelectPage extends StatelessWidget {
                       final element = appState.problemSessionList[index];
                       return ListTile(
                         leading: (element.status == 'NOT STARTED')
-                            ? Icon(Icons.not_started, color: Colors.yellow)
-                            : Icon(Icons.settings_backup_restore_outlined,
+                            ? const Icon(Icons.not_started, color: Colors.yellow)
+                            : const Icon(Icons.settings_backup_restore_outlined,
                                 color: Colors.green),
                         trailing: IconButton(
-                          icon: Icon(Icons.delete),
+                          icon: const Icon(Icons.delete),
                           onPressed: () {
                             appState.deleteProblemSession(element.id);
                           },

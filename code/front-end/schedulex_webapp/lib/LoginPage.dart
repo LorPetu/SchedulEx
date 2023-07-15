@@ -33,7 +33,7 @@ class _LoginPageState extends State<LoginPage> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Center(
-          child: Container(
+          child: SizedBox(
             width: 200,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

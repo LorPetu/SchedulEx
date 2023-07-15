@@ -21,6 +21,7 @@ class MyApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
       child: MaterialApp(
+        //builder: FToastBuilder(),
         title: 'SchedulEx',
         initialRoute: '/login',
         routes: {
@@ -43,7 +44,7 @@ class MyAppState extends ChangeNotifier {
 
   //unavailPage states
   DateTimeRange? sessionDates;
-  String school = 'Ing_Ind_Inf';
+  String? school;
   List<Unavail> unavailList = [];
 
   void setUserID(String id) {
@@ -103,18 +104,30 @@ class MyAppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateUnavail(Unavail updatedUnavail) {
-    final index =
-        unavailList.indexWhere((element) => element.id == updatedUnavail.id);
+  void updateUnavail(String unavailID, payload) {
+    final index = unavailList.indexWhere((element) => element.id == unavailID);
     if (index != -1) {
-      print(updatedUnavail.dates);
-      saveUnavailability(sessionID: problemSessionID, unavail: updatedUnavail);
-      unavailList[index] = updatedUnavail;
+      saveUnavailability(
+              sessionID: problemSessionID,
+              unavailID: unavailID,
+              payload: payload)
+          .then((data) {
+        List<DateTime> dates = List<DateTime>.from(data['values']['dates']
+            .map((dateString) => DateTime.parse(dateString)));
+        unavailList[index] = Unavail(
+            id: data['value']['id'], type: data['value']['type'], dates: dates);
+      });
+      //unavailList[index] = updatedUnavail;
     } else {
-      saveUnavailability(sessionID: problemSessionID, unavail: updatedUnavail)
-          .then((value) => updatedUnavail.id = value['id']);
-      unavailList.add(updatedUnavail);
-      print('unavail' + updatedUnavail.id + ' added ');
+      saveUnavailability(
+              sessionID: problemSessionID,
+              unavailID: unavailID,
+              payload: payload)
+          .then((data) {
+        unavailList.add(Unavail(id: data['value']['id'], type: 0, dates: []));
+      });
+
+      //print('unavail${updatedUnavail.id} added ');
     }
     notifyListeners();
     //print(unavailList[index].professor);
@@ -132,6 +145,16 @@ class MyAppState extends ChangeNotifier {
     problemSessionList.removeWhere((element) => element.id == sessionID);
 
     notifyListeners();
+  }
+
+  void showToast(BuildContext context, String text) {
+    final scaffold = ScaffoldMessenger.of(context);
+    scaffold.showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 1),
+        content: Text(text),
+      ),
+    );
   }
 }
 
@@ -153,7 +176,7 @@ class _ProblemSessionPageState extends State<ProblemSessionPage> {
       body: Column(
         children: [
           DropdownButton(
-              value: appState.school,
+              value: appState.school ?? 'Ing_Ind_Inf',
               items: const [
                 DropdownMenuItem(
                   value: 'AUIC',
@@ -175,7 +198,7 @@ class _ProblemSessionPageState extends State<ProblemSessionPage> {
               onChanged: (newValue) {
                 appState.setSchool(newValue);
               }),
-          MainDateSelector(),
+          const MainDateSelector(),
           UnavailViewer(
               unavailList: unavailList,
               onItemClick: (unavail) {
@@ -190,23 +213,26 @@ class _ProblemSessionPageState extends State<ProblemSessionPage> {
             padding: const EdgeInsets.all(20.0),
             child: ElevatedButton(
                 onPressed: () {
-                  startOptimization(sessionID: appState.problemSessionID);
-                  saveSession(
-                      sessionID: appState.problemSessionID,
-                      payload: {'status': 'STARTED'});
+                  if (appState.school != null &&
+                      appState.sessionDates != null) {
+                    print(appState.school == null);
+                    print(appState.sessionDates == null);
+                    startOptimization(sessionID: appState.problemSessionID);
+                    saveSession(
+                        sessionID: appState.problemSessionID,
+                        payload: {'status': 'STARTED'});
+                    appState.showToast(context, 'Optimization started');
+                  } else if (appState.school == null) {
+                    appState.showToast(context, 'School is not defined');
+                  } else if (appState.sessionDates == null) {
+                    appState.showToast(
+                        context, 'Start and End date are not defined');
+                  }
+
                   print('startOptimization triggered');
                 },
                 child: const Text('start')),
           ),
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: ElevatedButton(
-                onPressed: () {
-                  downloadExcel();
-                  print('download excel');
-                },
-                child: const Text('download excel')),
-          )
         ],
       ),
     );
@@ -256,7 +282,7 @@ class _MainDateSelectorState extends State<MainDateSelector> {
                     children: <Widget>[
                       Padding(
                         padding: const EdgeInsets.only(top: 50.0),
-                        child: Container(
+                        child: SizedBox(
                           height: 450,
                           width: 500,
                           child: child,
@@ -303,12 +329,12 @@ class UnavailViewer extends StatelessWidget {
             itemBuilder: (context, index) {
               return ListTile(
                 trailing: IconButton(
-                  icon: Icon(Icons.delete),
+                  icon: const Icon(Icons.delete),
                   onPressed: () {
                     onItemDelete(unavailList[index]);
                   },
                 ),
-                title: Text(unavailList[index].professor),
+                title: Text(unavailList[index].name),
                 onTap: () {
                   onItemClick(unavailList[index]);
                 },
