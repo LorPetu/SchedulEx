@@ -1,31 +1,16 @@
-import 'main.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:schedulex_webapp/model/UserState.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
-
-  @override
-  _LoginPageState createState() => _LoginPageState();
-}
-
-class _LoginPageState extends State<LoginPage> {
-  late TextEditingController _userIDController;
-
-  @override
-  void initState() {
-    super.initState();
-    _userIDController = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _userIDController.dispose();
-    super.dispose();
-  }
+class LoginPage extends StatelessWidget {
+  const LoginPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    var userID = context.select<UserState, void>((user) => user.userID);
+    var userState = context.watch<UserState>();
+    String inputUsername = '';
     return Scaffold(
       appBar: AppBar(
         title: const Text('Login Page'),
@@ -38,24 +23,27 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                TextField(
-                  controller: _userIDController,
+                TextFormField(
                   decoration: const InputDecoration(
-                    labelText: 'User ID',
+                    hintText: 'Username',
                   ),
+                  onChanged: (value) {
+                    inputUsername = value;
+                  },
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () {
                     // Get the user ID from the text field
-                    final userID = _userIDController.text;
+                    //debugPrint(userID);
+                    userState.setUserID(inputUsername);
+                    //debugPrint(userID);
 
                     // Set the user ID in MyAppState
-                    Provider.of<MyAppState>(context, listen: false)
-                        .setUserID(userID);
+                    context.pushReplacement('/select');
 
                     // Navigate to the Select Page
-                    Navigator.pushNamed(context, '/select');
+                    //Navigator.pushNamed(context, '/select');
                   },
                   child: const Text('Login'),
                 ),

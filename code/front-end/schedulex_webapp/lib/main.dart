@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import 'package:schedulex_webapp/LoginPage.dart';
+import 'package:schedulex_webapp/model/ProblemSessionState.dart';
+import 'package:schedulex_webapp/model/UnavailState.dart';
+import 'package:schedulex_webapp/model/UserState.dart';
 import 'SelectPage.dart';
 
 import 'utils.dart';
@@ -18,20 +22,63 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => MyAppState(),
-      child: MaterialApp(
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<UserState>(
+          create: (context) => UserState(),
+        ),
+        ChangeNotifierProxyProvider<UserState, ProblemSessionState>(
+          create: (_) => ProblemSessionState(),
+          update: (context, appState, problemSessionState) {
+            if (problemSessionState == null)
+              throw ArgumentError.notNull('problemSessionState');
+            problemSessionState.appState = appState;
+            return problemSessionState;
+          },
+        ),
+        ChangeNotifierProxyProvider<UserState, UnavailState>(
+          create: (_) => UnavailState(),
+          update: (context, appState, unavailState) {
+            if (unavailState == null)
+              throw ArgumentError.notNull('unavailState');
+            unavailState.appState = appState;
+            return unavailState;
+          },
+        ),
+      ],
+      //create: (context) => MyAppState(),
+      child: MaterialApp.router(
         title: 'SchedulEx',
-        initialRoute: '/login',
-        routes: {
-          '/login': (context) => const LoginPage(),
-          '/select': (context) => const SelectPage(),
-          '/problemSession': (context) => const ProblemSessionPage(),
-          '/unavail': (context) => const UnavailPage()
-        },
+        routerConfig: router(),
       ),
     );
   }
+}
+
+GoRouter router() {
+  return GoRouter(
+    initialLocation: '/login',
+    routes: [
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        path: '/select',
+        builder: (context, state) => const SelectPage(),
+        routes: [
+          GoRoute(
+            path: 'Session',
+            builder: (context, state) => const ProblemSessionPage(),
+          ),
+          GoRoute(
+            path: 'Unavail',
+            builder: (context, state) => const UnavailPage(),
+          ),
+        ],
+      ),
+    ],
+  );
 }
 
 class MyAppState extends ChangeNotifier {
