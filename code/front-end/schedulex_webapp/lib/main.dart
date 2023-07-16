@@ -65,7 +65,7 @@ class MyAppState extends ChangeNotifier {
       problemSessionID = id;
       debugPrint('Main: setProblemSessionID: $userID select $problemSessionID');
       getSessionData(sessionId: id).then((value) {
-        unavailList = value;
+        unavailList = value.unavailList!;
         notifyListeners();
       }).catchError((error) {
         // Handle any error that occurred during the Future execution
@@ -105,13 +105,13 @@ class MyAppState extends ChangeNotifier {
   }
 
   void setSchool(selectedSchool) {
-    saveSession(
-        sessionID: problemSessionID, payload: {'school': selectedSchool});
+    //saveSession(
+    //    sessionID: problemSessionID, payload: {'school': selectedSchool});
 
     debugPrint(selectedSchool);
     school = selectedSchool;
 
-    notifyListeners();
+    //notifyListeners();
   }
 
   void setStartEndDate(daterange) {
@@ -122,7 +122,7 @@ class MyAppState extends ChangeNotifier {
           startDate: sessionDates!.start.toString(),
           endDate: sessionDates!.end.toString());
     }
-    notifyListeners();
+    //notifyListeners();
   }
 
   void updateUnavail(String unavailID, payload) {
@@ -180,76 +180,119 @@ class ProblemSessionPage extends StatefulWidget {
 
 class _ProblemSessionPageState extends State<ProblemSessionPage> {
   @override
+  Future<dynamic>? unavailListFuture;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final appState = Provider.of<MyAppState>(context);
+
+    debugPrint('did change dependencies');
+    unavailListFuture = getSessionData(
+      sessionId: appState.problemSessionID,
+    );
+  }
+
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     var unavailList = appState.unavailList;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Homepage')),
-      body: Column(
-        children: [
-          DropdownButton(
-              value: appState.school ?? 'Ing_Ind_Inf',
-              items: const [
-                DropdownMenuItem(
-                  value: 'AUIC',
-                  child: Text('AUIC'),
-                ),
-                DropdownMenuItem(
-                  value: 'Ing_Ind_Inf',
-                  child: Text('Ing Ind Inf'),
-                ),
-                DropdownMenuItem(
-                  value: 'ICAT',
-                  child: Text('ICAT'),
-                ),
-                DropdownMenuItem(
-                  value: 'Design',
-                  child: Text('Design'),
-                ),
-              ],
-              onChanged: (newValue) {
-                appState.setSchool(newValue);
-              }),
-          const MainDateSelector(),
-          UnavailViewer(
-              unavailList: unavailList,
-              onItemClick: (unavail) {
-                debugPrint(
-                    'Main: ${appState.userID} select unavail ${unavail.id}');
-                appState.setcurrUnavailID(unavail.id);
+      body: FutureBuilder<dynamic>(
+          future: unavailListFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              // Display a loading indicator while fetching data
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            } else if (snapshot.hasError) {
+              // Handle any error that occurred during data retrieval
+              return Center(
+                child: Text('Error: ${snapshot.error}'),
+              );
+            } else {
+              if (snapshot.hasData) {
+                debugPrint('inside snapshot has data:' + snapshot.data.school);
+                appState.setSchool(snapshot.data.school);
+                appState.setStartEndDate(DateTimeRange(
+                    start: snapshot.data.startDate,
+                    end: snapshot.data.endDate));
+                List<Unavail> unavailList = snapshot.data.unavailList;
+              } else {
+                print('cosa?');
+                var unavailList = appState.unavailList;
+              }
 
-                Navigator.pushNamed(context, '/unavail');
-              },
-              onItemDelete: (unavail) {
-                debugPrint(
-                    'Main: ${appState.userID} delete unavail ${unavail.id}');
-                appState.deleteUnavail(unavail);
-              }),
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: ElevatedButton(
-                onPressed: () {
-                  if (appState.school != null &&
-                      appState.sessionDates != null) {
-                    startOptimization(sessionID: appState.problemSessionID);
-                    saveSession(
-                        sessionID: appState.problemSessionID,
-                        payload: {'status': 'STARTED'});
-                    appState.showToast(context, 'Optimization started');
-                  } else if (appState.school == null) {
-                    appState.showToast(context, 'School is not defined');
-                  } else if (appState.sessionDates == null) {
-                    appState.showToast(
-                        context, 'Start and End date are not defined');
-                  }
+              return Column(
+                children: [
+                  DropdownButton(
+                      value: appState.school ?? 'Ing_Ind_Inf',
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'AUIC',
+                          child: Text('AUIC'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Ing_Ind_Inf',
+                          child: Text('Ing Ind Inf'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'ICAT',
+                          child: Text('ICAT'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Design',
+                          child: Text('Design'),
+                        ),
+                      ],
+                      onChanged: (newValue) {
+                        appState.setSchool(newValue);
+                      }),
+                  const MainDateSelector(),
+                  UnavailViewer(
+                      unavailList: unavailList,
+                      onItemClick: (unavail) {
+                        debugPrint(
+                            'Main: ${appState.userID} select unavail ${unavail.id}');
+                        appState.setcurrUnavailID(unavail.id);
 
-                  debugPrint('startOptimization triggered');
-                },
-                child: const Text('start')),
-          ),
-        ],
-      ),
+                        Navigator.pushNamed(context, '/unavail');
+                      },
+                      onItemDelete: (unavail) {
+                        debugPrint(
+                            'Main: ${appState.userID} delete unavail ${unavail.id}');
+                        appState.deleteUnavail(unavail);
+                      }),
+                  Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: ElevatedButton(
+                        onPressed: () {
+                          if (appState.school != null &&
+                              appState.sessionDates != null) {
+                            startOptimization(
+                                sessionID: appState.problemSessionID);
+                            saveSession(
+                                sessionID: appState.problemSessionID,
+                                payload: {'status': 'STARTED'});
+                            appState.showToast(context, 'Optimization started');
+                          } else if (appState.school == null) {
+                            appState.showToast(
+                                context, 'School is not defined');
+                          } else if (appState.sessionDates == null) {
+                            appState.showToast(
+                                context, 'Start and End date are not defined');
+                          }
+
+                          debugPrint('startOptimization triggered');
+                        },
+                        child: const Text('start')),
+                  ),
+                ],
+              );
+            }
+          }),
     );
   }
 }

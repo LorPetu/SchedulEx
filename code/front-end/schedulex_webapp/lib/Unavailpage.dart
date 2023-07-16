@@ -200,7 +200,7 @@ class _UnavailPageState extends State<UnavailPage> {
                           //Since everytime I update something i don't need to save
                           Navigator.pop(context);
                         },
-                        child: const Text('Back'),
+                        child: const Text(' OK '),
                       ),
                       ElevatedButton(
                           onPressed: () {
