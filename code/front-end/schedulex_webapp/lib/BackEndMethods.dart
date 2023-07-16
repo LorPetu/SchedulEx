@@ -257,21 +257,25 @@ Future<List<Unavail>> getSessionData({required String sessionId}) async {
     final response = await http.get(Uri.parse(url));
 
     if (response.statusCode == 200) {
-      print('getSessionData_OK.');
+      //print('getSessionData_OK.');
       final responseData = json.decode(response.body);
       Map<String, dynamic> unavailData = responseData['unavailList'];
+      print(unavailData);
       List<Unavail> results = [];
 
       for (var entry in unavailData.entries) {
         String id = entry.key;
         dynamic data = entry.value;
-        int type = int.parse(data['type'].toString());
-        String professor = data['name'];
 
-        List<DateTime> dates = List<DateTime>.from(
-            data['dates'].map((dateString) => DateTime.parse(dateString)));
+        int type =
+            (data['type'] != null) ? int.parse(data['type'].toString()) : 0;
+        String name = data['name'] ?? '';
+        List<DateTime> dates = (data['dates'] != null)
+            ? List<DateTime>.from(
+                data['dates'].map((dateString) => DateTime.parse(dateString)))
+            : [];
 
-        results.add(Unavail(id: id, type: type, name: professor, dates: dates));
+        results.add(Unavail(id: id, type: type, name: name, dates: dates));
       }
 
       return results;
@@ -294,16 +298,17 @@ Future<dynamic> getUnavailData(
 
     if (response.statusCode == 200) {
       final responseData = json.decode(response.body);
-
+      int type = (responseData['type'] != null)
+          ? int.parse(responseData['type'].toString())
+          : 0;
+      String name = responseData['name'] ?? '';
+      List<DateTime> dates = (responseData['dates'] != null)
+          ? List<DateTime>.from(responseData['dates']
+              .map((dateString) => DateTime.parse(dateString)))
+          : [];
       String id = unavailID;
 
-      int type = int.parse(responseData['type'].toString());
-      String professor = responseData['name'];
-
-      List<DateTime> dates = List<DateTime>.from(responseData['dates']
-          .map((dateString) => DateTime.parse(dateString)));
-
-      return Unavail(id: id, type: type, name: professor, dates: dates);
+      return Unavail(id: id, type: type, name: name, dates: dates);
     } else {
       print('Failed getSessionData. Error: ${response.statusCode}');
       throw Exception('Failed getSessionData. Error: ${response.statusCode}');

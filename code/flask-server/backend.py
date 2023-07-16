@@ -114,6 +114,8 @@ def getSessionData(sessionID):
 
 @app.route("/getUnavailData/<string:sessionID>/<string:unavailID>")
 def getUnavailabilityData(sessionID,unavailID):
+    txt =f'data for unavail {unavailID}'
+    action = 'retrieved'
     #get per sessionID
     UnavailData = ref.child(sessionID).child('unavailList').child(unavailID).get()
     print(UnavailData)
@@ -146,9 +148,8 @@ def saveUnavailability():
     txt='unavailability'
     action='saved'
     request_data = request.get_json()
+    print(request_data)
     
-    date_list = request_data['dates'].split("/")
-    date_obj_list = [datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S.%f").isoformat() for date_str in date_list]
 
     unavail_node = ref.child(request_data['sessionID']).child('unavailList')
 
@@ -158,16 +159,22 @@ def saveUnavailability():
     else:
         print(request_data['unavailID'])
         unavail_node = unavail_node.child(request_data['unavailID'])
+        del request_data['unavailID']
 
-    unavail_node.update({
-        'name': request_data['name'],
-        'type': request_data['type'],
-        'dates': date_obj_list
-    })
+    del request_data['sessionID']
+
+    if('dates' in request_data):
+        date_list = request_data['dates'].split("/")
+        date_obj_list = [datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S.%f").isoformat() for date_str in date_list]
+        request_data['dates']= date_obj_list
+    print(request_data)
+    unavail_node.update(
+        request_data
+    )
 
     #print('Sto salvando dati per: ' + sessionID)
 
-    return {'status': f'{txt} {action} successfully.', 'value':unavail_node.get()}
+    return {'status': f'{txt} {action} successfully.','id': unavail_node.key, 'value':unavail_node.get()}
 
 ##IMPLEMENTED
 @app.route("/delete_unavail/<string:sessionID>/<string:unavailID>")

@@ -36,13 +36,15 @@ class MyApp extends StatelessWidget {
 }
 
 class MyAppState extends ChangeNotifier {
+  //Tracker States
   String userID = '';
   String problemSessionID = '';
+  String currUnavailID = '';
 
   //SelectpageSession
   List<ProblemSession> problemSessionList = [];
 
-  //unavailPage states
+  //unavailPage
   DateTimeRange? sessionDates;
   String? school;
   List<Unavail> unavailList = [];
@@ -70,6 +72,32 @@ class MyAppState extends ChangeNotifier {
       print('$userID select $problemSessionID');
       getSessionData(sessionId: id).then((value) {
         unavailList = value;
+        notifyListeners();
+      }).catchError((error) {
+        // Handle any error that occurred during the Future execution
+        print('Error: $error');
+      });
+      saveUserID(sessionID: problemSessionID, userID: userID);
+
+      //#####
+    }
+    notifyListeners();
+  }
+
+  void setcurrUnavailID(String id) {
+    if (id.isEmpty) {
+      // new unavail created
+      saveUnavailability(
+          sessionID: problemSessionID, unavailID: '', payload: {}).then((data) {
+        currUnavailID = data['value']['id'];
+        unavailList.add(Unavail(id: data['value']['id'], type: 0, dates: []));
+        notifyListeners();
+      });
+    } else {
+      currUnavailID = id;
+      print('$userID select $currUnavailID');
+      getUnavailData(sessionId: problemSessionID, unavailID: currUnavailID)
+          .then((value) {
         notifyListeners();
       }).catchError((error) {
         // Handle any error that occurred during the Future execution
@@ -119,14 +147,6 @@ class MyAppState extends ChangeNotifier {
       });
       //unavailList[index] = updatedUnavail;
     } else {
-      saveUnavailability(
-              sessionID: problemSessionID,
-              unavailID: unavailID,
-              payload: payload)
-          .then((data) {
-        unavailList.add(Unavail(id: data['value']['id'], type: 0, dates: []));
-      });
-
       //print('unavail${updatedUnavail.id} added ');
     }
     notifyListeners();
@@ -203,7 +223,9 @@ class _ProblemSessionPageState extends State<ProblemSessionPage> {
               unavailList: unavailList,
               onItemClick: (unavail) {
                 print('${appState.userID} select unavail ${unavail.id}');
-                Navigator.pushNamed(context, '/unavail', arguments: unavail);
+                appState.setcurrUnavailID(unavail.id);
+                print('current unavail selected is' + appState.currUnavailID);
+                Navigator.pushNamed(context, '/unavail');
               },
               onItemDelete: (unavail) {
                 print('${appState.userID} delete unavail ${unavail.id}');
@@ -320,6 +342,7 @@ class UnavailViewer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
     return Column(
       children: [
         SizedBox(
@@ -345,7 +368,15 @@ class UnavailViewer extends StatelessWidget {
         FloatingActionButton.small(
             child: const Icon(Icons.add),
             onPressed: () {
-              Navigator.pushNamed(context, '/unavail');
+              if (appState.school != null && appState.sessionDates != null) {
+                Navigator.pushNamed(context, '/unavail');
+                appState.showToast(context, 'Create a new unavailability');
+              } else if (appState.school == null) {
+                appState.showToast(context, 'School is not defined');
+              } else if (appState.sessionDates == null) {
+                appState.showToast(
+                    context, 'Start and End date are not defined');
+              }
             }),
       ],
     );
