@@ -17,6 +17,23 @@ class _UnavailPageState extends State<UnavailPage> {
   List<DateTime> dates = [];
   //String? currUnavailID;
 
+  Future<dynamic>? unavailFuture;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final appState = Provider.of<MyAppState>(context);
+    String currUnavailID = appState.currUnavailID;
+
+    if (currUnavailID != '') {
+      debugPrint('currUnavailID: $currUnavailID in if statement');
+      unavailFuture = getUnavailData(
+        sessionId: appState.problemSessionID,
+        unavailID: currUnavailID,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<MyAppState>(context);
@@ -25,14 +42,11 @@ class _UnavailPageState extends State<UnavailPage> {
     return Scaffold(
         appBar: AppBar(title: const Text('UnavailPage')),
         body: FutureBuilder<dynamic>(
-            future: getUnavailData(
-              sessionId: appState.problemSessionID,
-              unavailID: currUnavailID!,
-            ),
+            future: unavailFuture,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 // Display a loading indicator while fetching data
-                return Center(
+                return const Center(
                   child: CircularProgressIndicator(),
                 );
               } else if (snapshot.hasError) {
@@ -41,14 +55,15 @@ class _UnavailPageState extends State<UnavailPage> {
                   child: Text('Error: ${snapshot.error}'),
                 );
               } else {
-                // Data retrieval successful, build the widget tree
-                Unavail unavailData = snapshot.data!;
+                if (snapshot.hasData) {
+                  // Data retrieval successful, build the widget tree
+                  Unavail unavailData = snapshot.data;
 
-                // Update the widget state with the retrieved data
-                type = unavailData.type;
-                name = unavailData.name;
-                dates = unavailData.dates;
-
+                  // Update the widget state with the retrieved data
+                  type = unavailData.type;
+                  name = unavailData.name;
+                  dates = unavailData.dates;
+                }
                 return Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -69,12 +84,12 @@ class _UnavailPageState extends State<UnavailPage> {
                           setState(() {
                             type = newValue!;
                             saveUnavailability(
-                                    sessionID: appState.problemSessionID,
-                                    unavailID: currUnavailID,
-                                    payload: {'type': type})
-                                .then((value) => currUnavailID = value['id']);
+                                sessionID: appState.problemSessionID,
+                                unavailID: currUnavailID,
+                                payload: {'type': type});
                           });
-                          print(currUnavailID);
+                          debugPrint(
+                              'UnavailPage: after on changed function $currUnavailID');
                         },
                         hint: const Text('Select Type'),
                       ),
@@ -87,10 +102,12 @@ class _UnavailPageState extends State<UnavailPage> {
                               name = selection;
 
                               saveUnavailability(
-                                      sessionID: appState.problemSessionID,
-                                      unavailID: currUnavailID,
-                                      payload: {'name': name})
-                                  .then((value) => print('new unavail $value'));
+                                  sessionID: appState.problemSessionID,
+                                  unavailID: currUnavailID,
+                                  payload: {
+                                    'name': name
+                                  }).then((value) => debugPrint(
+                                  'UnavailPage: AutocompleteProf. response on Save Unavailability $value'));
                             });
                           },
                         ),
@@ -169,7 +186,7 @@ class _UnavailPageState extends State<UnavailPage> {
                                     trailing: IconButton(
                                       icon: const Icon(Icons.delete),
                                       onPressed: () {
-                                        print('delete this date');
+                                        debugPrint('delete this date');
                                       },
                                     ),
                                     title: Text(
@@ -180,36 +197,19 @@ class _UnavailPageState extends State<UnavailPage> {
                       ),
                       ElevatedButton(
                         onPressed: () {
-                          final Unavail newUnavail = Unavail(
-                            id: currUnavailID ?? '',
-                            type: type,
-                            name: name,
-                            dates: dates,
-                          );
-                          if (currUnavailID != null) {
-                            print(newUnavail.dates);
-                            appState.updateUnavail(currUnavailID!,
-                                {'type': type, 'name': name, 'dates': dates});
-                            //appState.updateUnavail(newUnavail);
-                            appState.showToast(context, 'Add new unavail');
-                            Navigator.pop(context);
-                          } else {
-                            appState.updateUnavail('',
-                                {'type': type, 'name': name, 'dates': dates});
-                            Navigator.pop(context);
-                          }
+                          //Since everytime I update something i don't need to save
+                          Navigator.pop(context);
                         },
-                        child: const Text('Save'),
+                        child: const Text('Back'),
                       ),
                       ElevatedButton(
                           onPressed: () {
-                            print(name);
                             getUnavailData(
                                     sessionId: appState.problemSessionID,
-                                    unavailID: currUnavailID!)
-                                .then((value) => print(value.id));
+                                    unavailID: currUnavailID)
+                                .then((value) => debugPrint(value.id));
                           },
-                          child: Text('data'))
+                          child: const Text('data'))
                     ],
                   ),
                 );
@@ -237,10 +237,10 @@ class AutoCompleteProfessor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    //final initialValue = name != null ? TextEditingValue(text: name!) : null;
+    final initialValue = name != null ? TextEditingValue(text: name!) : null;
 
     return Autocomplete<String>(
-      initialValue: TextEditingValue(text: name!),
+      initialValue: initialValue,
       optionsBuilder: (TextEditingValue textEditingValue) {
         if (textEditingValue.text == '') {
           return const Iterable<String>.empty();

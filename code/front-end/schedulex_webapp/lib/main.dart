@@ -51,31 +51,25 @@ class MyAppState extends ChangeNotifier {
 
   void setUserID(String id) {
     userID = id;
-    print('$userID logged in');
-    getSessionList().then((value) {
-      problemSessionList = value;
-      notifyListeners();
-    });
-    print(problemSessionList);
+    debugPrint('Main: setUserID: $userID logged in');
   }
 
   void setProblemSessionID(String id) {
     if (id.isEmpty) {
       saveSession(
-              sessionID: problemSessionID,
+              sessionID: '',
               payload: {'userID': userID, 'status': 'NOT STARTED'})
           .then((value) => problemSessionID = value['id']);
       problemSessionList.add(ProblemSession(id: problemSessionID, school: ''));
-      print('');
     } else {
       problemSessionID = id;
-      print('$userID select $problemSessionID');
+      debugPrint('Main: setProblemSessionID: $userID select $problemSessionID');
       getSessionData(sessionId: id).then((value) {
         unavailList = value;
         notifyListeners();
       }).catchError((error) {
         // Handle any error that occurred during the Future execution
-        print('Error: $error');
+        debugPrint('Error: $error');
       });
       saveUserID(sessionID: problemSessionID, userID: userID);
 
@@ -89,19 +83,19 @@ class MyAppState extends ChangeNotifier {
       // new unavail created
       saveUnavailability(
           sessionID: problemSessionID, unavailID: '', payload: {}).then((data) {
-        currUnavailID = data['value']['id'];
-        unavailList.add(Unavail(id: data['value']['id'], type: 0, dates: []));
+        currUnavailID = data['id'];
+        unavailList.add(Unavail(id: data['id'], type: 0, dates: []));
         notifyListeners();
       });
     } else {
       currUnavailID = id;
-      print('$userID select $currUnavailID');
+      debugPrint('$userID select $currUnavailID');
       getUnavailData(sessionId: problemSessionID, unavailID: currUnavailID)
           .then((value) {
         notifyListeners();
       }).catchError((error) {
         // Handle any error that occurred during the Future execution
-        print('Error: $error');
+        debugPrint('Error: $error');
       });
       saveUserID(sessionID: problemSessionID, userID: userID);
 
@@ -111,11 +105,10 @@ class MyAppState extends ChangeNotifier {
   }
 
   void setSchool(selectedSchool) {
-    print(problemSessionID);
     saveSession(
         sessionID: problemSessionID, payload: {'school': selectedSchool});
 
-    print(selectedSchool);
+    debugPrint(selectedSchool);
     school = selectedSchool;
 
     notifyListeners();
@@ -160,7 +153,7 @@ class MyAppState extends ChangeNotifier {
   }
 
   void deleteProblemSession(sessionID) {
-    print('session to delete $sessionID');
+    debugPrint('session to delete $sessionID');
     deleteSession(sessionID: sessionID);
     problemSessionList.removeWhere((element) => element.id == sessionID);
 
@@ -222,13 +215,15 @@ class _ProblemSessionPageState extends State<ProblemSessionPage> {
           UnavailViewer(
               unavailList: unavailList,
               onItemClick: (unavail) {
-                print('${appState.userID} select unavail ${unavail.id}');
+                debugPrint(
+                    'Main: ${appState.userID} select unavail ${unavail.id}');
                 appState.setcurrUnavailID(unavail.id);
-                print('current unavail selected is' + appState.currUnavailID);
+
                 Navigator.pushNamed(context, '/unavail');
               },
               onItemDelete: (unavail) {
-                print('${appState.userID} delete unavail ${unavail.id}');
+                debugPrint(
+                    'Main: ${appState.userID} delete unavail ${unavail.id}');
                 appState.deleteUnavail(unavail);
               }),
           Padding(
@@ -237,8 +232,6 @@ class _ProblemSessionPageState extends State<ProblemSessionPage> {
                 onPressed: () {
                   if (appState.school != null &&
                       appState.sessionDates != null) {
-                    print(appState.school == null);
-                    print(appState.sessionDates == null);
                     startOptimization(sessionID: appState.problemSessionID);
                     saveSession(
                         sessionID: appState.problemSessionID,
@@ -251,7 +244,7 @@ class _ProblemSessionPageState extends State<ProblemSessionPage> {
                         context, 'Start and End date are not defined');
                   }
 
-                  print('startOptimization triggered');
+                  debugPrint('startOptimization triggered');
                 },
                 child: const Text('start')),
           ),
@@ -369,6 +362,7 @@ class UnavailViewer extends StatelessWidget {
             child: const Icon(Icons.add),
             onPressed: () {
               if (appState.school != null && appState.sessionDates != null) {
+                appState.setcurrUnavailID('');
                 Navigator.pushNamed(context, '/unavail');
                 appState.showToast(context, 'Create a new unavailability');
               } else if (appState.school == null) {

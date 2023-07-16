@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
@@ -107,11 +108,11 @@ Future<dynamic> saveUnavailability(
     requestbody.addAll({'unavailID': unavailID});
   }
 
-  print(requestbody);
+  debugPrint('Methods: SaveUnavailability requestbody= $requestbody');
 
   payload.forEach((k, v) => requestbody.addAll({k: v.toString()}));
 
-  print(payload);
+  debugPrint('Methods: SaveUnavailability payload = $payload');
   try {
     final response = await http.post(
       Uri.parse(url),
@@ -220,6 +221,7 @@ Future<dynamic> saveSession(
   }
 }
 
+//This is used in the Select Page
 Future<List<ProblemSession>> getSessionList() async {
   String url = 'http://$SERVER_URL/getSessionList';
   try {
@@ -250,6 +252,7 @@ Future<List<ProblemSession>> getSessionList() async {
   }
 }
 
+//This is used in the Problem Session Page
 Future<List<Unavail>> getSessionData({required String sessionId}) async {
   String url = 'http://$SERVER_URL/getSessionData/$sessionId';
 
@@ -264,18 +267,25 @@ Future<List<Unavail>> getSessionData({required String sessionId}) async {
       List<Unavail> results = [];
 
       for (var entry in unavailData.entries) {
+        //debugPrint('child of $sessionId' + entry.key);
         String id = entry.key;
         dynamic data = entry.value;
 
-        int type =
-            (data['type'] != null) ? int.parse(data['type'].toString()) : 0;
-        String name = data['name'] ?? '';
-        List<DateTime> dates = (data['dates'] != null)
-            ? List<DateTime>.from(
-                data['dates'].map((dateString) => DateTime.parse(dateString)))
-            : [];
+        if (data != '') {
+          int type = (data['type'] != null && data['type'] != '')
+              ? int.tryParse(data['type'].toString()) ?? 0
+              : 0;
 
-        results.add(Unavail(id: id, type: type, name: name, dates: dates));
+          String name = data['name'] ?? '';
+          List<DateTime> dates = (data['dates'] != null)
+              ? List<DateTime>.from(
+                  data['dates'].map((dateString) => DateTime.parse(dateString)))
+              : [];
+
+          results.add(Unavail(id: id, type: type, name: name, dates: dates));
+        } else {
+          results.add(Unavail(id: id, type: 0, name: 'empty', dates: []));
+        }
       }
 
       return results;
@@ -289,6 +299,7 @@ Future<List<Unavail>> getSessionData({required String sessionId}) async {
   }
 }
 
+//This is used in the UnavailPage
 Future<dynamic> getUnavailData(
     {required String sessionId, required String unavailID}) async {
   String url = 'http://$SERVER_URL/getUnavailData/$sessionId/$unavailID';
@@ -298,24 +309,29 @@ Future<dynamic> getUnavailData(
 
     if (response.statusCode == 200) {
       final responseData = json.decode(response.body);
-      int type = (responseData['type'] != null)
-          ? int.parse(responseData['type'].toString())
-          : 0;
-      String name = responseData['name'] ?? '';
-      List<DateTime> dates = (responseData['dates'] != null)
-          ? List<DateTime>.from(responseData['dates']
-              .map((dateString) => DateTime.parse(dateString)))
-          : [];
-      String id = unavailID;
 
-      return Unavail(id: id, type: type, name: name, dates: dates);
+      if (responseData.isEmpty) {
+        // Return a default empty Unavail object
+        return Unavail(id: unavailID, type: 0, name: '', dates: []);
+      } else {
+        int type = (responseData['type'] != null)
+            ? int.parse(responseData['type'].toString())
+            : 0;
+        String name = responseData['name'] ?? '';
+        List<DateTime> dates = (responseData['dates'] != null)
+            ? List<DateTime>.from(responseData['dates']
+                .map((dateString) => DateTime.parse(dateString)))
+            : [];
+        String id = unavailID;
+        return Unavail(id: id, type: type, name: name, dates: dates);
+      }
     } else {
-      print('Failed getSessionData. Error: ${response.statusCode}');
-      throw Exception('Failed getSessionData. Error: ${response.statusCode}');
+      print('Failed getUnavailData. Error: ${response.statusCode}');
+      throw Exception('Failed getUnavailData. Error: ${response.statusCode}');
     }
   } catch (e) {
-    print('Exception occurred for getSessionData: $e');
-    throw Exception('Exception occurred for getSessionData: $e');
+    print('Exception occurred for getUnavailData: $e');
+    throw Exception('Exception occurred for getUnavailData: $e');
   }
 }
 
