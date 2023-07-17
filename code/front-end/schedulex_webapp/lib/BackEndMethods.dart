@@ -8,9 +8,8 @@ import 'utils.dart';
 
 const SERVER_URL = "127.0.0.1:5000";
 
-Future<void> saveUserID(
-    {required String sessionID, required String userID}) async {
-  String url = 'http://' + SERVER_URL + '/setUserID/$sessionID/$userID';
+void saveUserID({required String sessionID, required String userID}) async {
+  String url = 'http://$SERVER_URL/setUserID/$sessionID/$userID';
 
   try {
     final response = await http.post(Uri.parse(url));
@@ -25,9 +24,8 @@ Future<void> saveUserID(
   }
 }
 
-Future<void> saveSchoolID(
-    {required String sessionID, required String schoolID}) async {
-  String baseUrl = 'http://' + SERVER_URL;
+void saveSchoolID({required String sessionID, required String schoolID}) async {
+  String baseUrl = 'http://$SERVER_URL';
   Uri uri = Uri.parse('$baseUrl/setSchoolID');
 
   // Dati da inviare nel corpo della richiesta
@@ -53,13 +51,12 @@ Future<void> saveSchoolID(
   }
 }
 
-Future<void> saveStartEndDate(
+void saveStartEndDate(
     {required String sessionID,
     required String startDate,
     required String endDate}) async {
-  String url = 'http://' +
-      SERVER_URL +
-      '/setStartEndDate/$sessionID/$startDate/$endDate';
+  String url =
+      'http://$SERVER_URL/setStartEndDate/$sessionID/$startDate/$endDate';
 
   try {
     final response = await http.post(Uri.parse(url));
@@ -74,12 +71,12 @@ Future<void> saveStartEndDate(
   }
 }
 
-Future<void> saveSettings(
+void saveSettings(
     {required String sessionID,
     required String distCalls,
     required String distExams}) async {
   String url =
-      'http://' + SERVER_URL + '/setSettings/$sessionID/$distCalls/$distExams';
+      'http://$SERVER_URL/setSettings/$sessionID/$distCalls/$distExams';
 
   try {
     final response = await http.post(Uri.parse(url));
@@ -95,24 +92,27 @@ Future<void> saveSettings(
 }
 
 Future<dynamic> saveUnavailability(
-    {required String sessionID, required Unavail unavail}) async {
+    {required String sessionID,
+    required String unavailID,
+    required Map<String, dynamic> payload}) async {
   String url = 'http://$SERVER_URL/saveUnavailability/';
   String txt = 'unavailability';
   String action = 'save';
 
-  List<String> dates = unavail.dates.map((e) => e.toString()).toList();
+  //List<String> dates = unavail.dates.map((e) => e.toString()).toList();
 
-  Map<String, String> requestbody = {
-    'sessionID': sessionID,
-    'type': unavail.type.toString(),
-    'name': unavail.professor,
-    'dates': dates.join('/')
-  };
+  Map<String, String> requestbody = {};
+  requestbody.addAll({'sessionID': sessionID});
 
-  if (unavail.id.isNotEmpty) {
-    requestbody.addAll({'unavailID': unavail.id});
+  if (unavailID.isNotEmpty) {
+    requestbody.addAll({'unavailID': unavailID});
   }
 
+  debugPrint('Methods: SaveUnavailability requestbody= $requestbody');
+
+  payload.forEach((k, v) => requestbody.addAll({k: v.toString()}));
+
+  debugPrint('Methods: SaveUnavailability payload = $payload');
   try {
     final response = await http.post(
       Uri.parse(url),
@@ -122,6 +122,7 @@ Future<dynamic> saveUnavailability(
 
     if (response.statusCode == 200) {
       print('$txt $action successfully.');
+      //print(response.body);
 
       return jsonDecode(response.body);
     } else {
@@ -132,10 +133,10 @@ Future<dynamic> saveUnavailability(
   }
 }
 
-Future<void> deleteUnavailability(
+void deleteUnavailability(
     {required String sessionID, required Unavail unavail}) async {
   String unavailID = unavail.id;
-  String url = 'http://' + SERVER_URL + '/delete_unavail/$sessionID/$unavailID';
+  String url = 'http://$SERVER_URL/delete_unavail/$sessionID/$unavailID';
 
   try {
     final response = await http.get(Uri.parse(url));
@@ -151,8 +152,8 @@ Future<void> deleteUnavailability(
   }
 }
 
-Future<void> deleteSession({required String sessionID}) async {
-  String url = 'http://' + SERVER_URL + '/deleteSession/$sessionID';
+void deleteSession({required String sessionID}) async {
+  String url = 'http://$SERVER_URL/deleteSession/$sessionID';
 
   try {
     final response = await http.get(Uri.parse(url));
@@ -169,7 +170,7 @@ Future<void> deleteSession({required String sessionID}) async {
 }
 
 void startOptimization({required String sessionID}) async {
-  String url = 'http://' + SERVER_URL + '/startOptimization/$sessionID';
+  String url = 'http://$SERVER_URL/startOptimization/$sessionID';
 
   try {
     final response = await http.get(Uri.parse(url));
@@ -192,7 +193,6 @@ Future<dynamic> saveSession(
   Map<String, String> requestbody = {};
 
   if (sessionID.isNotEmpty) {
-    debugPrint('exist Session');
     requestbody.addAll({'sessionID': sessionID});
   }
 
@@ -221,8 +221,9 @@ Future<dynamic> saveSession(
   }
 }
 
+//This is used in the Select Page
 Future<List<ProblemSession>> getSessionList() async {
-  String url = 'http://' + SERVER_URL + '/getSessionList';
+  String url = 'http://$SERVER_URL/getSessionList';
   try {
     final response = await http.get(Uri.parse(url));
 
@@ -251,32 +252,49 @@ Future<List<ProblemSession>> getSessionList() async {
   }
 }
 
-Future<List<Unavail>> getSessionData({required String sessionId}) async {
-  String url = 'http://' + SERVER_URL + '/getSessionData/$sessionId';
+//This is used in the Problem Session Page
+Future<ProblemSession> getSessionData({required String sessionId}) async {
+  String url = 'http://$SERVER_URL/getSessionData/$sessionId';
 
   try {
     final response = await http.get(Uri.parse(url));
 
     if (response.statusCode == 200) {
-      print('getSessionData_OK.');
+      //print('getSessionData_OK.');
       final responseData = json.decode(response.body);
       Map<String, dynamic> unavailData = responseData['unavailList'];
+      print(unavailData);
       List<Unavail> results = [];
 
       for (var entry in unavailData.entries) {
+        //debugPrint('child of $sessionId' + entry.key);
         String id = entry.key;
         dynamic data = entry.value;
-        int type = int.parse(data['type'].toString());
-        String professor = data['name'];
 
-        List<DateTime> dates = List<DateTime>.from(
-            data['dates'].map((dateString) => DateTime.parse(dateString)));
+        if (data != '') {
+          int type = (data['type'] != null && data['type'] != '')
+              ? int.tryParse(data['type'].toString()) ?? 0
+              : 0;
 
-        results.add(
-            Unavail(id: id, type: type, professor: professor, dates: dates));
+          String name = data['name'] ?? '';
+          List<DateTime> dates = (data['dates'] != null)
+              ? List<DateTime>.from(
+                  data['dates'].map((dateString) => DateTime.parse(dateString)))
+              : [];
+
+          results.add(Unavail(id: id, type: type, name: name, dates: dates));
+        } else {
+          results.add(Unavail(id: id, type: 0, name: 'empty', dates: []));
+        }
       }
 
-      return results;
+      return ProblemSession(
+          id: sessionId,
+          school: responseData['school'],
+          startDate: DateTime.parse(responseData['startDate']),
+          endDate: DateTime.parse(responseData['endDate']),
+          status: responseData['endDate'],
+          unavailList: results);
     } else {
       print('Failed getSessionData. Error: ${response.statusCode}');
       throw Exception('Failed getSessionData. Error: ${response.statusCode}');
@@ -287,9 +305,92 @@ Future<List<Unavail>> getSessionData({required String sessionId}) async {
   }
 }
 
+//This is used in the UnavailPage
+Future<dynamic> getUnavailData(
+    {required String sessionId, required String unavailID}) async {
+  String url = 'http://$SERVER_URL/getUnavailData/$sessionId/$unavailID';
+
+  try {
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      final responseData = json.decode(response.body);
+
+      if (responseData.isEmpty) {
+        // Return a default empty Unavail object
+        return Unavail(id: unavailID, type: 0, name: '', dates: []);
+      } else {
+        int type = (responseData['type'] != null)
+            ? int.parse(responseData['type'].toString())
+            : 0;
+        String name = responseData['name'] ?? '';
+        List<DateTime> dates = (responseData['dates'] != null)
+            ? List<DateTime>.from(responseData['dates']
+                .map((dateString) => DateTime.parse(dateString)))
+            : [];
+        String id = unavailID;
+        return Unavail(id: id, type: type, name: name, dates: dates);
+      }
+    } else {
+      print('Failed getUnavailData. Error: ${response.statusCode}');
+      throw Exception('Failed getUnavailData. Error: ${response.statusCode}');
+    }
+  } catch (e) {
+    print('Exception occurred for getUnavailData: $e');
+    throw Exception('Exception occurred for getUnavailData: $e');
+  }
+}
+
 Future<void> downloadExcel() async {
   var url = 'https://$SERVER_URL/Database_esami.xlsx';
   var response = await http.get(Uri.parse(url));
   var bytes = response.bodyBytes;
   await File('Database_esami.xlsx').writeAsBytes(bytes);
 }
+
+/*
+Future<List<Unavail>> getSessionData({required String sessionId}) async {
+  String url = 'http://$SERVER_URL/getSessionData/$sessionId';
+
+  try {
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      //print('getSessionData_OK.');
+      final responseData = json.decode(response.body);
+      Map<String, dynamic> unavailData = responseData['unavailList'];
+      print(unavailData);
+      List<Unavail> results = [];
+
+      for (var entry in unavailData.entries) {
+        //debugPrint('child of $sessionId' + entry.key);
+        String id = entry.key;
+        dynamic data = entry.value;
+
+        if (data != '') {
+          int type = (data['type'] != null && data['type'] != '')
+              ? int.tryParse(data['type'].toString()) ?? 0
+              : 0;
+
+          String name = data['name'] ?? '';
+          List<DateTime> dates = (data['dates'] != null)
+              ? List<DateTime>.from(
+                  data['dates'].map((dateString) => DateTime.parse(dateString)))
+              : [];
+
+          results.add(Unavail(id: id, type: type, name: name, dates: dates));
+        } else {
+          results.add(Unavail(id: id, type: 0, name: 'empty', dates: []));
+        }
+      }
+
+      return {'info': ProblemSession(id: sessionId, school: responseData['school']),'list':results};
+    } else {
+      print('Failed getSessionData. Error: ${response.statusCode}');
+      throw Exception('Failed getSessionData. Error: ${response.statusCode}');
+    }
+  } catch (e) {
+    print('Exception occurred for getSessionData: $e');
+    throw Exception('Exception occurred for getSessionData: $e');
+  }
+}*/
