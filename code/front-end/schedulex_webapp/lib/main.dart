@@ -116,7 +116,7 @@ class MyAppState extends ChangeNotifier {
       problemSessionID = id;
       print('$userID select $problemSessionID');
       getSessionData(sessionId: id).then((value) {
-        unavailList = value;
+        unavailList = value.unavailList!;
         notifyListeners();
       }).catchError((error) {
         // Handle any error that occurred during the Future execution
@@ -152,7 +152,7 @@ class MyAppState extends ChangeNotifier {
   }
 
   void updateUnavail(Unavail updatedUnavail) {
-    final index =
+    /*final index =
         unavailList.indexWhere((element) => element.id == updatedUnavail.id);
     if (index != -1) {
       print(updatedUnavail.dates);
@@ -163,7 +163,7 @@ class MyAppState extends ChangeNotifier {
           .then((value) => updatedUnavail.id = value['id']);
       unavailList.add(updatedUnavail);
       print('unavail' + updatedUnavail.id + ' added ');
-    }
+    }*/
     notifyListeners();
     //print(unavailList[index].professor);
   }
@@ -348,7 +348,7 @@ class UnavailViewer extends StatelessWidget {
                     onItemDelete(unavailList[index]);
                   },
                 ),
-                title: Text(unavailList[index].professor),
+                title: Text(unavailList[index].name),
                 onTap: () {
                   onItemClick(unavailList[index]);
                 },

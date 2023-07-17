@@ -26,7 +26,7 @@ class _UnavailPageState extends State<UnavailPage> {
     if (unavail != null) {
       setState(() {
         type = unavail.type;
-        name = unavail.professor;
+        name = unavail.name;
         dates = unavail.dates;
       });
     }
@@ -66,7 +66,7 @@ class _UnavailPageState extends State<UnavailPage> {
             Padding(
               padding: const EdgeInsets.all(10.0),
               child: AutoCompleteProfessor(
-                name: unavail?.professor,
+                name: unavail?.name,
                 onNameSelected: (String selection) {
                   setState(() {
                     name = selection;
@@ -87,7 +87,7 @@ class _UnavailPageState extends State<UnavailPage> {
                 final Unavail newUnavail = Unavail(
                   id: unavail?.id ?? '',
                   type: type,
-                  professor: name,
+                  name: name,
                   dates: dates,
                 );
                 if (unavail != null) {

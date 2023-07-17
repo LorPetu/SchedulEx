@@ -15,13 +15,32 @@ class ProblemSessionState extends ChangeNotifier {
   List<Unavail> unavailList = [];
 
   UserState get user => appState;
+  void resetProblemSessionID() {
+    selectedSessionID = '';
+    school = 'Ing_Ind_Inf';
+    sessionDates = null;
+    unavailList = [];
+  }
 
   void setProblemSessionID(String id) {
     selectedSessionID = id;
-    String catalog = user.userID;
-    print('$catalog select $selectedSessionID');
+
+    debugPrint('${user.userID} select $selectedSessionID');
     getSessionData(sessionId: id).then((value) {
-      unavailList = value;
+      print(value);
+      if (value.startDate != null && value.endDate != null) {
+        sessionDates =
+            DateTimeRange(start: value.startDate!, end: value.endDate!);
+      }
+      print(value.school);
+      if (value.school.isEmpty) {
+        print(value.school);
+        //school = value.school;
+      } else {
+        school = value.school;
+      }
+
+      unavailList = value.unavailList ?? [];
       notifyListeners();
     }).catchError((error) {
       // Handle any error that occurred during the Future execution

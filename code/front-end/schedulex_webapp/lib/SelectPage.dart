@@ -35,10 +35,12 @@ class SelectPage extends StatelessWidget {
               ),
               onPressed: () {
                 // Set the ProblemSessionID in MyuserState
-                userState.createSession();
-
+                userState.createSession().then((value) {
+                  problemSessionState.setProblemSessionID(value);
+                  context.pushReplacement('/select/session');
+                  print('${userState.userID} create a new session');
+                });
                 //context.pushReplacement('/Session');
-                print('${userState.userID} create a new session');
               },
             ),
           ),
@@ -66,7 +68,9 @@ class SelectPage extends StatelessWidget {
                               userState.deleteProblemSession(element.id);
                             },
                           ),
-                          title: Text(element.school),
+                          title: element.school.isNotEmpty
+                              ? Text(element.school)
+                              : Text('School not selected'),
                           onTap: () {
                             problemSessionState.setProblemSessionID(element.id);
                             context.pushReplacement('/select/session');

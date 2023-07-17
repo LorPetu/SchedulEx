@@ -8,7 +8,8 @@ import 'utils.dart';
 
 const SERVER_URL = "127.0.0.1:5000";
 
-void saveUserID({required String sessionID, required String userID}) async {
+Future<void> saveUserID(
+    {required String sessionID, required String userID}) async {
   String url = 'http://$SERVER_URL/setUserID/$sessionID/$userID';
 
   try {
@@ -24,7 +25,8 @@ void saveUserID({required String sessionID, required String userID}) async {
   }
 }
 
-void saveSchoolID({required String sessionID, required String schoolID}) async {
+Future<void> saveSchoolID(
+    {required String sessionID, required String schoolID}) async {
   String baseUrl = 'http://$SERVER_URL';
   Uri uri = Uri.parse('$baseUrl/setSchoolID');
 
@@ -51,7 +53,7 @@ void saveSchoolID({required String sessionID, required String schoolID}) async {
   }
 }
 
-void saveStartEndDate(
+Future<void> saveStartEndDate(
     {required String sessionID,
     required String startDate,
     required String endDate}) async {
@@ -71,7 +73,7 @@ void saveStartEndDate(
   }
 }
 
-void saveSettings(
+Future<void> saveSettings(
     {required String sessionID,
     required String distCalls,
     required String distExams}) async {
@@ -133,7 +135,7 @@ Future<dynamic> saveUnavailability(
   }
 }
 
-void deleteUnavailability(
+Future<void> deleteUnavailability(
     {required String sessionID, required Unavail unavail}) async {
   String unavailID = unavail.id;
   String url = 'http://$SERVER_URL/delete_unavail/$sessionID/$unavailID';
@@ -152,7 +154,7 @@ void deleteUnavailability(
   }
 }
 
-void deleteSession({required String sessionID}) async {
+Future<void> deleteSession({required String sessionID}) async {
   String url = 'http://$SERVER_URL/deleteSession/$sessionID';
 
   try {
@@ -169,7 +171,7 @@ void deleteSession({required String sessionID}) async {
   }
 }
 
-void startOptimization({required String sessionID}) async {
+Future<void> startOptimization({required String sessionID}) async {
   String url = 'http://$SERVER_URL/startOptimization/$sessionID';
 
   try {
@@ -260,41 +262,67 @@ Future<ProblemSession> getSessionData({required String sessionId}) async {
     final response = await http.get(Uri.parse(url));
 
     if (response.statusCode == 200) {
-      //print('getSessionData_OK.');
+      print('getSessionData_OK.');
       final responseData = json.decode(response.body);
-      Map<String, dynamic> unavailData = responseData['unavailList'];
-      print(unavailData);
+
       List<Unavail> results = [];
 
-      for (var entry in unavailData.entries) {
-        //debugPrint('child of $sessionId' + entry.key);
-        String id = entry.key;
-        dynamic data = entry.value;
+      if (responseData['unavailList'] != null) {
+        Map<String, dynamic> unavailData = responseData['unavailList'];
 
-        if (data != '') {
-          int type = (data['type'] != null && data['type'] != '')
-              ? int.tryParse(data['type'].toString()) ?? 0
-              : 0;
+        debugPrint('#############');
+        for (var entry in unavailData.entries) {
+          debugPrint('child of $sessionId' + entry.key);
+          String id = entry.key;
+          dynamic? data = entry.value;
 
-          String name = data['name'] ?? '';
-          List<DateTime> dates = (data['dates'] != null)
-              ? List<DateTime>.from(
-                  data['dates'].map((dateString) => DateTime.parse(dateString)))
-              : [];
+          if (data != null && data.isNotEmpty) {
+            int type = (data['type'] != null &&
+                    data['type'] is String &&
+                    data['type'] != '')
+                ? int.tryParse(data['type'].toString()) ?? 0
+                : 0;
 
-          results.add(Unavail(id: id, type: type, name: name, dates: dates));
-        } else {
-          results.add(Unavail(id: id, type: 0, name: 'empty', dates: []));
+            String name = (data['name'] != null && data['name'] is String)
+                ? data['name']
+                : '';
+            List<DateTime> dates = (data['dates'] != null &&
+                    data['dates'] is List)
+                ? List<DateTime>.from(data['dates']!.map((dateString) =>
+                    DateTime.tryParse(dateString.toString()) ?? DateTime.now()))
+                : [];
+
+            results.add(Unavail(
+              id: id,
+              type: type,
+              name: name,
+              dates: dates,
+            ));
+          } else {
+            results.add(Unavail(id: id, type: 0, name: 'empty', dates: []));
+          }
         }
+      } else {
+        results = [];
       }
 
+      print(results);
+
+      DateTime? startDate = responseData['startDate'] != null
+          ? DateTime.tryParse(responseData['startDate'].toString())
+          : null;
+      DateTime? endDate = responseData['endDate'] != null
+          ? DateTime.tryParse(responseData['endDate'].toString())
+          : null;
+
       return ProblemSession(
-          id: sessionId,
-          school: responseData['school'],
-          startDate: DateTime.parse(responseData['startDate']),
-          endDate: DateTime.parse(responseData['endDate']),
-          status: responseData['endDate'],
-          unavailList: results);
+        id: sessionId,
+        school: responseData['school'],
+        status: responseData['status'],
+        startDate: startDate,
+        endDate: endDate,
+        unavailList: results,
+      );
     } else {
       print('Failed getSessionData. Error: ${response.statusCode}');
       throw Exception('Failed getSessionData. Error: ${response.statusCode}');

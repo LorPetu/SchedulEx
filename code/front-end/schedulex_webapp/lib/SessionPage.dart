@@ -24,6 +24,7 @@ class ProblemSessionPageNEW extends StatelessWidget {
             onPressed: () {
               context.pushReplacement('/select');
               //reset value of ProblemSession selected
+              problemSessionState.resetProblemSessionID();
             },
             icon: const Icon(Icons.close),
           ),
@@ -36,7 +37,7 @@ class ProblemSessionPageNEW extends StatelessWidget {
         return Column(
           children: [
             DropdownButton(
-                value: school,
+                value: school.isEmpty ? 'Ing_Ind_inf' : school,
                 items: const [
                   DropdownMenuItem(
                     value: 'AUIC',
@@ -70,10 +71,10 @@ class ProblemSessionPageNEW extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                  '${sessionDates!.start.day} - ${sessionDates!.start.month} - ${sessionDates!.start.year}'),
+                                  '${sessionDates.start.day} - ${sessionDates.start.month} - ${sessionDates.start.year}'),
                               const SizedBox(width: 20),
                               Text(
-                                  '${sessionDates!.end.day} - ${sessionDates!.end.month} - ${sessionDates!.end.year}')
+                                  '${sessionDates.end.day} - ${sessionDates.end.month} - ${sessionDates.end.year}')
                             ],
                           ),
                   ),
@@ -164,7 +165,7 @@ class UnavailViewer extends StatelessWidget {
                     onItemDelete(unavailList[index]);
                   },
                 ),
-                title: Text(unavailList[index].professor),
+                title: Text(unavailList[index].name),
                 onTap: () {
                   onItemClick(unavailList[index]);
                 },

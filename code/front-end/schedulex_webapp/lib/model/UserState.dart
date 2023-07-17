@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:schedulex_webapp/model/ProblemSessionState.dart';
 import 'package:schedulex_webapp/utils.dart';
 import 'package:schedulex_webapp/BackEndMethods.dart';
 
 class UserState extends ChangeNotifier {
+  late ProblemSessionState session;
   String userID = 'esempio';
   String problemSessionID = '';
 
@@ -20,13 +22,19 @@ class UserState extends ChangeNotifier {
     });
   }
 
-  void createSession() {
-    saveSession(
-        sessionID: problemSessionID,
-        payload: {'userID': userID, 'status': 'NOT STARTED'}).then((value) {
+  Future<String> createSession() {
+    return saveSession(
+      sessionID: '',
+      payload: {'userID': userID, 'status': 'NOT STARTED'},
+    ).then((value) {
       problemSessionID = value['id'];
       problemSessionList.add(ProblemSession(id: problemSessionID, school: ''));
+      debugPrint('new session created');
       notifyListeners();
+      return problemSessionID;
+    }).catchError((error) {
+      debugPrint('Error: $error');
+      return '';
     });
   }
 
