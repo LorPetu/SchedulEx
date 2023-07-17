@@ -199,8 +199,9 @@ def saveSession():
     else:
         print(request_data['sessionID'])
         session_node = ref.child(request_data['sessionID'])
+        del request_data['sessionID']
         
-    del request_data['sessionID']
+    
 
     for key in request_data:
         print(key)

@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'main.dart';
+import 'package:go_router/go_router.dart';
+
+import 'package:schedulex_webapp/model/ProblemSessionState.dart';
+import 'package:schedulex_webapp/model/UserState.dart';
 
 class SelectPage extends StatelessWidget {
   const SelectPage({Key? key}) : super(key: key);
-
+  //final String selected;
   @override
   Widget build(BuildContext context) {
-    final appState = Provider.of<MyAppState>(context);
+    final userState = context.watch<UserState>();
+    final problemSessionState = context.watch<ProblemSessionState>();
+    /*context.select<ProblemSessionState, String>(
+        (session) => session.selectedSessionID! );
+        final problemSessionState_set = context.select<ProblemSessionState, void>(
+        (session) {session.setProblemSessionID(id)} );*/
 
     return Scaffold(
       appBar: AppBar(
@@ -26,43 +34,49 @@ class SelectPage extends StatelessWidget {
                 ),
               ),
               onPressed: () {
-                // Set the ProblemSessionID in MyAppState
-                appState.setProblemSessionID('');
+                // Set the ProblemSessionID in MyuserState
+                userState.createSession();
 
-                Navigator.pushNamed(context, '/problemSession');
-                print('${appState.userID} create a new session');
+                //context.pushReplacement('/Session');
+                print('${userState.userID} create a new session');
               },
             ),
           ),
-          Expanded(
-            child: appState.problemSessionList.isEmpty
-                ? const Center(
-                    child: Text('No data available'),
-                  )
-                : ListView.builder(
-                    itemCount: appState.problemSessionList.length,
-                    itemBuilder: (context, index) {
-                      final element = appState.problemSessionList[index];
-                      return ListTile(
-                        leading: (element.status == 'NOT STARTED')
-                            ? Icon(Icons.not_started, color: Colors.yellow)
-                            : Icon(Icons.settings_backup_restore_outlined,
-                                color: Colors.green),
-                        trailing: IconButton(
-                          icon: Icon(Icons.delete),
-                          onPressed: () {
-                            appState.deleteProblemSession(element.id);
+          Consumer<UserState>(builder: (context, userState, _) {
+            final problemSessionList = userState.problemSessionList;
+            return Expanded(
+              child: problemSessionList.isEmpty
+                  ? const Center(
+                      child: Text('No data available'),
+                    )
+                  : ListView.builder(
+                      itemCount: problemSessionList.length,
+                      itemBuilder: (context, index) {
+                        final element = problemSessionList[index];
+                        return ListTile(
+                          leading: (element.status == 'NOT STARTED')
+                              ? const Icon(Icons.not_started,
+                                  color: Colors.yellow)
+                              : const Icon(
+                                  Icons.settings_backup_restore_outlined,
+                                  color: Colors.green),
+                          trailing: IconButton(
+                            icon: Icon(Icons.delete),
+                            onPressed: () {
+                              userState.deleteProblemSession(element.id);
+                            },
+                          ),
+                          title: Text(element.school),
+                          onTap: () {
+                            problemSessionState.setProblemSessionID(element.id);
+                            context.pushReplacement('/select/session');
+                            //Navigator.pushNamed(context, '/problemSession');
                           },
-                        ),
-                        title: Text(element.school),
-                        onTap: () {
-                          appState.setProblemSessionID(element.id);
-                          Navigator.pushNamed(context, '/problemSession');
-                        },
-                      );
-                    },
-                  ),
-          )
+                        );
+                      },
+                    ),
+            );
+          })
         ],
       ),
     );

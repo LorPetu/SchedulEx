@@ -1,0 +1,183 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
+import 'package:schedulex_webapp/LoginPage.dart';
+import 'package:schedulex_webapp/model/ProblemSessionState.dart';
+import 'package:schedulex_webapp/model/UnavailState.dart';
+import 'package:schedulex_webapp/model/UserState.dart';
+
+import 'package:schedulex_webapp/utils.dart';
+
+class ProblemSessionPageNEW extends StatelessWidget {
+  const ProblemSessionPageNEW({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final userID = context.select<UserState, String>((value) => value.userID);
+    final problemSessionState = context.watch<ProblemSessionState>();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Session Page'),
+        actions: [
+          IconButton(
+            onPressed: () {
+              context.pushReplacement('/select');
+              //reset value of ProblemSession selected
+            },
+            icon: const Icon(Icons.close),
+          ),
+        ],
+      ),
+      body: Consumer(builder: (context, userState, _) {
+        final school = problemSessionState.school;
+        final sessionDates = problemSessionState.sessionDates;
+        final unavailList = problemSessionState.unavailList;
+        return Column(
+          children: [
+            DropdownButton(
+                value: school,
+                items: const [
+                  DropdownMenuItem(
+                    value: 'AUIC',
+                    child: Text('AUIC'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'Ing_Ind_Inf',
+                    child: Text('Ing Ind Inf'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'ICAT',
+                    child: Text('ICAT'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'Design',
+                    child: Text('Design'),
+                  ),
+                ],
+                onChanged: (newValue) {
+                  problemSessionState.setSchool(newValue);
+                }),
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: (sessionDates == null)
+                        ? Text('Select Dates')
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                  '${sessionDates!.start.day} - ${sessionDates!.start.month} - ${sessionDates!.start.year}'),
+                              const SizedBox(width: 20),
+                              Text(
+                                  '${sessionDates!.end.day} - ${sessionDates!.end.month} - ${sessionDates!.end.year}')
+                            ],
+                          ),
+                  ),
+                  ElevatedButton(
+                    child: const Text("Choose Dates"),
+                    onPressed: () async {
+                      final DateTimeRange? dateTimeRange =
+                          await showDateRangePicker(
+                        context: context,
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2100),
+                        builder: (context, child) {
+                          return Column(
+                            children: <Widget>[
+                              Padding(
+                                padding: const EdgeInsets.only(top: 50.0),
+                                child: Container(
+                                  height: 450,
+                                  width: 500,
+                                  child: child,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                      if (dateTimeRange != null) {
+                        problemSessionState.setStartEndDate(dateTimeRange);
+                      }
+                    },
+                  )
+                ],
+              ),
+            ),
+            UnavailViewer(
+                unavailList: unavailList,
+                onItemClick: (unavail) {
+                  print('$userID select unavail ${unavail.id}');
+                  Navigator.pushNamed(context, '/unavail', arguments: unavail);
+                },
+                onItemDelete: (unavail) {
+                  print('$userID delete unavail ${unavail.id}');
+                  //appState.deleteUnavail(unavail);
+                }),
+            Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: ElevatedButton(
+                  onPressed: () {
+                    /*startOptimization(sessionID: appState.problemSessionID);
+                    saveSession(
+                        sessionID: appState.problemSessionID,
+                        payload: {'status': 'STARTED'});
+                    print('startOptimization triggered');*/
+                  },
+                  child: const Text('start')),
+            )
+          ],
+        );
+      }),
+    );
+  }
+}
+
+class UnavailViewer extends StatelessWidget {
+  final List<Unavail> unavailList;
+  final Function(Unavail) onItemClick;
+  final Function(Unavail) onItemDelete;
+
+  const UnavailViewer(
+      {super.key,
+      required this.unavailList,
+      required this.onItemClick,
+      required this.onItemDelete});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        SizedBox(
+          height: 300,
+          child: ListView.builder(
+            itemCount: unavailList.length,
+            itemBuilder: (context, index) {
+              return ListTile(
+                trailing: IconButton(
+                  icon: Icon(Icons.delete),
+                  onPressed: () {
+                    onItemDelete(unavailList[index]);
+                  },
+                ),
+                title: Text(unavailList[index].professor),
+                onTap: () {
+                  onItemClick(unavailList[index]);
+                },
+              );
+            },
+          ),
+        ),
+        FloatingActionButton.small(
+            child: const Icon(Icons.add),
+            onPressed: () {
+              Navigator.pushNamed(context, '/unavail');
+            }),
+      ],
+    );
+  }
+}

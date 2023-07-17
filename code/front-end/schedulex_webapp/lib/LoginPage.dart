@@ -8,7 +8,7 @@ class LoginPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var userID = context.select<UserState, void>((user) => user.userID);
+    //var userID = context.select<UserState, void>((user) => user.userID);
     var userState = context.watch<UserState>();
     String inputUsername = '';
     return Scaffold(

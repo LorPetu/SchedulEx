@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:schedulex_webapp/LoginPage.dart';
+import 'package:schedulex_webapp/SessionPage.dart';
 import 'package:schedulex_webapp/model/ProblemSessionState.dart';
 import 'package:schedulex_webapp/model/UnavailState.dart';
 import 'package:schedulex_webapp/model/UserState.dart';
@@ -68,11 +69,11 @@ GoRouter router() {
         builder: (context, state) => const SelectPage(),
         routes: [
           GoRoute(
-            path: 'Session',
-            builder: (context, state) => const ProblemSessionPage(),
+            path: 'session',
+            builder: (context, state) => const ProblemSessionPageNEW(),
           ),
           GoRoute(
-            path: 'Unavail',
+            path: 'unavail',
             builder: (context, state) => const UnavailPage(),
           ),
         ],
@@ -170,14 +171,6 @@ class MyAppState extends ChangeNotifier {
   void deleteUnavail(Unavail deletedUnavail) {
     unavailList.removeWhere((element) => element.id == deletedUnavail.id);
     deleteUnavailability(sessionID: problemSessionID, unavail: deletedUnavail);
-    notifyListeners();
-  }
-
-  void deleteProblemSession(sessionID) {
-    print('session to delete $sessionID');
-    deleteSession(sessionID: sessionID);
-    problemSessionList.removeWhere((element) => element.id == sessionID);
-
     notifyListeners();
   }
 }

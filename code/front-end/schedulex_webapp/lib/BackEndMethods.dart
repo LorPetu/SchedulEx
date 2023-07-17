@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
@@ -7,7 +8,8 @@ import 'utils.dart';
 
 const SERVER_URL = "127.0.0.1:5000";
 
-void saveUserID({required String sessionID, required String userID}) async {
+Future<void> saveUserID(
+    {required String sessionID, required String userID}) async {
   String url = 'http://' + SERVER_URL + '/setUserID/$sessionID/$userID';
 
   try {
@@ -23,7 +25,8 @@ void saveUserID({required String sessionID, required String userID}) async {
   }
 }
 
-void saveSchoolID({required String sessionID, required String schoolID}) async {
+Future<void> saveSchoolID(
+    {required String sessionID, required String schoolID}) async {
   String baseUrl = 'http://' + SERVER_URL;
   Uri uri = Uri.parse('$baseUrl/setSchoolID');
 
@@ -50,7 +53,7 @@ void saveSchoolID({required String sessionID, required String schoolID}) async {
   }
 }
 
-void saveStartEndDate(
+Future<void> saveStartEndDate(
     {required String sessionID,
     required String startDate,
     required String endDate}) async {
@@ -71,7 +74,7 @@ void saveStartEndDate(
   }
 }
 
-void saveSettings(
+Future<void> saveSettings(
     {required String sessionID,
     required String distCalls,
     required String distExams}) async {
@@ -129,7 +132,7 @@ Future<dynamic> saveUnavailability(
   }
 }
 
-void deleteUnavailability(
+Future<void> deleteUnavailability(
     {required String sessionID, required Unavail unavail}) async {
   String unavailID = unavail.id;
   String url = 'http://' + SERVER_URL + '/delete_unavail/$sessionID/$unavailID';
@@ -148,7 +151,7 @@ void deleteUnavailability(
   }
 }
 
-void deleteSession({required String sessionID}) async {
+Future<void> deleteSession({required String sessionID}) async {
   String url = 'http://' + SERVER_URL + '/deleteSession/$sessionID';
 
   try {
@@ -189,6 +192,7 @@ Future<dynamic> saveSession(
   Map<String, String> requestbody = {};
 
   if (sessionID.isNotEmpty) {
+    debugPrint('exist Session');
     requestbody.addAll({'sessionID': sessionID});
   }
 
