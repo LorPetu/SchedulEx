@@ -108,9 +108,27 @@ def getSessionList():
 def getSessionData(sessionID):
     #get per sessionID
     SessionData = ref.child(sessionID).get()
-    print(SessionData)
+    print('getSessionData: Sessiondata = ', SessionData)
 
     return SessionData
+
+@app.route("/getUnavailData/<string:sessionID>/<string:unavailID>")
+def getUnavailabilityData(sessionID, unavailID):
+    # Retrieve the Unavail data from the Firebase Realtime Database
+    unavailData = ref.child(sessionID).child('unavailList').child(unavailID).get()
+
+    # Check if the unavailData exists
+    if unavailData!='':
+        
+        return unavailData
+    else:
+        # Return an empty response if the unavailData doesn't exist
+        return {
+            'type': 0,
+            'name': '',
+            'dates': []
+        }
+
 
 @app.route("/setSettings/<string:sessionID>/<string:distCalls>/<string:distExams>", methods=['POST'])
 def setSettings(sessionID, distCalls, distExams):
@@ -137,9 +155,8 @@ def saveUnavailability():
     txt='unavailability'
     action='saved'
     request_data = request.get_json()
+    print(request_data)
     
-    date_list = request_data['dates'].split("/")
-    date_obj_list = [datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S.%f").isoformat() for date_str in date_list]
 
     unavail_node = ref.child(request_data['sessionID']).child('unavailList')
 
@@ -149,16 +166,24 @@ def saveUnavailability():
     else:
         print(request_data['unavailID'])
         unavail_node = unavail_node.child(request_data['unavailID'])
+        del request_data['unavailID']
 
-    unavail_node.update({
-        'name': request_data['name'],
-        'type': request_data['type'],
-        'dates': date_obj_list
-    })
+    del request_data['sessionID']
+
+    if('dates' in request_data):
+        date_list = request_data['dates'].split("/")
+        date_obj_list = [datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S.%f").isoformat() for date_str in date_list]
+        request_data['dates']= date_obj_list
+    print('Save unavailability: request data = ', request_data)
+
+    if(request_data!={}): 
+        unavail_node.update(
+        request_data
+    )
 
     #print('Sto salvando dati per: ' + sessionID)
 
-    return {'status': f'{txt} {action} successfully.', 'id':unavail_node.key}
+    return {'status': f'{txt} {action} successfully.','id': unavail_node.key, 'value':unavail_node.get()}
 
 ##IMPLEMENTED
 @app.route("/delete_unavail/<string:sessionID>/<string:unavailID>")
@@ -193,19 +218,19 @@ def saveSession():
     action='saved'
     request_data = request.get_json()
 
+    #Chech if the sessionID is new or not
     if('sessionID' not in  request_data ):
-        session_node = ref.push()
+        session_node = ref.push() #create the new child for the corresponding sessionID
         print(session_node.key)
     else:
         print(request_data['sessionID'])
         session_node = ref.child(request_data['sessionID'])
         del request_data['sessionID']
         
+    if(request_data!={}):
+        print('sto qua')
+        session_node.update(request_data)
     
-
-    for key in request_data:
-        print(key)
-    session_node.update(request_data)
 
     return {'status': f'{txt} {action} successfully.', 'id':session_node.key}
 
