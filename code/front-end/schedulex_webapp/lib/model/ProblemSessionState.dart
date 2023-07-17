@@ -77,4 +77,16 @@ class ProblemSessionState extends ChangeNotifier {
       });
     }
   }
+
+  void addUnavail(Unavail newUnavail) {
+    unavailList.add(newUnavail);
+    notifyListeners();
+  }
+
+  void deleteUnavail(Unavail deletedUnavail) {
+    unavailList.removeWhere((element) => element.id == deletedUnavail.id);
+    deleteUnavailability(
+        sessionID: selectedSessionID!, unavail: deletedUnavail);
+    notifyListeners();
+  }
 }

@@ -1,42 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'main.dart';
+import 'package:schedulex_webapp/model/ProblemSessionState.dart';
+import 'package:schedulex_webapp/model/UnavailState.dart';
 import 'utils.dart';
 
-class UnavailPage extends StatefulWidget {
-  const UnavailPage({Key? key});
-
-  @override
-  State<UnavailPage> createState() => _UnavailPageState();
-}
-
-class _UnavailPageState extends State<UnavailPage> {
-  int type = 0;
-  String name = '';
-  List<DateTime> dates = [];
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    final appState = Provider.of<MyAppState>(context, listen: false);
-    final Unavail? unavail =
-        ModalRoute.of(context)?.settings.arguments as Unavail?;
-
-    if (unavail != null) {
-      setState(() {
-        type = unavail.type;
-        name = unavail.name;
-        dates = unavail.dates;
-      });
-    }
-  }
+class UnavailPageNEW extends StatelessWidget {
+  const UnavailPageNEW({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final appState = Provider.of<MyAppState>(context);
-    final Unavail? unavail =
-        ModalRoute.of(context)?.settings.arguments as Unavail?;
+    final unavailState = context.watch<UnavailState>();
 
     return Scaffold(
       appBar: AppBar(title: const Text('UnavailPage')),
@@ -45,7 +19,7 @@ class _UnavailPageState extends State<UnavailPage> {
         child: Column(
           children: [
             DropdownButton<int>(
-              value: type,
+              value: unavailState.type,
               items: const [
                 DropdownMenuItem(
                   value: 0,
@@ -57,48 +31,28 @@ class _UnavailPageState extends State<UnavailPage> {
                 ),
               ],
               onChanged: (newValue) {
-                setState(() {
-                  type = newValue!;
-                });
+                unavailState.setType(newValue!);
               },
               hint: const Text('Select Type'),
             ),
             Padding(
               padding: const EdgeInsets.all(10.0),
               child: AutoCompleteProfessor(
-                name: unavail?.name,
+                name: unavailState.name,
                 onNameSelected: (String selection) {
-                  setState(() {
-                    name = selection;
-                  });
+                  unavailState.setName(selection);
                 },
               ),
             ),
             DateTimeListWidget(
-                dateTimeList: dates,
+                dateTimeList: unavailState.dates,
                 onDatesChange: (newdates) {
-                  setState(() {
-                    print(newdates);
-                    dates = newdates;
-                  });
+                  unavailState.addDates(newdates);
                 }),
             ElevatedButton(
               onPressed: () {
-                final Unavail newUnavail = Unavail(
-                  id: unavail?.id ?? '',
-                  type: type,
-                  name: name,
-                  dates: dates,
-                );
-                if (unavail != null) {
-                  print(newUnavail.dates);
-                  appState.updateUnavail(newUnavail);
-                  //appState.updateUnavail(newUnavail);
-                  Navigator.pop(context);
-                } else {
-                  appState.updateUnavail(newUnavail);
-                  Navigator.pop(context);
-                }
+                unavailState.reset();
+                context.pushReplacement('/select/session');
               },
               child: const Text('Save'),
             ),
@@ -197,7 +151,8 @@ class _DateTimeListWidgetState extends State<DateTimeListWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final appState = Provider.of<MyAppState>(context);
+    final sessiondates = context.select<ProblemSessionState, DateTimeRange>(
+        (value) => value.sessionDates!);
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -207,9 +162,9 @@ class _DateTimeListWidgetState extends State<DateTimeListWidget> {
             onPressed: () async {
               final DateTime? currentDate = await showDatePicker(
                 context: context,
-                initialDate: appState.sessionDates!.start,
-                firstDate: appState.sessionDates!.start,
-                lastDate: appState.sessionDates!.end,
+                initialDate: sessiondates.start,
+                firstDate: sessiondates.start,
+                lastDate: sessiondates.end,
               );
               if (currentDate != null) {
                 setState(() {
@@ -223,8 +178,8 @@ class _DateTimeListWidgetState extends State<DateTimeListWidget> {
             onPressed: () async {
               final DateTimeRange? dateTimeRange = await showDateRangePicker(
                 context: context,
-                firstDate: appState.sessionDates!.start,
-                lastDate: appState.sessionDates!.end,
+                firstDate: sessiondates.start,
+                lastDate: sessiondates.end,
                 builder: (context, child) {
                   return Column(
                     children: <Widget>[

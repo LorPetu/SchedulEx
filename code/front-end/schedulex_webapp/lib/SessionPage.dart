@@ -15,6 +15,7 @@ class ProblemSessionPageNEW extends StatelessWidget {
   Widget build(BuildContext context) {
     final userID = context.select<UserState, String>((value) => value.userID);
     final problemSessionState = context.watch<ProblemSessionState>();
+    final unavailState = context.watch<UnavailState>();
 
     return Scaffold(
       appBar: AppBar(
@@ -66,7 +67,7 @@ class ProblemSessionPageNEW extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: (sessionDates == null)
-                        ? Text('Select Dates')
+                        ? const Text('Select Dates')
                         : Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -109,16 +110,48 @@ class ProblemSessionPageNEW extends StatelessWidget {
                 ],
               ),
             ),
-            UnavailViewer(
-                unavailList: unavailList,
-                onItemClick: (unavail) {
-                  print('$userID select unavail ${unavail.id}');
-                  Navigator.pushNamed(context, '/unavail', arguments: unavail);
-                },
-                onItemDelete: (unavail) {
-                  print('$userID delete unavail ${unavail.id}');
-                  //appState.deleteUnavail(unavail);
-                }),
+            Column(
+              children: [
+                SizedBox(
+                  height: 300,
+                  child: ListView.builder(
+                    itemCount: unavailList.length,
+                    itemBuilder: (context, index) {
+                      return ListTile(
+                        trailing: IconButton(
+                          icon: Icon(Icons.delete),
+                          onPressed: () {
+                            print(
+                                '$userID delete unavail ${unavailList[index].id}');
+                            //appState.deleteUnavail(unavail);
+                            //context.pushReplacement('/select/unavail');
+                          },
+                        ),
+                        title: Text(unavailList[index].name),
+                        onTap: () {
+                          print(
+                              '$userID select unavail ${unavailList[index].id}');
+                          unavailState
+                              .setCurrID(unavailList[index].id)
+                              .then((value) {
+                            context.pushReplacement('/select/unavail');
+                          });
+                          //context.pushReplacement('/select/unavail');
+                        },
+                      );
+                    },
+                  ),
+                ),
+                FloatingActionButton.small(
+                    child: const Icon(Icons.add),
+                    onPressed: () {
+                      debugPrint('new unavail to be created');
+                      unavailState.setCurrID('').then((value) {
+                        context.pushReplacement('/select/unavail');
+                      });
+                    }),
+              ],
+            ),
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: ElevatedButton(
@@ -176,7 +209,8 @@ class UnavailViewer extends StatelessWidget {
         FloatingActionButton.small(
             child: const Icon(Icons.add),
             onPressed: () {
-              Navigator.pushNamed(context, '/unavail');
+              debugPrint('new unavail to be created');
+              //context.pushReplacement('/select/unavail');
             }),
       ],
     );
