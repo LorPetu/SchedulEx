@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:schedulex_webapp/LoginPage.dart';
 import 'package:schedulex_webapp/model/ProblemSessionState.dart';
 import 'package:schedulex_webapp/model/UnavailState.dart';
 import 'package:schedulex_webapp/model/UserState.dart';
@@ -31,7 +30,8 @@ class ProblemSessionPageNEW extends StatelessWidget {
           ),
         ],
       ),
-      body: Consumer(builder: (context, userState, _) {
+      body: Consumer<ProblemSessionState>(
+          builder: (context, problemSessionState, _) {
         final school = problemSessionState.school;
         final sessionDates = problemSessionState.sessionDates;
         final unavailList = problemSessionState.unavailList;
@@ -92,7 +92,7 @@ class ProblemSessionPageNEW extends StatelessWidget {
                             children: <Widget>[
                               Padding(
                                 padding: const EdgeInsets.only(top: 50.0),
-                                child: Container(
+                                child: SizedBox(
                                   height: 450,
                                   width: 500,
                                   child: child,
@@ -119,7 +119,7 @@ class ProblemSessionPageNEW extends StatelessWidget {
                     itemBuilder: (context, index) {
                       return ListTile(
                         trailing: IconButton(
-                          icon: Icon(Icons.delete),
+                          icon: const Icon(Icons.delete),
                           onPressed: () {
                             print(
                                 '$userID delete unavail ${unavailList[index].id}');
@@ -193,7 +193,7 @@ class UnavailViewer extends StatelessWidget {
             itemBuilder: (context, index) {
               return ListTile(
                 trailing: IconButton(
-                  icon: Icon(Icons.delete),
+                  icon: const Icon(Icons.delete),
                   onPressed: () {
                     onItemDelete(unavailList[index]);
                   },

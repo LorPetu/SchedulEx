@@ -155,25 +155,36 @@ def saveUnavailability():
     txt='unavailability'
     action='saved'
     request_data = request.get_json()
-    print(request_data)
+    #print(request_data)
     
 
     unavail_node = ref.child(request_data['sessionID']).child('unavailList')
 
     if('unavailID' not in  request_data ):
         unavail_node = unavail_node.push()
-        print(unavail_node.key)
+        #print(unavail_node.key)
     else:
-        print(request_data['unavailID'])
+        #print(request_data['unavailID'])
         unavail_node = unavail_node.child(request_data['unavailID'])
         del request_data['unavailID']
 
     del request_data['sessionID']
 
+    #date check and modification  
     if('dates' in request_data):
-        date_list = request_data['dates'].split("/")
-        date_obj_list = [datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S.%f").isoformat() for date_str in date_list]
-        request_data['dates']= date_obj_list
+        date_list = unavail_node.child('dates').get()
+        print(f'date list : {date_list}')
+        if(date_list==None):
+            date_list=[]
+        
+        
+        for date_str in request_data['dates'].split("/"):
+            currDate = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S.%f").isoformat()
+            if(currDate not in date_list):
+                print('verified')
+                date_list.append(currDate)
+        print(date_list)
+        request_data['dates']= date_list
     print('Save unavailability: request data = ', request_data)
 
     if(request_data!={}): 

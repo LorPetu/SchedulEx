@@ -63,14 +63,14 @@ class SelectPage extends StatelessWidget {
                                   Icons.settings_backup_restore_outlined,
                                   color: Colors.green),
                           trailing: IconButton(
-                            icon: Icon(Icons.delete),
+                            icon: const Icon(Icons.delete),
                             onPressed: () {
-                              userState.deleteProblemSession(element.id);
+                              userState.delete(element.id);
                             },
                           ),
                           title: element.school.isNotEmpty
                               ? Text(element.school)
-                              : Text('School not selected'),
+                              : const Text('School not selected'),
                           onTap: () {
                             problemSessionState.setProblemSessionID(element.id);
                             context.pushReplacement('/select/session');

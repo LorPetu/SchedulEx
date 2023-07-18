@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:schedulex_webapp/BackEndMethods.dart';
 import 'package:schedulex_webapp/model/ProblemSessionState.dart';
-import 'package:schedulex_webapp/model/UserState.dart';
-import 'package:schedulex_webapp/utils.dart';
 
 class UnavailState extends ChangeNotifier {
   late ProblemSessionState sessionState;
@@ -17,6 +15,7 @@ class UnavailState extends ChangeNotifier {
     type = 0;
     name = '';
     dates = [];
+    notifyListeners();
   }
 
   Future<dynamic> setCurrID(String newId) {
@@ -29,16 +28,19 @@ class UnavailState extends ChangeNotifier {
         name = value.name;
         dates = value.dates;
         sessionState
-            .addUnavail(Unavail(id: id!, name: name, type: type, dates: dates));
+            .update({'id': id!, 'name': name, 'type': type, 'dates': dates});
         notifyListeners();
       }).catchError((error) {
         debugPrint('UnavailState Error: $error');
         notifyListeners();
       });
     } else {
+      debugPrint('UnavailState: createUnavail');
       return createUnavail().then((value) {
         id = value['id'];
-        return null; // Return null explicitly
+        notifyListeners();
+        return null;
+        // Return null explicitly
       });
     }
   }
@@ -49,8 +51,9 @@ class UnavailState extends ChangeNotifier {
         unavailID: '',
         payload: {}).then((value) {
       print(value);
+      id = value['id'];
       sessionState
-          .addUnavail(Unavail(id: value['id'], type: type, dates: dates));
+          .update({'id': id!, 'name': name, 'type': type, 'dates': dates});
       notifyListeners();
       print(value);
       return value;
@@ -59,7 +62,6 @@ class UnavailState extends ChangeNotifier {
       notifyListeners();
       return '';
     });
-    //return Future(() => Unavail(id: id, type: type, dates: dates));
   }
 
   void setType(int newtype) {
@@ -79,11 +81,22 @@ class UnavailState extends ChangeNotifier {
         unavailID: id!,
         payload: {'name': newName}).then((value) {
       name = newName;
+      sessionState.update({'id': id!, 'name': name});
       notifyListeners();
     });
   }
 
-  void addDates(List<DateTime> dates) {
-    //TODO:
+  void addDates(List<DateTime> newdates) async {
+    addDatesToUnavail(
+      sessionID: sessionState.selectedSessionID!,
+      unavailID: id!,
+      newDates: newdates,
+    ).then((value) {
+      print(value);
+      dates = value;
+
+      //dates = value['value']['dates'];
+      notifyListeners();
+    });
   }
 }

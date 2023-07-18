@@ -15,11 +15,14 @@ class ProblemSessionState extends ChangeNotifier {
   List<Unavail> unavailList = [];
 
   UserState get user => appState;
+
   void resetProblemSessionID() {
     selectedSessionID = '';
     school = 'Ing_Ind_Inf';
     sessionDates = null;
     unavailList = [];
+
+    notifyListeners();
   }
 
   void setProblemSessionID(String id) {
@@ -57,7 +60,7 @@ class ProblemSessionState extends ChangeNotifier {
       //
       print(selectedSchool);
       school = selectedSchool;
-
+      user.update({'id': selectedSessionID!, 'school': school});
       notifyListeners();
       //
     });
@@ -78,9 +81,31 @@ class ProblemSessionState extends ChangeNotifier {
     }
   }
 
+  void update(Map<String, dynamic> update) {
+    final index =
+        unavailList.indexWhere((element) => element.id == update['id']);
+    debugPrint('ProblemSessionState: update[id] ${update['id']}');
+    if (index != -1) {
+      debugPrint('ProblemSessionState: update an already existing session');
+      (update['type'] != null)
+          ? unavailList[index].setType(update['type'])
+          : null;
+      (update['name'] != null)
+          ? unavailList[index].setName(update['name'])
+          : null;
+    } else {
+      debugPrint('ProblemSessionState: update a new session');
+      unavailList.add(Unavail(id: update['id'], type: 0, dates: []));
+    }
+
+    notifyListeners();
+  }
+
   void addUnavail(Unavail newUnavail) {
     unavailList.add(newUnavail);
+    debugPrint('ProblemSessionState: adding new');
     notifyListeners();
+    //appState.updateUnavail(newUnavail);
   }
 
   void deleteUnavail(Unavail deletedUnavail) {
@@ -88,5 +113,6 @@ class ProblemSessionState extends ChangeNotifier {
     deleteUnavailability(
         sessionID: selectedSessionID!, unavail: deletedUnavail);
     notifyListeners();
+    //appState.deleteUnavail(deletedUnavail);
   }
 }

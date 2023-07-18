@@ -135,6 +135,64 @@ Future<dynamic> saveUnavailability(
   }
 }
 
+Future<List<DateTime>> addDatesToUnavail(
+    {required String sessionID,
+    required String unavailID,
+    required List<DateTime> newDates}) async {
+  String url = 'http://$SERVER_URL/saveUnavailability/';
+  String txt = 'unavailability DATES';
+  String action = 'save';
+
+  //List<String> dates = unavail.dates.map((e) => e.toString()).toList();
+
+  Map<String, String> requestbody = {};
+  requestbody.addAll({'sessionID': sessionID});
+
+  if (unavailID.isNotEmpty) {
+    requestbody.addAll({'unavailID': unavailID});
+  }
+
+  debugPrint('Methods: addDatesToUnavail requestbody= $requestbody');
+  String newdatesStr = newDates.map(
+    (date) {
+      return date.toString();
+    },
+  ).join('/');
+  requestbody.addAll({'dates': newdatesStr});
+
+  debugPrint('Methods: addDatesToUnavail payload = $newDates');
+  try {
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(requestbody),
+    );
+
+    if (response.statusCode == 200) {
+      print('$txt $action successfully.');
+
+      List<DateTime> dateTimeList =
+          (jsonDecode(response.body)['value']['dates'] as List<dynamic>)
+              .map((dynamic item) {
+        if (item is DateTime) {
+          return item;
+        } else if (item is String) {
+          return DateTime.parse(item);
+        }
+        // Handle other cases if needed
+        throw FormatException('Invalid date format');
+      }).toList();
+
+      return dateTimeList;
+    } else {
+      print('Failed to $action $txt. Error: ${response.statusCode}');
+    }
+  } catch (e) {
+    print('Exception occurred while $action $txt: $e');
+  }
+  return [];
+}
+
 Future<void> deleteUnavailability(
     {required String sessionID, required Unavail unavail}) async {
   String unavailID = unavail.id;
@@ -272,9 +330,9 @@ Future<ProblemSession> getSessionData({required String sessionId}) async {
 
         debugPrint('#############');
         for (var entry in unavailData.entries) {
-          debugPrint('child of $sessionId' + entry.key);
+          debugPrint('child of $sessionId${entry.key}');
           String id = entry.key;
-          dynamic? data = entry.value;
+          dynamic data = entry.value;
 
           if (data != null && data.isNotEmpty) {
             int type = (data['type'] != null &&

@@ -8,10 +8,8 @@ import 'package:schedulex_webapp/model/UnavailState.dart';
 import 'package:schedulex_webapp/model/UserState.dart';
 import 'SelectPage.dart';
 
-import 'utils.dart';
 
 import 'Unavailpage.dart';
-import 'BackEndMethods.dart';
 
 void main() {
   runApp(const MyApp());
@@ -29,10 +27,11 @@ class MyApp extends StatelessWidget {
           create: (context) => UserState(),
         ),
         ChangeNotifierProxyProvider<UserState, ProblemSessionState>(
-          create: (_) => ProblemSessionState(),
+          create: (context) => ProblemSessionState(),
           update: (context, appState, problemSessionState) {
-            if (problemSessionState == null)
+            if (problemSessionState == null) {
               throw ArgumentError.notNull('problemSessionState');
+            }
             problemSessionState.appState = appState;
             return problemSessionState;
           },
@@ -40,8 +39,9 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProxyProvider<ProblemSessionState, UnavailState>(
           create: (context) => UnavailState(),
           update: (context, session, unavailState) {
-            if (unavailState == null)
+            if (unavailState == null) {
               throw ArgumentError.notNull('unavailState');
+            }
             unavailState.sessionState = session;
             return unavailState;
           },
@@ -80,62 +80,4 @@ GoRouter router() {
       ),
     ],
   );
-}
-
-class MyAppState extends ChangeNotifier {
-  String userID = '';
-  String problemSessionID = '';
-
-  //SelectpageSession
-  List<ProblemSession> problemSessionList = [];
-
-  //unavailPage states
-  DateTimeRange? sessionDates;
-  String school = 'Ing_Ind_Inf';
-  List<Unavail> unavailList = [];
-
-  void setSchool(selectedSchool) {
-    print(problemSessionID);
-    saveSession(
-        sessionID: problemSessionID, payload: {'school': selectedSchool});
-
-    print(selectedSchool);
-    school = selectedSchool;
-
-    notifyListeners();
-  }
-
-  void setStartEndDate(daterange) {
-    sessionDates = daterange;
-    if (sessionDates != null) {
-      saveStartEndDate(
-          sessionID: problemSessionID,
-          startDate: sessionDates!.start.toString(),
-          endDate: sessionDates!.end.toString());
-    }
-    notifyListeners();
-  }
-
-  void updateUnavail(Unavail updatedUnavail) {
-    /*final index =
-        unavailList.indexWhere((element) => element.id == updatedUnavail.id);
-    if (index != -1) {
-      print(updatedUnavail.dates);
-      saveUnavailability(sessionID: problemSessionID, unavail: updatedUnavail);
-      unavailList[index] = updatedUnavail;
-    } else {
-      saveUnavailability(sessionID: problemSessionID, unavail: updatedUnavail)
-          .then((value) => updatedUnavail.id = value['id']);
-      unavailList.add(updatedUnavail);
-      print('unavail' + updatedUnavail.id + ' added ');
-    }*/
-    notifyListeners();
-    //print(unavailList[index].professor);
-  }
-
-  void deleteUnavail(Unavail deletedUnavail) {
-    unavailList.removeWhere((element) => element.id == deletedUnavail.id);
-    deleteUnavailability(sessionID: problemSessionID, unavail: deletedUnavail);
-    notifyListeners();
-  }
 }
