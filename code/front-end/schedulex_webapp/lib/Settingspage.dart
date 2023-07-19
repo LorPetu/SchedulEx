@@ -77,19 +77,13 @@ class SettingsPage extends StatelessWidget {
       );
     }
 
-    void _saveForm() {
-      // Access the entered values from the controllers
-      final minDistanceExam = int.tryParse(minDistanceExamController.text) ?? 0;
-      final defaultDistance = int.tryParse(defaultDistanceController.text) ?? 0;
-
-      // Update the session object with the entered values
-      problemSessionState.setMinDistanceExam(minDistanceExam);
-      problemSessionState.setMinDistanceCallsDefault(defaultDistance);
-
-      // Perform other save actions as needed
-
-      print('minDistanceExam: $minDistanceExam');
-      print('defaultDistance: $defaultDistance');
+    void saveForm() {
+      problemSessionState.updateSettings({
+        'minDistanceCallsDefault': defaultDistanceController.text ?? 0,
+        'minDistanceExam': minDistanceExamController.text ?? 0,
+        'currSemester': numCallsController.text ?? 0,
+        'numCalls': currSemestercontroller.text ?? 0
+      });
     }
 
     return Scaffold(
@@ -175,7 +169,7 @@ class SettingsPage extends StatelessWidget {
               padding: const EdgeInsets.all(15.0),
               child: ElevatedButton(
                 onPressed: () {
-                  _saveForm();
+                  saveForm();
                   addException();
                 },
                 child: const Text('Add Exception'),
@@ -210,7 +204,7 @@ class SettingsPage extends StatelessWidget {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                _saveForm(); // Call the _saveForm method to save the entered values
+                saveForm(); // Call the _saveForm method to save the entered values
               },
               child: const Text('Save'),
             ),

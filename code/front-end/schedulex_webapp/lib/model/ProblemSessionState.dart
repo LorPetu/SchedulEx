@@ -38,10 +38,30 @@ class ProblemSessionState extends ChangeNotifier {
   }
 
   // distance1 = minDistanceExam; distance2= minDistanceCallsDefault; Calls = numCalls; curr = currSemester;
-  void updateSettings(int distance1, int distance2, int calls, int curr) {
-    Map<String, int> payload = {};
+  void updateSettings(payload) {
+    if (payload['minDistanceExam'] != null) {
+      minDistanceExam = int.tryParse(payload['minDistanceExam']);
+    }
+    if (payload['minDistanceCallsDefault'] != null) {
+      minDistanceCallsDefault =
+          int.tryParse(payload['minDistanceCallsDefault']);
+    }
+    if (payload['numCalls'] != null) {
+      numCalls = int.tryParse(payload['numCalls']);
+    }
+    if (payload['currSemester'] != null) {
+      currSemester = int.tryParse(payload['currSemester']);
+    }
 
-    setSettings(sessionID: selectedSessionID!, payload: payload);
+    // Create a new payload containing only the modified values
+    Map<String, dynamic> modifiedPayload = {
+      'minDistanceExam': minDistanceExam,
+      'minDistanceCallsDefault': minDistanceCallsDefault,
+      'numCalls': numCalls,
+      'currSemester': currSemester,
+    };
+
+    setSettings(sessionID: selectedSessionID!, payload: modifiedPayload);
   }
 
   void setMinDistanceExam(int newdistance) {

@@ -138,19 +138,23 @@ def setSettings():
     print(request_data)
     settings_node = ref.child(request_data['sessionID']).child('settings')   
 
-    #modify minDistanceExam
+    flag=False
 
     if('minDistanceExam' in request_data): 
         # TO DO: 
         settings_node.child('minDistanceExam').set(request_data['minDistanceExam'])
-    elif ('minDistanceCalls' in request_data):
+        flag=True
+    if ('minDistanceCalls' in request_data):
         #TO DO:
         settings_node.child('minDistanceCalls').child('Default').set(request_data['minDistanceCalls'])
-    elif('numCalls' in request_data):
+        flag=True
+    if('numCalls' in request_data):
         settings_node.child('numCalls').set(request_data['numCalls'])
-    elif('currSemester' in request_data):
-        settings_node.child('currSemester').set(request_data['currSemester'])    
-    else:
+        flag=True
+    if('currSemester' in request_data):
+        settings_node.child('currSemester').set(request_data['currSemester'])   
+        flag=True 
+    if not flag:
         exceptions_node = settings_node.child('minDistanceCalls').child('Exceptions')
         exceptions =exceptions_node.get()
         print(exceptions )

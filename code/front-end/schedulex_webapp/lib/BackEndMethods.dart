@@ -442,7 +442,7 @@ Future<void> setSettings(
     final response = await http.post(
       Uri.parse(url),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(payload),
+      body: jsonEncode(Map<String, Object>.from(payload)),
     );
 
     if (response.statusCode == 200) {

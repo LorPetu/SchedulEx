@@ -30,6 +30,13 @@ class LoginPage extends StatelessWidget {
                   onChanged: (value) {
                     inputUsername = value;
                   },
+                  onFieldSubmitted: (value) {
+                    userState.setUserID(inputUsername);
+                    //debugPrint(userID);
+
+                    // Set the user ID in MyAppState
+                    context.pushReplacement('/select');
+                  },
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
