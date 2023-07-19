@@ -154,15 +154,23 @@ class ProblemSessionPageNEW extends StatelessWidget {
             ),
             Padding(
               padding: const EdgeInsets.all(20.0),
-              child: ElevatedButton(
-                  onPressed: () {
-                    /*startOptimization(sessionID: appState.problemSessionID);
-                    saveSession(
-                        sessionID: appState.problemSessionID,
-                        payload: {'status': 'STARTED'});
-                    print('startOptimization triggered');*/
-                  },
-                  child: const Text('start')),
+              child: Row(
+                children: [
+                  ElevatedButton(
+                      onPressed: () =>
+                          context.pushReplacement('/select/settings'),
+                      child: const Icon(Icons.settings)),
+                  ElevatedButton(
+                      onPressed: () {
+                        /*startOptimization(sessionID: appState.problemSessionID);
+                        saveSession(
+                            sessionID: appState.problemSessionID,
+                            payload: {'status': 'STARTED'});
+                        print('startOptimization triggered');*/
+                      },
+                      child: const Text('start')),
+                ],
+              ),
             )
           ],
         );

@@ -14,6 +14,13 @@ class ProblemSessionState extends ChangeNotifier {
   String school = 'Ing_Ind_Inf';
   List<Unavail> unavailList = [];
 
+  //settings
+  int? minDistanceExam;
+  int? minDistanceCallsDefault;
+  int? numCalls;
+  int? currSemester;
+  List<dynamic> exceptions = [];
+
   UserState get user => appState;
 
   void resetProblemSessionID() {
@@ -21,6 +28,58 @@ class ProblemSessionState extends ChangeNotifier {
     school = 'Ing_Ind_Inf';
     sessionDates = null;
     unavailList = [];
+    minDistanceExam = null;
+    minDistanceCallsDefault = null;
+    exceptions = [];
+    numCalls = null;
+    currSemester = null;
+
+    notifyListeners();
+  }
+
+  // distance1 = minDistanceExam; distance2= minDistanceCallsDefault; Calls = numCalls; curr = currSemester;
+  void updateSettings(int distance1, int distance2, int calls, int curr) {
+    Map<String, int> payload = {};
+
+    setSettings(sessionID: selectedSessionID!, payload: payload);
+  }
+
+  void setMinDistanceExam(int newdistance) {
+    setSettings(
+        sessionID: selectedSessionID!,
+        payload: {'minDistanceExam': newdistance}).then((value) {
+      notifyListeners();
+      print('request done');
+    });
+    minDistanceExam = newdistance;
+    notifyListeners();
+  }
+
+  void setMinDistanceCallsDefault(int newdistance) {
+    setSettings(
+        sessionID: selectedSessionID!,
+        payload: {'minDistanceCalls': newdistance}).then((value) {
+      minDistanceCallsDefault = newdistance;
+      notifyListeners();
+    });
+
+    notifyListeners();
+  }
+
+  void insertException(String examID, int newdistance) {
+    setSettings(
+        sessionID: selectedSessionID!,
+        payload: {'id': examID, 'distance': newdistance}).then((value) {
+      notifyListeners();
+      print('request done');
+    });
+    exceptions.add({'id': examID, 'distance': newdistance});
+    print(exceptions);
+    notifyListeners();
+  }
+
+  void deleteException(String id) {
+    exceptions.removeWhere((element) => element['id'] == id);
 
     notifyListeners();
   }
@@ -29,21 +88,31 @@ class ProblemSessionState extends ChangeNotifier {
     selectedSessionID = id;
 
     debugPrint('${user.userID} select $selectedSessionID');
+
     getSessionData(sessionId: id).then((value) {
-      print(value);
-      if (value.startDate != null && value.endDate != null) {
-        sessionDates =
-            DateTimeRange(start: value.startDate!, end: value.endDate!);
-      }
-      print(value.school);
-      if (value.school.isEmpty) {
-        print(value.school);
-        //school = value.school;
-      } else {
-        school = value.school;
+      if (value['problemsession'].startDate != null &&
+          value['problemsession'].endDate != null) {
+        sessionDates = DateTimeRange(
+            start: value['problemsession'].startDate!,
+            end: value['problemsession'].endDate!);
       }
 
-      unavailList = value.unavailList ?? [];
+      if (!value['problemsession'].school.isEmpty) {
+        school = value['problemsession'].school;
+      }
+      unavailList = value['problemsession'].unavailList ?? [];
+      dynamic settings = value['settings'];
+      print(settings);
+      if (settings != null) {
+        minDistanceCallsDefault = settings['minDistanceCalls']['Default'];
+        minDistanceExam = settings['minDistanceExam'];
+        if (settings['minDistanceCalls']['Exceptions'] != null) {
+          settings['minDistanceCalls']['Exceptions'].forEach((k, v) {
+            exceptions.add(v);
+          });
+        }
+      }
+
       notifyListeners();
     }).catchError((error) {
       // Handle any error that occurred during the Future execution

@@ -130,22 +130,48 @@ def getUnavailabilityData(sessionID, unavailID):
         }
 
 
-@app.route("/setSettings/<string:sessionID>/<string:distCalls>/<string:distExams>", methods=['POST'])
-def setSettings(sessionID, distCalls, distExams):
-    print(sessionID, distCalls, distExams)
-    # Converti la data in formato stringa in un oggetto datetime
-    distCallsObj = int(distCalls)
-    distExamsObj = int(distExams)
+@app.route("/setSettings/", methods=['POST'])
+def setSettings():
+    txt='settings'
+    action='saved'
+    request_data = request.get_json()
+    print(request_data)
+    settings_node = ref.child(request_data['sessionID']).child('settings')   
 
-    # Crea un nuovo nodo nel database con l'sessionID come chiave e la start_date come valore
-    ref.child(sessionID).update({
-        'startDate': distCallsObj,
-        'endDate': distExamsObj
-    })
+    #modify minDistanceExam
 
-    print('Sto salvando dati per: ' + sessionID)
-    print(distCallsObj, type(distCallsObj))
-    print(distExamsObj, type(distExamsObj))
+    if('minDistanceExam' in request_data): 
+        # TO DO: 
+        settings_node.child('minDistanceExam').set(request_data['minDistanceExam'])
+    elif ('minDistanceCalls' in request_data):
+        #TO DO:
+        settings_node.child('minDistanceCalls').child('Default').set(request_data['minDistanceCalls'])
+    elif('numCalls' in request_data):
+        settings_node.child('numCalls').set(request_data['numCalls'])
+    elif('currSemester' in request_data):
+        settings_node.child('currSemester').set(request_data['currSemester'])    
+    else:
+        exceptions_node = settings_node.child('minDistanceCalls').child('Exceptions')
+        exceptions =exceptions_node.get()
+        print(exceptions )
+        del request_data['sessionID']
+        exceptions_node.push().update(request_data)
+        if(exceptions==None):
+            exceptions=[]
+        else:
+            print(type(exceptions))
+
+        #print('exceptions: ',exceptions_node.get())
+
+        
+        # for date_str in request_data['dates'].split("/"):
+        #     currDate = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S.%f").isoformat()
+        #     if(currDate not in exceptions):
+               
+        #         exceptions.append(currDate)
+#print(exceptions)
+        
+
 
     return 'Settings saved successfully.'
 

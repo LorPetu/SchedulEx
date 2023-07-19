@@ -20,10 +20,11 @@ class UnavailPageNEW extends StatelessWidget {
     void addDateRange(DateTime startDate, DateTime endDate) {
       List<DateTime> newDates = [];
       for (var date = startDate;
-          date == endDate;
+          date.isBefore(endDate.add(const Duration(days: 1)));
           date = date.add(const Duration(days: 1))) {
         newDates.add(date);
       }
+      print('newdates $newDates');
       unavailState.addDates(newDates);
     }
 

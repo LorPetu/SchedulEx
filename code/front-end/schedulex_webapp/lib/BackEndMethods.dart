@@ -180,7 +180,7 @@ Future<List<DateTime>> addDatesToUnavail(
           return DateTime.parse(item);
         }
         // Handle other cases if needed
-        throw FormatException('Invalid date format');
+        throw const FormatException('Invalid date format');
       }).toList();
 
       return dateTimeList;
@@ -313,7 +313,7 @@ Future<List<ProblemSession>> getSessionList() async {
 }
 
 //This is used in the Problem Session Page
-Future<ProblemSession> getSessionData({required String sessionId}) async {
+Future<dynamic> getSessionData({required String sessionId}) async {
   String url = 'http://$SERVER_URL/getSessionData/$sessionId';
 
   try {
@@ -322,7 +322,7 @@ Future<ProblemSession> getSessionData({required String sessionId}) async {
     if (response.statusCode == 200) {
       print('getSessionData_OK.');
       final responseData = json.decode(response.body);
-
+      print(responseData);
       List<Unavail> results = [];
 
       if (responseData['unavailList'] != null) {
@@ -373,14 +373,17 @@ Future<ProblemSession> getSessionData({required String sessionId}) async {
           ? DateTime.tryParse(responseData['endDate'].toString())
           : null;
 
-      return ProblemSession(
-        id: sessionId,
-        school: responseData['school'],
-        status: responseData['status'],
-        startDate: startDate,
-        endDate: endDate,
-        unavailList: results,
-      );
+      return {
+        'problemsession': ProblemSession(
+          id: sessionId,
+          school: responseData['school'],
+          status: responseData['status'],
+          startDate: startDate,
+          endDate: endDate,
+          unavailList: results,
+        ),
+        'settings': responseData['settings']
+      };
     } else {
       print('Failed getSessionData. Error: ${response.statusCode}');
       throw Exception('Failed getSessionData. Error: ${response.statusCode}');
@@ -427,56 +430,35 @@ Future<dynamic> getUnavailData(
   }
 }
 
+Future<void> setSettings(
+    {required String sessionID, required Map<String, dynamic> payload}) async {
+  String url = 'http://$SERVER_URL/setSettings/';
+  String txt = 'minDistanceCalls';
+  String action = 'set';
+  //The request must be expressed as string
+  payload.addAll({'sessionID': sessionID});
+
+  try {
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(payload),
+    );
+
+    if (response.statusCode == 200) {
+      print('$txt $action successfully.');
+      //print(response.body);
+    } else {
+      print('Failed to $action $txt. Error: ${response.statusCode}');
+    }
+  } catch (e) {
+    print('Exception occurred while $action $txt: $e');
+  }
+}
+
 Future<void> downloadExcel() async {
   var url = 'https://$SERVER_URL/Database_esami.xlsx';
   var response = await http.get(Uri.parse(url));
   var bytes = response.bodyBytes;
   await File('Database_esami.xlsx').writeAsBytes(bytes);
 }
-
-/*
-Future<List<Unavail>> getSessionData({required String sessionId}) async {
-  String url = 'http://$SERVER_URL/getSessionData/$sessionId';
-
-  try {
-    final response = await http.get(Uri.parse(url));
-
-    if (response.statusCode == 200) {
-      //print('getSessionData_OK.');
-      final responseData = json.decode(response.body);
-      Map<String, dynamic> unavailData = responseData['unavailList'];
-      print(unavailData);
-      List<Unavail> results = [];
-
-      for (var entry in unavailData.entries) {
-        //debugPrint('child of $sessionId' + entry.key);
-        String id = entry.key;
-        dynamic data = entry.value;
-
-        if (data != '') {
-          int type = (data['type'] != null && data['type'] != '')
-              ? int.tryParse(data['type'].toString()) ?? 0
-              : 0;
-
-          String name = data['name'] ?? '';
-          List<DateTime> dates = (data['dates'] != null)
-              ? List<DateTime>.from(
-                  data['dates'].map((dateString) => DateTime.parse(dateString)))
-              : [];
-
-          results.add(Unavail(id: id, type: type, name: name, dates: dates));
-        } else {
-          results.add(Unavail(id: id, type: 0, name: 'empty', dates: []));
-        }
-      }
-
-      return {'info': ProblemSession(id: sessionId, school: responseData['school']),'list':results};
-    } else {
-      print('Failed getSessionData. Error: ${response.statusCode}');
-      throw Exception('Failed getSessionData. Error: ${response.statusCode}');
-    }
-  } catch (e) {
-    print('Exception occurred for getSessionData: $e');
-    throw Exception('Exception occurred for getSessionData: $e');
-  }
-}*/

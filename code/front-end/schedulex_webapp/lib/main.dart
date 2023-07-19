@@ -3,11 +3,11 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:schedulex_webapp/LoginPage.dart';
 import 'package:schedulex_webapp/SessionPage.dart';
+import 'package:schedulex_webapp/Settingspage.dart';
 import 'package:schedulex_webapp/model/ProblemSessionState.dart';
 import 'package:schedulex_webapp/model/UnavailState.dart';
 import 'package:schedulex_webapp/model/UserState.dart';
 import 'SelectPage.dart';
-
 
 import 'Unavailpage.dart';
 
@@ -76,6 +76,10 @@ GoRouter router() {
             path: 'unavail',
             builder: (context, state) => const UnavailPageNEW(),
           ),
+          GoRoute(
+            path: 'settings',
+            builder: (context, state) => const SettingsPage(),
+          )
         ],
       ),
     ],
