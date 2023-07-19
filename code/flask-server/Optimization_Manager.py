@@ -3,6 +3,12 @@ import pandas as pd
 from utils import *
 from optimizer_copy import *
 
+def saveFlag(status_obj, string, ref, sessionID):
+    ref.child(sessionID).update({
+        'status': status_obj.setFlag(string)
+    })
+
+
 #FUNZIONA
 def getDatabaseProblemData(sessionID, ref, status_obj):
     status_obj.setStatus('Gathering of data of Database Problem is running...')
@@ -130,9 +136,10 @@ def createOptExamList(ExamList, status_obj, percentage):
 def createWeight(unprocessedExamList, semester, status_obj, percentage):
     status_obj.setStatus(percentage + ' Weight creation is running')
     # Creates weights for each optExam
-    # for exam in unprocessedExamList:
-    #     exam.effortWeight = exam.cfu * 3 + exam.passed_percentage * 4 + exam.average_mark * 4
-    #     exam.timeWeight = [int(2**(-0.3*abs(exam.sem - exam_j.exam.sem))*1000)/100 + 10*((exam.sem==semester).real)*((exam_j.exam.sem==semester).real) for exam_j in unprocessedExamList] 
+    for exam in unprocessedExamList:
+        exam.effortWeight = exam.cfu * 3 + exam.passed_percentage * 4 + exam.average_mark * 4
+        exam.timeWeight = [int(2**(-0.3 * abs(exam.sem - exam_j.exam.sem)) * 1000) / 100 + 10 * ((exam.sem == semester) * (exam_j.exam.sem == semester)) for exam_j in unprocessedExamList]
+        #exam.timeWeight = [int(2**(-0.3*abs(exam.sem - exam_j.exam.sem))*1000)/100 + 10*((exam.sem==semester).real)*((exam_j.exam.sem==semester).real) for exam_j in unprocessedExamList] 
     return unprocessedExamList  
 
 
@@ -168,10 +175,10 @@ def addUnavailability(unprocessedExamList, problem_session, status_obj, percenta
 
 
 def runOptimizationManager(status_obj, callback):
-    status_obj.setFlag('STARTED-NOT SOLVED')
     sessionID = status_obj.sessionID
     status_obj.setStatus('Optimization flow started')
     ref=status_obj.ref
+    saveFlag(status_obj, 'STARTED', ref, sessionID)
     # Get according to sessionID database values Problem
     status_obj.setStatus('Gathering of data of Database Problem will start shortly')
     problem_session=getDatabaseProblemData(sessionID, ref, status_obj)
@@ -179,7 +186,7 @@ def runOptimizationManager(status_obj, callback):
     #print(problem_session)
     ## Itera each school CdS
     if problem_session.school == 'Ing_Ind_Inf':
-        cds_list = ['ATM']#,'ELT', 'ELN', 'BIO', 'MTM', 'INF']
+        cds_list = ['ATM','ELT']#, 'ELN', 'BIO', 'MTM', 'INF']
     if problem_session.school == 'Design':
         cds_list = ['ATM']#,'ELT', 'ELN', 'BIO', 'MTM', 'INF']
     if problem_session.school == 'AUIC':
@@ -217,13 +224,14 @@ def runOptimizationManager(status_obj, callback):
         print(unprocessedExamList3[0].minDistanceCalls)
         #print(unprocessedExamList3[1].effortWeight)
         status_obj.setStatus(percentage + ' Optimization process will start shortly')
+        saveFlag(status_obj, 'NOT SOLVED', ref, sessionID)
         resultsExams.add(solveScheduling(unprocessedExamList3, problem_session))
         status_obj.setStatus(percentage + ' Optimization process completed')
         
         #unprocessedExamList3[1].assignedDates=['2023-06-02', '2023-06-03']
         #resultsExams.add(unprocessedExamList3[1])
         callback(resultsExams)
-        status_obj.setFlag('SOLVED')
+        saveFlag(status_obj, 'SOLVED', ref, sessionID)
     return resultsExams
 
 #if __name__== "__main__":

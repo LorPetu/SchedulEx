@@ -74,7 +74,7 @@ def handleOptimizationResults(results):
         sheet.append(row_values)
 
     # Salvataggio del file Excel
-    workbook.save("flask-server\calendario.xlsx")
+    workbook.save("flask-server\Calendario.xlsx")
 
 
 @app.route("/askStatus/<string:sessionID>")
@@ -84,14 +84,6 @@ def askStatus(sessionID):
 
     # Restituisci la risposta HTTP al browser
     return stato_corrente
-
-@app.route("/askFlag/<string:sessionID>")
-def askFlag(sessionID):
-    ## Ottieni l'oggetto status_obj da qualche parte, ad esempio passandolo come argomento
-    flag_corrente = status.getFlag()
-
-    # Restituisci la risposta HTTP al browser
-    return flag_corrente
 
 ### IMPLEMENTED
 @app.route("/setUserID/<string:sessionID>/<string:userID>", methods=['POST'])
