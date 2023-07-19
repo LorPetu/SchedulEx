@@ -69,13 +69,30 @@ class ProblemSession {
 }
 
 class Exam {
-  final String title;
+  final String name;
+  final List<DateTime> assignedDates;
 
-  const Exam(this.title);
+  Exam(this.name, this.assignedDates);
 
   @override
-  String toString() => title;
+  String toString() => name;
 }
+
+List<Exam> exams = [
+  Exam('Exam 1', [
+    DateTime.utc(2023, 7, 20),
+    DateTime.utc(2023, 7, 22),
+    DateTime.utc(2023, 7, 25),
+  ]),
+  Exam('Exam 2', [
+    DateTime.utc(2023, 7, 21),
+    DateTime.utc(2023, 7, 23),
+    DateTime.utc(2023, 7, 26),
+  ]),
+  // Add more exams here...
+];
+
+// Create a map to store the exams associated with their respective dates
 
 /// Example Exams.
 ///
@@ -85,14 +102,18 @@ final kExams = LinkedHashMap<DateTime, List<Exam>>(
   hashCode: getHashCode,
 )..addAll(_kExamSource);
 
-final _kExamSource = Map.fromIterable(List.generate(50, (index) => index),
-    key: (item) => DateTime.utc(kFirstDay.year, kFirstDay.month, item * 5),
-    value: (item) => List.generate(
-        item % 4 + 1, (index) => Exam('Exam $item | ${index + 1}')))
-  ..addAll({
+final _kExamSource = exams.fold<Map<DateTime, List<Exam>>>(
+  {}, // Start with an empty map
+  (map, exam) {
+    for (final assignedDate in exam.assignedDates) {
+      map[assignedDate] = (map[assignedDate] ?? [])..add(exam);
+    }
+    return map;
+  },
+)..addAll({
     kToday: [
-      Exam('Today\'s Exam 1'),
-      Exam('Today\'s Exam 2'),
+      Exam('Today\'s Exam 1', [DateTime.now()]),
+      Exam('Today\'s Exam 2', [DateTime.now()]),
     ],
   });
 

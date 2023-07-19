@@ -245,7 +245,7 @@ Future<void> startOptimization({required String sessionID}) async {
   }
 }
 
-Future<String?> getStatus({required String sessionID}) async {
+Future<Map<String, dynamic>?> getStatus({required String sessionID}) async {
   String url = 'http://$SERVER_URL/askStatus/$sessionID';
 
   try {
@@ -253,7 +253,7 @@ Future<String?> getStatus({required String sessionID}) async {
 
     if (response.statusCode == 200) {
       print('Get status successfully.');
-      return response.body;
+      return jsonDecode(response.body);
     } else {
       print('Failed to get status. Error: ${response.statusCode}');
     }

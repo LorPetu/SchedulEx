@@ -1,3 +1,6 @@
+from firebase_admin import db
+
+
 class Unavail:
     def __init__(self, id, type, dates, name):
         self.id = id
@@ -49,29 +52,24 @@ class optExam(Exam):
         self.assignedDates = assignedDates
          
 class optStatus:
-    def __init__(self, flag, status, sessionID, ref):
-        self.__flag = flag
+    def __init__(self, progress, status, sessionID, ref):
+        self.__progress = progress
         self.__status = status
         self.sessionID = sessionID
         self.ref = ref
     
     def getStatus(self)-> str:
         return self.__status
-    def getFlag(self)-> int:
-        return self.__flag
+    def getProgress(self)-> int:
+        return self.__progress
 
     def setStatus(self,new_status):
+        db.reference("/").child(self.sessionID).update({
+        'status': new_status
+    })
         self.__status=new_status
-    def setFlag(self,new_flag):
-        self.__flag=new_flag
-
-if __name__ == "__main__":
-    status=optStatus("NOT STARTED")
-
-    print(status.getStatus())
-    status.setStatus('STARTED')
-
-    print(status.getStatus())
+    def setFlag(self,progress_update):
+        self.__progress=progress_update
 
     
 import random

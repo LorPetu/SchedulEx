@@ -21,14 +21,31 @@ class CalendarPage extends StatefulWidget {
 class _CalendarPageState extends State<CalendarPage> {
   String serverResponse = 'No response yet';
   late Timer _pollingTimer;
+  bool? isSolved; // Replace this with your status logic
 
   @override
   void initState() {
     super.initState();
     final session = context.read<ProblemSessionState>();
-    getStatus(sessionID: session.selectedSessionID!); // Initial fetch
-    _pollingTimer = Timer.periodic(const Duration(seconds: 10),
-        (_) => getStatus(sessionID: session.selectedSessionID!));
+    getStatus(sessionID: session.selectedSessionID!).then((value) {
+      setState(() {
+        print(value);
+        isSolved = (value?['status'] == 'SOLVED');
+        serverResponse = value?['progress'];
+      });
+    }); // Initial fetch
+    _pollingTimer = Timer.periodic(
+        const Duration(seconds: 10),
+        (_) => getStatus(sessionID: session.selectedSessionID!).then((value) {
+              setState(() {
+                print(value);
+                isSolved = (value?['status'] == 'SOLVED');
+                if (isSolved!) {
+                  stopPolling();
+                }
+                serverResponse = value?['progress'];
+              });
+            }));
   }
 
   // Method to stop the polling
@@ -39,7 +56,7 @@ class _CalendarPageState extends State<CalendarPage> {
   @override
   Widget build(BuildContext context) {
     final session = context.watch<ProblemSessionState>();
-    bool status = true; // Replace this with your status logic
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Calendar'),
@@ -54,18 +71,14 @@ class _CalendarPageState extends State<CalendarPage> {
           ),
         ],
       ),
-      body: status
-          ? TableResults(stopPolling: stopPolling)
+      body: isSolved ?? false
+          ? TableResults()
           : Center(child: Text('Server Response: $serverResponse')),
     );
   }
 }
 
 class TableResults extends StatefulWidget {
-  final Function stopPolling;
-
-  TableResults({required this.stopPolling});
-
   @override
   _TableResultsState createState() => _TableResultsState();
 }
@@ -143,69 +156,64 @@ class _TableResultsState extends State<TableResults> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('TableCalendar - Exams'),
-      ),
-      body: Column(
-        children: [
-          TableCalendar<Exam>(
-            firstDay: kFirstDay,
-            lastDay: kLastDay,
-            focusedDay: _focusedDay,
-            selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-            rangeStartDay: _rangeStart,
-            rangeEndDay: _rangeEnd,
-            calendarFormat: _calendarFormat,
-            rangeSelectionMode: _rangeSelectionMode,
-            eventLoader: _getExamsForDay,
-            startingDayOfWeek: StartingDayOfWeek.monday,
-            calendarStyle: CalendarStyle(
-              // Use `CalendarStyle` to customize the UI
-              outsideDaysVisible: false,
-            ),
-            onDaySelected: _onDaySelected,
-            onRangeSelected: _onRangeSelected,
-            onFormatChanged: (format) {
-              if (_calendarFormat != format) {
-                setState(() {
-                  _calendarFormat = format;
-                });
-              }
-            },
-            onPageChanged: (focusedDay) {
-              _focusedDay = focusedDay;
+    return Column(
+      children: [
+        TableCalendar<Exam>(
+          firstDay: kFirstDay,
+          lastDay: kLastDay,
+          focusedDay: _focusedDay,
+          selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+          rangeStartDay: _rangeStart,
+          rangeEndDay: _rangeEnd,
+          calendarFormat: _calendarFormat,
+          rangeSelectionMode: _rangeSelectionMode,
+          eventLoader: _getExamsForDay,
+          startingDayOfWeek: StartingDayOfWeek.monday,
+          calendarStyle: CalendarStyle(
+            // Use `CalendarStyle` to customize the UI
+            outsideDaysVisible: false,
+          ),
+          onDaySelected: _onDaySelected,
+          onRangeSelected: _onRangeSelected,
+          onFormatChanged: (format) {
+            if (_calendarFormat != format) {
+              setState(() {
+                _calendarFormat = format;
+              });
+            }
+          },
+          onPageChanged: (focusedDay) {
+            _focusedDay = focusedDay;
+          },
+        ),
+        const SizedBox(height: 8.0),
+        Expanded(
+          child: ValueListenableBuilder<List<Exam>>(
+            valueListenable: _selectedExams,
+            builder: (context, value, _) {
+              return ListView.builder(
+                itemCount: value.length,
+                itemBuilder: (context, index) {
+                  return Container(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 12.0,
+                      vertical: 4.0,
+                    ),
+                    decoration: BoxDecoration(
+                      border: Border.all(),
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    child: ListTile(
+                      onTap: () => print('${value[index]}'),
+                      title: Text('${value[index]}'),
+                    ),
+                  );
+                },
+              );
             },
           ),
-          const SizedBox(height: 8.0),
-          Expanded(
-            child: ValueListenableBuilder<List<Exam>>(
-              valueListenable: _selectedExams,
-              builder: (context, value, _) {
-                return ListView.builder(
-                  itemCount: value.length,
-                  itemBuilder: (context, index) {
-                    return Container(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 12.0,
-                        vertical: 4.0,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(),
-                        borderRadius: BorderRadius.circular(12.0),
-                      ),
-                      child: ListTile(
-                        onTap: () => print('${value[index]}'),
-                        title: Text('${value[index]}'),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

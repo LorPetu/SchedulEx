@@ -73,8 +73,11 @@ class SelectPage extends StatelessWidget {
                               : const Text('School not selected'),
                           onTap: () {
                             problemSessionState.setProblemSessionID(element.id);
-                            context.pushReplacement('/select/session');
-                            //Navigator.pushNamed(context, '/problemSession');
+                            if (element.status == 'STARTED') {
+                              context.pushReplacement('/select/calendar');
+                            } else {
+                              context.pushReplacement('/select/session');
+                            }
                           },
                         );
                       },

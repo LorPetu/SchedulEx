@@ -18,11 +18,11 @@ cred_obj = firebase_admin.credentials.Certificate("./schedulex-723a8-firebase-ad
 
 default_app = firebase_admin.initialize_app(cred_obj, {'databaseURL':'https://schedulex-723a8-default-rtdb.firebaseio.com/'})
 
-ref = db.reference("/") # Ottieni un riferimento al percorso del database dove desideri salvare i dati
+ref = db.reference("/") 
 
 status_data = {
-       "flag": 0,
-       "status": [],
+       "progress": 'No progress yet',
+       "status": '',
        "sessionID": [],
        "ref": [], 
     }
@@ -41,7 +41,7 @@ def test():
 ### IMPLEMENTED
 @app.route("/startOptimization/<string:sessionID>")
 def startOptimization(sessionID):
-    status.setStatus('partito')
+    status.setStatus('STARTED')
     status.sessionID = sessionID
     status.ref = ref
 
@@ -80,11 +80,11 @@ def handleOptimizationResults(results):
 @app.route("/askStatus/<string:sessionID>")
 def askStatus(sessionID):
     ## Ottieni l'oggetto status_obj da qualche parte, ad esempio passandolo come argomento
-    stato_corrente = status.getStatus()
-    print(stato_corrente)
+    result = {'status': status.getStatus(), 'progress' : status.getProgress()}
+    
 
     # Restituisci la risposta HTTP al browser
-    return "Response"
+    return result
 
 ### IMPLEMENTED
 @app.route("/setUserID/<string:sessionID>/<string:userID>", methods=['POST'])
@@ -151,22 +151,70 @@ def getSessionData(sessionID):
 
     return SessionData
 
-@app.route("/setSettings/<string:sessionID>/<string:distCalls>/<string:distExams>", methods=['POST'])
-def setSettings(sessionID, distCalls, distExams):
-    print(sessionID, distCalls, distExams)
-    # Converti la data in formato stringa in un oggetto datetime
-    distCallsObj = int(distCalls)
-    distExamsObj = int(distExams)
+@app.route("/getUnavailData/<string:sessionID>/<string:unavailID>")
+def getUnavailabilityData(sessionID, unavailID):
+    # Retrieve the Unavail data from the Firebase Realtime Database
+    unavailData = ref.child(sessionID).child('unavailList').child(unavailID).get()
 
-    # Crea un nuovo nodo nel database con l'sessionID come chiave e la start_date come valore
-    ref.child(sessionID).update({
-        'startDate': distCallsObj,
-        'endDate': distExamsObj
-    })
+    # Check if the unavailData exists
+    if unavailData!='':
+        
+        return unavailData
+    else:
+        # Return an empty response if the unavailData doesn't exist
+        return {
+            'type': 0,
+            'name': '',
+            'dates': []
+        }
 
-    print('Sto salvando dati per: ' + sessionID)
-    print(distCallsObj, type(distCallsObj))
-    print(distExamsObj, type(distExamsObj))
+
+@app.route("/setSettings/", methods=['POST'])
+def setSettings():
+    txt='settings'
+    action='saved'
+    request_data = request.get_json()
+    print(request_data)
+    settings_node = ref.child(request_data['sessionID']).child('settings')   
+
+    flag=False
+
+    if('minDistanceExam' in request_data): 
+        # TO DO: 
+        settings_node.child('minDistanceExam').set(request_data['minDistanceExam'])
+        flag=True
+    if ('minDistanceCalls' in request_data):
+        #TO DO:
+        settings_node.child('minDistanceCalls').child('Default').set(request_data['minDistanceCalls'])
+        flag=True
+    if('numCalls' in request_data):
+        settings_node.child('numCalls').set(request_data['numCalls'])
+        flag=True
+    if('currSemester' in request_data):
+        settings_node.child('currSemester').set(request_data['currSemester'])   
+        flag=True 
+    if not flag:
+        exceptions_node = settings_node.child('minDistanceCalls').child('Exceptions')
+        exceptions =exceptions_node.get()
+        print(exceptions )
+        del request_data['sessionID']
+        exceptions_node.push().update(request_data)
+        if(exceptions==None):
+            exceptions=[]
+        else:
+            print(type(exceptions))
+
+        #print('exceptions: ',exceptions_node.get())
+
+        
+        # for date_str in request_data['dates'].split("/"):
+        #     currDate = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S.%f").isoformat()
+        #     if(currDate not in exceptions):
+               
+        #         exceptions.append(currDate)
+#print(exceptions)
+        
+
 
     return 'Settings saved successfully.'
 
@@ -232,20 +280,22 @@ def saveSession():
     action='saved'
     request_data = request.get_json()
 
+    #Chech if the sessionID is new or not
     if('sessionID' not in  request_data ):
-        session_node = ref.push()
+        session_node = ref.push() #create the new child for the corresponding sessionID
         print(session_node.key)
     else:
         print(request_data['sessionID'])
         session_node = ref.child(request_data['sessionID'])
+        del request_data['sessionID']
         
-    del request_data['sessionID']
-
-    for key in request_data:
-        print(key)
-    session_node.update(request_data)
+    if(request_data!={}):
+        print('sto qua')
+        session_node.update(request_data)
+    
 
     return {'status': f'{txt} {action} successfully.', 'id':session_node.key}
+
 
 @app.route("/deleteSession/<string:sessionID>")
 def deleteSession(sessionID):
