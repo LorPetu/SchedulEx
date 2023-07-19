@@ -10,10 +10,10 @@ from Optimization_Manager import *
 from queueManager import flag_queue
 
 
-#cred_obj = firebase_admin.credentials.Certificate("./schedulex-723a8-firebase-adminsdk-mau2x-c93019364b.json")
+cred_obj = firebase_admin.credentials.Certificate("./schedulex-723a8-firebase-adminsdk-mau2x-c93019364b.json")
 
-json_file_path = "C:\\Users\\Utente\\Desktop\\SchedulEx\\code\\flask-server\\schedulex-723a8-firebase-adminsdk-mau2x-c93019364b.json"
-cred_obj = firebase_admin.credentials.Certificate(json_file_path)
+# json_file_path = "C:\\Users\\Utente\\Desktop\\SchedulEx\\code\\flask-server\\schedulex-723a8-firebase-adminsdk-mau2x-c93019364b.json"
+# cred_obj = firebase_admin.credentials.Certificate(json_file_path)
 
 
 default_app = firebase_admin.initialize_app(cred_obj, {'databaseURL':'https://schedulex-723a8-default-rtdb.firebaseio.com/'})
@@ -136,10 +136,10 @@ def getSessionList():
             "description": ref.child(session_id).child('description').get(),
             "user": ref.child(session_id).child('userID').get(),
         }
-        problem_session = ProblemSession(**session_data)  # Create a ProblemSession object
-        problem_sessions.append(problem_session)
+        #problem_session = ProblemSession(**session_data)  # Create a ProblemSession object
+        problem_sessions.append(session_data)
 
-    response = json.dumps([ps.__dict__ for ps in problem_sessions])  # Convert the list of ProblemSession objects to JSON
+    response = json.dumps(problem_sessions)  # Convert the list of ProblemSession objects to JSON
     return response
 
 ### IMPLEMENTED

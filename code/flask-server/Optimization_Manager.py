@@ -149,17 +149,22 @@ def addDistances(unprocessedExamList, problem_session, status_obj, percentage):
 #TESTARE IL MATCHING DI DATE
 def addUnavailability(unprocessedExamList, problem_session, status_obj, percentage):
     status_obj.setStatus(percentage + ' Unavailability merging is running...')
-    for opt_exam in unprocessedExamList:
-        professor_list = []
-        professors = opt_exam.professor.split('-')  #Divides the string into hyphenated names
-        professor_list.extend(professors)  # Adds names to the professor_list
-        #print(professor_list)
 
-        for sublist in problem_session.unavailList:
-            if sublist[1] == 0:
-                opt_exam.unavailDates += sublist[2]
-            elif sublist[1] == 1 and sublist[0] in professor_list:
-                opt_exam.unavailDates += sublist[2]
+    professor_list = []
+    professors = opt_exam.professor.split('-')  #Divides the string into hyphenated names
+    professor_list.extend(professors)  # Adds names to the professor_list
+    #print(professor_list)
+
+    for opt_exam in unprocessedExamList:
+        # for each unavail {id, name, type, dates} in problem_session that is considered 
+        # check if the unavail involves the professor of opt_exam 
+        for unavail in problem_session.unavailList:
+            if (unavail.name in opt_exam.professor):
+                opt_exam.unavailDates += unavail.dates
+            # if sublist[1] == 0:
+            #     opt_exam.unavailDates += sublist[2]
+            # elif sublist[1] == 1 and sublist[0] in professor_list:
+            #     opt_exam.unavailDates += sublist[2]
 
     return unprocessedExamList
 
