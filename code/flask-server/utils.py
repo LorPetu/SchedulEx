@@ -57,7 +57,7 @@ class optStatus:
     
     def getStatus(self)-> str:
         return self.__status
-    def getFlag(self)-> int:
+    def getFlag(self)-> str:
         return self.__flag
 
     def setStatus(self,new_status):

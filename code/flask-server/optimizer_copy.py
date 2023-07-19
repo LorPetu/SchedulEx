@@ -11,8 +11,10 @@ def solveScheduling(exams, problem_session):
 
     ## Define the days that are available from start to end date
     availDates = []
-    current_date=problem_session.start_date
-    while current_date <= problem_session.end_date:
+    current_date=problem_session.startDate
+    print(current_date)
+    print(problem_session.startDate)
+    while current_date <= problem_session.endDate:
         availDates.append(current_date)
         current_date += timedelta(days=1)
 

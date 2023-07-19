@@ -1,6 +1,7 @@
 from firebase_admin import db
 import pandas as pd
 from utils import *
+from optimizer_copy import *
 
 #FUNZIONA
 def getDatabaseProblemData(sessionID, ref, status_obj):
@@ -30,8 +31,8 @@ def getDatabaseProblemData(sessionID, ref, status_obj):
         "status": session_data.get('status'),
         "description": session_data.get('description'),
         "user": session_data.get('userID'),
-        "startDate": [],#session_data.get('startDate'),
-        "endDate": [],#session_data.get('endDate'),
+        "startDate": datetime.strptime(session_data.get('startDate'), "%Y-%m-%dT%H:%M:%S"),
+        "endDate": datetime.strptime(session_data.get('endDate'), "%Y-%m-%dT%H:%M:%S"),
         "unavailList": result_list,
         "settings": settings_list,
         "semester": [],#session_data.get('semester'),
@@ -46,15 +47,17 @@ def getDatabaseProblemData(sessionID, ref, status_obj):
 def getDatabaseExam(cds_id, status_obj, school, percentage):
     
     try:
-        status_obj.setStatus(percentage + ' Gathering of data of Database Exam is running...')
-        # Read data from the specified sheet of the Excel file
-        data = pd.read_excel('flask-server\Database esami_'+school+'.xlsx', sheet_name=cds_id)
-    except FileNotFoundError:
-        status_obj.setStatus(percentage + ' Excel file not found: flask-server\Database esami_'+school+'.xlsx')
-        return None
-    except ValueError:
-        status_obj.setStatus(percentage + f' Sheet "{cds_id}" not found in the Excel file.')
-        return None
+        status_obj.setStatus(percentage + ' Recupero dei dati del Database Esami in corso...')
+        # Leggi i dati dal foglio specificato del file Excel
+        data = pd.read_excel('Database esami_'+school+'.xlsx', sheet_name=cds_id)
+    except FileNotFoundError as e:
+        status_obj.setStatus(percentage + ' File Excel non trovato: flask-server\Database esami_'+school+'.xlsx')
+        #print('Errore:', e)
+        return 'file error'
+    except ValueError as e:
+        status_obj.setStatus(percentage + f' Foglio "{cds_id}" non trovato nel file Excel.')
+        #print('Errore:', e)
+        return 'sheet error'
 
     # Creates an empty list for Exam objects
     resultsExams1 = []
@@ -165,7 +168,7 @@ def addUnavailability(unprocessedExamList, problem_session, status_obj, percenta
 
 
 def runOptimizationManager(status_obj, callback):
-    status_obj.setFlag(1)
+    status_obj.setFlag('STARTED-NOT SOLVED')
     sessionID = status_obj.sessionID
     status_obj.setStatus('Optimization flow started')
     ref=status_obj.ref
@@ -186,14 +189,13 @@ def runOptimizationManager(status_obj, callback):
         total_cds = len(cds_list)  # Numero totale di cds nella lista
         percentage = f"Iterazione {index}/{total_cds}: {cds_id}"
         status_obj.setStatus(percentage + ' Gathering of data of Database Exam will start shortly')
-        try:
-            ExamList = getDatabaseExam(cds_id, status_obj, problem_session.school, percentage)
-        except FileNotFoundError:
-            status_obj.setFlag(0)
-            break
-        except ValueError:
-            status_obj.setFlag(0)
-            break
+        ExamList = getDatabaseExam(cds_id, status_obj, problem_session.school, percentage)
+        if ExamList=='file error':
+            status_obj.setStatus('DATABASE NOT FOUND')
+            return
+        if ExamList == 'sheet error':
+            status_obj.setStatus('SHEET NOT FOUND')
+            return
         status_obj.setStatus(percentage + ' Database Problem data gathering completed')
         status_obj.setStatus(percentage + ' Exam list creation will start shortly')
         optExamList=createOptExamList(ExamList, status_obj, percentage)
@@ -214,14 +216,14 @@ def runOptimizationManager(status_obj, callback):
         status_obj.setStatus(percentage + ' Unavailability merging completed')
         print(unprocessedExamList3[0].minDistanceCalls)
         #print(unprocessedExamList3[1].effortWeight)
-        #status_obj.setStatus(percentage + ' Optimization process will start shortly')
-        #resultsExams.add(startOptimization(unprocessedExamList3))
-        #status_obj.setStatus(percentage + ' Optimization process completed')
+        status_obj.setStatus(percentage + ' Optimization process will start shortly')
+        resultsExams.add(solveScheduling(unprocessedExamList3, problem_session))
+        status_obj.setStatus(percentage + ' Optimization process completed')
         
-        unprocessedExamList3[1].assignedDates=['2023-06-02', '2023-06-03']
-        resultsExams.add(unprocessedExamList3[1])
+        #unprocessedExamList3[1].assignedDates=['2023-06-02', '2023-06-03']
+        #resultsExams.add(unprocessedExamList3[1])
         callback(resultsExams)
-        status_obj.setFlag(0) # 0 se ha finito e può partire un'altra ottimizzazione
+        status_obj.setFlag('SOLVED')
     return resultsExams
 
 #if __name__== "__main__":

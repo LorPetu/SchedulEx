@@ -21,7 +21,7 @@ default_app = firebase_admin.initialize_app(cred_obj, {'databaseURL':'https://sc
 ref = db.reference("/") # Ottieni un riferimento al percorso del database dove desideri salvare i dati
 
 status_data = {
-       "flag": 0,
+       "flag": 'NOT STARTED',
        "status": [],
        "sessionID": [],
        "ref": [], 
@@ -81,10 +81,17 @@ def handleOptimizationResults(results):
 def askStatus(sessionID):
     ## Ottieni l'oggetto status_obj da qualche parte, ad esempio passandolo come argomento
     stato_corrente = status.getStatus()
-    print(stato_corrente)
 
     # Restituisci la risposta HTTP al browser
-    return "Response"
+    return stato_corrente
+
+@app.route("/askFlag/<string:sessionID>")
+def askFlag(sessionID):
+    ## Ottieni l'oggetto status_obj da qualche parte, ad esempio passandolo come argomento
+    flag_corrente = status.getFlag()
+
+    # Restituisci la risposta HTTP al browser
+    return flag_corrente
 
 ### IMPLEMENTED
 @app.route("/setUserID/<string:sessionID>/<string:userID>", methods=['POST'])
