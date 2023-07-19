@@ -10,15 +10,26 @@ from Optimization_Manager import *
 from queueManager import flag_queue
 
 
-cred_obj = firebase_admin.credentials.Certificate("./schedulex-723a8-firebase-adminsdk-mau2x-c93019364b.json")
+#cred_obj = firebase_admin.credentials.Certificate("./schedulex-723a8-firebase-adminsdk-mau2x-c93019364b.json")
 
-#json_file_path = "C:\\Users\\Utente\\Desktop\\SchedulEx\\code\\flask-server\\schedulex-723a8-firebase-adminsdk-mau2x-c93019364b.json"
-#cred_obj = firebase_admin.credentials.Certificate(json_file_path)
+json_file_path = "C:\\Users\\Utente\\Desktop\\SchedulEx\\code\\flask-server\\schedulex-723a8-firebase-adminsdk-mau2x-c93019364b.json"
+cred_obj = firebase_admin.credentials.Certificate(json_file_path)
 
 
 default_app = firebase_admin.initialize_app(cred_obj, {'databaseURL':'https://schedulex-723a8-default-rtdb.firebaseio.com/'})
 
 ref = db.reference("/") # Ottieni un riferimento al percorso del database dove desideri salvare i dati
+
+status_data = {
+       "flag": 0,
+       "status": [],
+       "sessionID": [],
+       "ref": [], 
+    }
+    # Create an Exam object using the data dictionary
+status = optStatus(**status_data)
+print(status)
+
 
 app = Flask(__name__)
 
@@ -27,14 +38,50 @@ def test():
     print('test ok')
     return 'test'
 
-@app.route("/askStatus")
-def askStatus():
-    if not flag_queue.empty():
-        flag = flag_queue.get()
-        print(flag)
-        flag_queue.put(flag)
-    else:
-        print("La coda è vuota")
+### IMPLEMENTED
+@app.route("/startOptimization/<string:sessionID>")
+def startOptimization(sessionID):
+    status.setStatus('partito')
+    status.sessionID = sessionID
+    status.ref = ref
+
+    # Crea un oggetto thread e passa gli argomenti come argomenti posizionali
+    optimization_thread = Thread(target=runOptimizationManager, args=(status, handleOptimizationResults))
+
+    optimization_thread.start()
+    return 'Start process'
+
+def handleOptimizationResults(results):
+    # Questa è la funzione di callback che verrà chiamata dal thread quando ha completato l'ottimizzazione
+    for result in results:
+        print("Risultati dell'ottimizzazione:", result.assignedDates)
+    
+    import openpyxl
+
+    # Creazione di un nuovo file Excel
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+
+    # Intestazione delle colonne
+    headers = ["Corso", "Date Esame"]  # Sostituisci con i nomi dei campi di result
+    sheet.append(headers)
+
+    for result in results:
+        row_values = [result.course_code, result.assignedDates]  # Sostituisci con i nomi dei campi corretti di result
+        # Converti la lista in una stringa separata da virgole
+        row_values = [','.join(map(str, item)) if isinstance(item, list) else item for item in row_values]
+        
+        sheet.append(row_values)
+
+    # Salvataggio del file Excel
+    workbook.save("flask-server\calendario.xlsx")
+
+
+@app.route("/askStatus/<string:sessionID>")
+def askStatus(sessionID):
+    ## Ottieni l'oggetto status_obj da qualche parte, ad esempio passandolo come argomento
+    stato_corrente = status.getStatus()
+    print(stato_corrente)
 
     # Restituisci la risposta HTTP al browser
     return "Response"
@@ -73,14 +120,6 @@ def setStartEndDate(sessionID, startDate, endDate):
     
     return 'Start date saved successfully.'
 
-### IMPLEMENTED
-@app.route("/startOptimization/<string:sessionID>")
-def startOptimization(sessionID):
-    # Call
-    OptimizationManager = Thread(target=runOptimizationManager, args=(flag_queue,))
-    OptimizationManager.start()
-
-    return 'Start process'
 
 ### IMPLEMENTED
 @app.route("/getSessionList")
