@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:schedulex_webapp/model/ProblemSessionState.dart';
-import 'package:schedulex_webapp/model/UserState.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final userID = context.select<UserState, String>((value) => value.userID);
+    //final userID = context.select<UserState, String>((value) => value.userID);
     final problemSessionState = context.watch<ProblemSessionState>();
 
     final numCallsController = TextEditingController(
@@ -79,10 +78,10 @@ class SettingsPage extends StatelessWidget {
 
     void saveForm() {
       problemSessionState.updateSettings({
-        'minDistanceCallsDefault': defaultDistanceController.text ?? 0,
-        'minDistanceExam': minDistanceExamController.text ?? 0,
-        'currSemester': numCallsController.text ?? 0,
-        'numCalls': currSemestercontroller.text ?? 0
+        'minDistanceCallsDefault': defaultDistanceController.text,
+        'minDistanceExam': minDistanceExamController.text,
+        'currSemester': numCallsController.text,
+        'numCalls': currSemestercontroller.text
       });
     }
 

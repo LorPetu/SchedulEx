@@ -27,8 +27,9 @@ def test():
     print('test ok')
     return 'test'
 
-@app.route("/askStatus")
-def askStatus():
+@app.route("/askStatus/<string:sessionID>")
+def askStatus(sessionID):
+    print(f'ask status for {sessionID}')
     if not flag_queue.empty():
         flag = flag_queue.get()
         print(flag)

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:schedulex_webapp/model/ProblemSessionState.dart';
 import 'package:schedulex_webapp/model/UnavailState.dart';
 import 'package:schedulex_webapp/model/UserState.dart';
+import 'package:schedulex_webapp/BackEndMethods.dart';
 
 import 'package:schedulex_webapp/utils.dart';
 
@@ -155,18 +156,24 @@ class ProblemSessionPageNEW extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   ElevatedButton(
                       onPressed: () =>
                           context.pushReplacement('/select/settings'),
                       child: const Icon(Icons.settings)),
+                  const SizedBox(
+                    width: 15,
+                  ),
                   ElevatedButton(
                       onPressed: () {
-                        /*startOptimization(sessionID: appState.problemSessionID);
+                        startOptimization(
+                            sessionID: problemSessionState.selectedSessionID!);
                         saveSession(
-                            sessionID: appState.problemSessionID,
+                            sessionID: problemSessionState.selectedSessionID!,
                             payload: {'status': 'STARTED'});
-                        print('startOptimization triggered');*/
+                        print('startOptimization triggered');
+                        context.pushReplacement('/select/calendar');
                       },
                       child: const Text('start')),
                 ],

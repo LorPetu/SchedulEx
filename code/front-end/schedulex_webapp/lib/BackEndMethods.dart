@@ -245,6 +245,23 @@ Future<void> startOptimization({required String sessionID}) async {
   }
 }
 
+Future<String?> getStatus({required String sessionID}) async {
+  String url = 'http://$SERVER_URL/askStatus/$sessionID';
+
+  try {
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      print('Get status successfully.');
+      return response.body;
+    } else {
+      print('Failed to get status. Error: ${response.statusCode}');
+    }
+  } catch (e) {
+    print('Exception occurred while getting status: $e');
+  }
+}
+
 Future<dynamic> saveSession(
     {required String sessionID, required Map<String, dynamic> payload}) async {
   String url = 'http://$SERVER_URL/saveSession/';

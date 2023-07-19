@@ -7,6 +7,7 @@ import 'package:schedulex_webapp/Settingspage.dart';
 import 'package:schedulex_webapp/model/ProblemSessionState.dart';
 import 'package:schedulex_webapp/model/UnavailState.dart';
 import 'package:schedulex_webapp/model/UserState.dart';
+import 'package:schedulex_webapp/CalendarPage.dart';
 import 'SelectPage.dart';
 
 import 'Unavailpage.dart';
@@ -79,6 +80,10 @@ GoRouter router() {
           GoRoute(
             path: 'settings',
             builder: (context, state) => const SettingsPage(),
+          ),
+          GoRoute(
+            path: 'calendar',
+            builder: (context, state) => CalendarPage(),
           )
         ],
       ),
