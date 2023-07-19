@@ -10,15 +10,26 @@ from Optimization_Manager import *
 from queueManager import flag_queue
 
 
-cred_obj = firebase_admin.credentials.Certificate("./schedulex-723a8-firebase-adminsdk-mau2x-c93019364b.json")
+#cred_obj = firebase_admin.credentials.Certificate("./schedulex-723a8-firebase-adminsdk-mau2x-c93019364b.json")
 
-#json_file_path = "C:\\Users\\Utente\\Desktop\\SchedulEx\\code\\flask-server\\schedulex-723a8-firebase-adminsdk-mau2x-c93019364b.json"
-#cred_obj = firebase_admin.credentials.Certificate(json_file_path)
+json_file_path = "C:\\Users\\Utente\\Desktop\\SchedulEx\\code\\flask-server\\schedulex-723a8-firebase-adminsdk-mau2x-c93019364b.json"
+cred_obj = firebase_admin.credentials.Certificate(json_file_path)
 
 
 default_app = firebase_admin.initialize_app(cred_obj, {'databaseURL':'https://schedulex-723a8-default-rtdb.firebaseio.com/'})
 
 ref = db.reference("/") # Ottieni un riferimento al percorso del database dove desideri salvare i dati
+
+status_data = {
+       "flag": 0,
+       "status": [],
+       "sessionID": [],
+       "ref": [], 
+    }
+    # Create an Exam object using the data dictionary
+status = optStatus(**status_data)
+print(status)
+
 
 app = Flask(__name__)
 
@@ -27,15 +38,50 @@ def test():
     print('test ok')
     return 'test'
 
+### IMPLEMENTED
+@app.route("/startOptimization/<string:sessionID>")
+def startOptimization(sessionID):
+    status.setStatus('partito')
+    status.sessionID = sessionID
+    status.ref = ref
+
+    # Crea un oggetto thread e passa gli argomenti come argomenti posizionali
+    optimization_thread = Thread(target=runOptimizationManager, args=(status, handleOptimizationResults))
+
+    optimization_thread.start()
+    return 'Start process'
+
+def handleOptimizationResults(results):
+    # Questa è la funzione di callback che verrà chiamata dal thread quando ha completato l'ottimizzazione
+    for result in results:
+        print("Risultati dell'ottimizzazione:", result.assignedDates)
+    
+    import openpyxl
+
+    # Creazione di un nuovo file Excel
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+
+    # Intestazione delle colonne
+    headers = ["Corso", "Date Esame"]  # Sostituisci con i nomi dei campi di result
+    sheet.append(headers)
+
+    for result in results:
+        row_values = [result.course_code, result.assignedDates]  # Sostituisci con i nomi dei campi corretti di result
+        # Converti la lista in una stringa separata da virgole
+        row_values = [','.join(map(str, item)) if isinstance(item, list) else item for item in row_values]
+        
+        sheet.append(row_values)
+
+    # Salvataggio del file Excel
+    workbook.save("flask-server\calendario.xlsx")
+
+
 @app.route("/askStatus/<string:sessionID>")
 def askStatus(sessionID):
-    print(f'ask status for {sessionID}')
-    if not flag_queue.empty():
-        flag = flag_queue.get()
-        print(flag)
-        flag_queue.put(flag)
-    else:
-        print("La coda è vuota")
+    ## Ottieni l'oggetto status_obj da qualche parte, ad esempio passandolo come argomento
+    stato_corrente = status.getStatus()
+    print(stato_corrente)
 
     # Restituisci la risposta HTTP al browser
     return "Response"
@@ -74,14 +120,6 @@ def setStartEndDate(sessionID, startDate, endDate):
     
     return 'Start date saved successfully.'
 
-### IMPLEMENTED
-@app.route("/startOptimization/<string:sessionID>")
-def startOptimization(sessionID):
-    # Call
-    OptimizationManager = Thread(target=runOptimizationManager, args=(flag_queue,))
-    OptimizationManager.start()
-
-    return 'Start process'
 
 ### IMPLEMENTED
 @app.route("/getSessionList")
@@ -109,74 +147,26 @@ def getSessionList():
 def getSessionData(sessionID):
     #get per sessionID
     SessionData = ref.child(sessionID).get()
-    print('getSessionData: Sessiondata = ', SessionData)
+    print(SessionData)
 
     return SessionData
 
-@app.route("/getUnavailData/<string:sessionID>/<string:unavailID>")
-def getUnavailabilityData(sessionID, unavailID):
-    # Retrieve the Unavail data from the Firebase Realtime Database
-    unavailData = ref.child(sessionID).child('unavailList').child(unavailID).get()
+@app.route("/setSettings/<string:sessionID>/<string:distCalls>/<string:distExams>", methods=['POST'])
+def setSettings(sessionID, distCalls, distExams):
+    print(sessionID, distCalls, distExams)
+    # Converti la data in formato stringa in un oggetto datetime
+    distCallsObj = int(distCalls)
+    distExamsObj = int(distExams)
 
-    # Check if the unavailData exists
-    if unavailData!='':
-        
-        return unavailData
-    else:
-        # Return an empty response if the unavailData doesn't exist
-        return {
-            'type': 0,
-            'name': '',
-            'dates': []
-        }
+    # Crea un nuovo nodo nel database con l'sessionID come chiave e la start_date come valore
+    ref.child(sessionID).update({
+        'startDate': distCallsObj,
+        'endDate': distExamsObj
+    })
 
-
-@app.route("/setSettings/", methods=['POST'])
-def setSettings():
-    txt='settings'
-    action='saved'
-    request_data = request.get_json()
-    print(request_data)
-    settings_node = ref.child(request_data['sessionID']).child('settings')   
-
-    flag=False
-
-    if('minDistanceExam' in request_data): 
-        # TO DO: 
-        settings_node.child('minDistanceExam').set(request_data['minDistanceExam'])
-        flag=True
-    if ('minDistanceCalls' in request_data):
-        #TO DO:
-        settings_node.child('minDistanceCalls').child('Default').set(request_data['minDistanceCalls'])
-        flag=True
-    if('numCalls' in request_data):
-        settings_node.child('numCalls').set(request_data['numCalls'])
-        flag=True
-    if('currSemester' in request_data):
-        settings_node.child('currSemester').set(request_data['currSemester'])   
-        flag=True 
-    if not flag:
-        exceptions_node = settings_node.child('minDistanceCalls').child('Exceptions')
-        exceptions =exceptions_node.get()
-        print(exceptions )
-        del request_data['sessionID']
-        exceptions_node.push().update(request_data)
-        if(exceptions==None):
-            exceptions=[]
-        else:
-            print(type(exceptions))
-
-        #print('exceptions: ',exceptions_node.get())
-
-        
-        # for date_str in request_data['dates'].split("/"):
-        #     currDate = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S.%f").isoformat()
-        #     if(currDate not in exceptions):
-               
-        #         exceptions.append(currDate)
-#print(exceptions)
-        
-
+    print('Sto salvando dati per: ' + sessionID)
+    print(distCallsObj, type(distCallsObj))
+    print(distExamsObj, type(distExamsObj))
 
     return 'Settings saved successfully.'
 
@@ -186,46 +176,28 @@ def saveUnavailability():
     txt='unavailability'
     action='saved'
     request_data = request.get_json()
-    #print(request_data)
     
+    date_list = request_data['dates'].split("/")
+    date_obj_list = [datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S.%f").isoformat() for date_str in date_list]
 
     unavail_node = ref.child(request_data['sessionID']).child('unavailList')
 
     if('unavailID' not in  request_data ):
         unavail_node = unavail_node.push()
-        #print(unavail_node.key)
+        print(unavail_node.key)
     else:
-        #print(request_data['unavailID'])
+        print(request_data['unavailID'])
         unavail_node = unavail_node.child(request_data['unavailID'])
-        del request_data['unavailID']
 
-    del request_data['sessionID']
-
-    #date check and modification  
-    if('dates' in request_data):
-        date_list = unavail_node.child('dates').get()
-        print(f'date list : {date_list}')
-        if(date_list==None):
-            date_list=[]
-        
-        
-        for date_str in request_data['dates'].split("/"):
-            currDate = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S.%f").isoformat()
-            if(currDate not in date_list):
-                print('verified')
-                date_list.append(currDate)
-        print(date_list)
-        request_data['dates']= date_list
-    print('Save unavailability: request data = ', request_data)
-
-    if(request_data!={}): 
-        unavail_node.update(
-        request_data
-    )
+    unavail_node.update({
+        'name': request_data['name'],
+        'type': request_data['type'],
+        'dates': date_obj_list
+    })
 
     #print('Sto salvando dati per: ' + sessionID)
 
-    return {'status': f'{txt} {action} successfully.','id': unavail_node.key, 'value':unavail_node.get()}
+    return {'status': f'{txt} {action} successfully.', 'id':unavail_node.key}
 
 ##IMPLEMENTED
 @app.route("/delete_unavail/<string:sessionID>/<string:unavailID>")
@@ -260,19 +232,18 @@ def saveSession():
     action='saved'
     request_data = request.get_json()
 
-    #Chech if the sessionID is new or not
     if('sessionID' not in  request_data ):
-        session_node = ref.push() #create the new child for the corresponding sessionID
+        session_node = ref.push()
         print(session_node.key)
     else:
         print(request_data['sessionID'])
         session_node = ref.child(request_data['sessionID'])
-        del request_data['sessionID']
         
-    if(request_data!={}):
-        print('sto qua')
-        session_node.update(request_data)
-    
+    del request_data['sessionID']
+
+    for key in request_data:
+        print(key)
+    session_node.update(request_data)
 
     return {'status': f'{txt} {action} successfully.', 'id':session_node.key}
 
