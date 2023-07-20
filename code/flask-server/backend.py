@@ -1,7 +1,7 @@
 import json
 import os
 from utils import *
-from flask import Flask, request #, send_file
+from flask import Flask, request , send_file
 import firebase_admin
 from datetime import datetime
 from firebase_admin import db
@@ -15,8 +15,6 @@ from Optimization_Manager import *
 cred_obj = firebase_admin.credentials.Certificate("./schedulex-723a8-firebase-adminsdk-mau2x-c93019364b.json")
 
 
-
-
 default_app = firebase_admin.initialize_app(cred_obj, {'appName':'SchedulEx','databaseURL':'https://schedulex-723a8-default-rtdb.firebaseio.com/'})
 app = Flask(__name__)
 
@@ -24,23 +22,30 @@ ref = db.reference("/")
 status_data = {
        "progress": 'No progress yet',
        "status": 'NOT STARTED',
-       "sessionID": [],
-       "ref": [], 
+       "sessionID": '',
     }
     # Create an Exam object using the data dictionary
 status = optStatus(**status_data)
-print(status)
 
-
-
-
+status_list = []
 
 ### IMPLEMENTED
 @app.route("/startOptimization/<string:sessionID>")
 def startOptimization(sessionID):
-    status.setStatus('STARTED')
+    
+    # problem_session=ref.get().key()
+    # for id in problem_session:
+    #   for item in status_list
+    #       if item.sessioID in problem_session && item.status == 'STARTED'
+    #           item.progress = 'Another problem session i'
+    #           return
+    # if sessionID == id:
+    #        
+
+    
     status.sessionID = sessionID
-    status.ref = ref
+    status.setStatus('STARTED')
+    
 
     # Crea un oggetto thread e passa gli argomenti come argomenti posizionali
     optimization_thread = Thread(target=runOptimizationManager, args=(status, handleOptimizationResults))
@@ -49,9 +54,13 @@ def startOptimization(sessionID):
     return 'Start process'
 
 def handleOptimizationResults(results, problem_session):
+    for element in results:
+        element.assignedDates= [date.strftime("%Y-%m-%d") for date in element.assignedDates]
+    
     # Questa è la funzione di callback che verrà chiamata dal thread quando ha completato l'ottimizzazione
+    print('#### handleOptimization Results ####\n')
     for result in results:
-        print("Risultati dell'ottimizzazione:", result.assignedDates)
+        print(result.toString())
     
 
     # Creazione della cartella download se non esiste
@@ -73,7 +82,7 @@ def handleOptimizationResults(results, problem_session):
     # Intestazione delle colonne
     headers = ["Cds", "Course Code", "Course Name", "Semester", "Year", "Location", "Professor", "Section", "Date"]  # Sostituisci con i nomi dei campi di result
     sheet.append(headers)
-
+    row_values = []
     for result in results:
         for date in result.assignedDates:
             row_values = [result.cds, result.course_code, result.course_name, result.semester, result.year, result.location, result.professor, result.section, date]
@@ -82,7 +91,6 @@ def handleOptimizationResults(results, problem_session):
         # Converti la lista in una stringa separata da virgole
         #row_values = [','.join(map(str, item)) if isinstance(item, list) else item for item in row_values]
         
-        sheet.append(row_values)
     
     # Salvataggio del file Excel
     excel_file_path = os.path.join(download_folder, f"Calendar_{problem_session.id}.xlsx")
@@ -181,7 +189,7 @@ def getUnavailabilityData(sessionID, unavailID):
         }
 
 
-@app.route("/setSettings/", methods=['POST'])
+@app.route("/set /", methods=['POST'])
 def setSettings():
     txt='settings'
     action='saved'
@@ -191,13 +199,13 @@ def setSettings():
 
     flag=False
 
-    if('minDistanceExam' in request_data): 
+    if('minDistanceExams' in request_data): 
         # TO DO: 
-        settings_node.child('minDistanceExam').set(request_data['minDistanceExam'])
+        settings_node.child('minDistanceExams').set(request_data['minDistanceExams'])
         flag=True
-    if ('minDistanceCalls' in request_data):
+    if ('minDistanceCallsDefault' in request_data):
         #TO DO:
-        settings_node.child('minDistanceCalls').child('Default').set(request_data['minDistanceCalls'])
+        settings_node.child('minDistanceCalls').child('Default').set(request_data['minDistanceCallsDefault'])
         flag=True
     if('numCalls' in request_data):
         settings_node.child('numCalls').set(request_data['numCalls'])
@@ -313,7 +321,7 @@ def deleteUnavailabilityDate():
 @app.route("/getProfessorList")
 def getProfessorList():
     # Carica il file Excel
-    df = pd.read_excel('./Database esami_modificato.xlsx')
+    df = pd.read_excel('./Database esami_Ing_Ind_Inf.xlsx', sheet_name='total')
 
     # Cerca l'indice della colonna in cui l'elemento della sua prima riga è la parola "Docenti"
     indice_docenti = df.columns.get_loc('Professor')
@@ -340,7 +348,7 @@ def getProfessorList():
 @app.route("/getExamList")
 def getExamList():
     # Carica il file Excel
-    df = pd.read_excel('./Database esami_modificato.xlsx')
+    df = pd.read_excel('./Database esami_Ing_Ind_Inf.xlsx', sheet_name='total')
 
     # Cerca l'indice della colonna in cui l'elemento della sua prima riga è la parola "Docenti"
     indice_name = df.columns.get_loc('Course Name')
@@ -368,6 +376,16 @@ def saveSession():
     if('sessionID' not in  request_data ):
         session_node = ref.push() #create the new child for the corresponding sessionID
         print(session_node.key)
+
+        #creo nuova sessione
+        status_data = {
+       "progress": 'No progress yet',
+       "status": 'NOT STARTED',
+       "sessionID": session_node.key,
+        }
+        # Create an Exam object using the data dictionary
+        status = optStatus(**status_data)
+        status_list.append(status)
     else:
         print(request_data['sessionID'])
         session_node = ref.child(request_data['sessionID'])
@@ -391,11 +409,13 @@ def deleteSession(sessionID):
 
     return f'{txt} {sessionID} {action} successfully.'
 
-# @app.route('/downloadExcel/<string:sessionID>')
-# def downloadExcel (sessionID):
-#     #For windows you need to use drive name [ex: F:/Example.pdf]
-#     path = f"/download/Calendar_{sessionID}.xlsx"
-#     return send_file(path, as_attachment=True)
+@app.route('/downloadExcel/<string:sessionID>')
+def downloadExcel (sessionID):
+    #For windows you need to use drive name [ex: F:/Example.pdf]
+    path = f"/download/Calendar_{sessionID}.xlsx"
+    return send_file(path, as_attachment=True)
+
+# @app.route('/getJSONresults/<string:sessionID>')
 
 if __name__== "__main__":
     app.run(debug=True)

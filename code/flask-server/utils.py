@@ -8,9 +8,12 @@ class Unavail:
         self.type = type
         self.dates = dates
         self.name=name
+
+    def toString(self):
+        return f'{self.name} || {self.type} ||{self.dates}'
         
 class ProblemSession:
-    def __init__(self, id, school, status, description, user,startDate, endDate, unavailList, settings, semester, callsNumber):
+    def __init__(self, id, school, status, description, user,startDate, endDate, unavailList, settings):
         self.id = id
         self.school = school
         self.status = status
@@ -20,8 +23,6 @@ class ProblemSession:
         self.endDate = endDate
         self.unavailList = unavailList
         self.settings = settings
-        self.semester = semester
-        self.callsNumber = callsNumber
 
 class Exam:
     def __init__(self, cds, course_code, me, course_name, semester, year, sem, location, exam_head, professor, section, enrolled_number, cfu, passed_percentage, average_mark):
@@ -42,22 +43,27 @@ class Exam:
         self.passed_percentage = passed_percentage
         self.average_mark = average_mark
 
+    def toString(self):
+        return f'{self.course_code} || {self.course_name}'
+
 class optExam(Exam):
-    def __init__(self, school, course_code, me, course_name, semester, year, sem, location, exam_head, professor, section, enrolled_number, cfu, passed_percentage, average_mark, unavailDates, effortWeight, timeWeight, minDistanceExams,minDistanceCalls, assignedDates):
-        super().__init__(school, course_code, me, course_name, semester, year, sem, location, exam_head, professor, section, enrolled_number, cfu, passed_percentage, average_mark)
+    def __init__(self, cds, course_code, me, course_name, semester, year, sem, location, exam_head, professor, section, enrolled_number, cfu, passed_percentage, average_mark, unavailDates, effortWeight, timeWeight, minDistanceExams,minDistanceCalls, assignedDates):
+        super().__init__(cds, course_code, me, course_name, semester, year, sem, location, exam_head, professor, section, enrolled_number, cfu, passed_percentage, average_mark)
         self.unavailDates = unavailDates
         self.effortWeight = effortWeight
         self.timeWeight = timeWeight
         self.minDistanceExams = minDistanceExams
         self.minDistanceCalls = minDistanceCalls
         self.assignedDates = assignedDates
+
+    def toString(self):
+        return f'\n #### {self.course_code} || {self.course_name} ######\n ->Unavail Dates: {self.unavailDates}\n ->effortWeight: {self.effortWeight}\n ->timeWeights: {self.timeWeight}\n ->MinDistanceCalls: {self.minDistanceCalls}\n ->AssignedDates:{self.assignedDates}'    
          
 class optStatus:
-    def __init__(self, progress, status, sessionID, ref):
+    def __init__(self, progress, status, sessionID):
         self.__progress = progress
         self.__status = status
         self.sessionID = sessionID
-        self.ref = ref
     
     def getStatus(self)-> str:
         return self.__status

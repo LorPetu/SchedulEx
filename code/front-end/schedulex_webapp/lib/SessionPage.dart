@@ -169,17 +169,45 @@ class ProblemSessionPageNEW extends StatelessWidget {
                     width: 15,
                   ),
                   ElevatedButton(
-                      onPressed: () {
-                        startOptimization(
-                            sessionID: problemSessionState.selectedSessionID!);
-                        saveSession(
-                            sessionID: problemSessionState.selectedSessionID!,
-                            payload: {'status': 'STARTED'}).then((value) {
-                          problemSessionState.setStatus('STARTED');
-                        });
-                        print('startOptimization triggered');
-                        context.pushReplacement('/select/calendar');
-                      },
+                      onPressed: (problemSessionState.status == 'STARTED')
+                          ? null
+                          : () {
+                              if (!problemSessionState.school.isEmpty &&
+                                  problemSessionState.sessionDates != null &&
+                                  problemSessionState.numCalls != null &&
+                                  problemSessionState.currSemester != null &&
+                                  problemSessionState.minDistanceExams !=
+                                      null &&
+                                  problemSessionState.minDistanceCallsDefault !=
+                                      null) {
+                                startOptimization(
+                                    sessionID:
+                                        problemSessionState.selectedSessionID!);
+                                saveSession(
+                                        sessionID: problemSessionState
+                                            .selectedSessionID!,
+                                        payload: {'status': 'STARTED'})
+                                    .then((value) {
+                                  problemSessionState.setStatus('STARTED');
+                                  context.pushReplacement('/select/calendar');
+                                });
+                                problemSessionState.showToast(
+                                    context, 'Optimization started');
+                              } else if (problemSessionState.school.isEmpty) {
+                                problemSessionState.showToast(
+                                    context, 'School is not defined');
+                              } else if (problemSessionState.sessionDates ==
+                                  null) {
+                                problemSessionState.showToast(context,
+                                    'Start and End date are not defined');
+                              } else {
+                                print(problemSessionState.currSemester);
+                                problemSessionState.showToast(
+                                    context, 'Please define session settings');
+                              }
+
+                              print('startOptimization triggered');
+                            },
                       child: const Text('start')),
                 ],
               ),

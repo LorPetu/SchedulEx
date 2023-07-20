@@ -427,6 +427,8 @@ Future<dynamic> getSessionData({required String sessionId}) async {
           ? DateTime.tryParse(responseData['endDate'].toString())
           : null;
 
+      print("retrieve of: ${responseData['settings']}");
+
       return {
         'problemsession': ProblemSession(
           id: sessionId,
@@ -541,10 +543,14 @@ Future<List<Exam>> getExamList() async {
 Future<void> setSettings(
     {required String sessionID, required Map<String, dynamic> payload}) async {
   String url = 'http://$SERVER_URL/setSettings/';
-  String txt = 'minDistanceCalls';
+  String txt = 'Settings set';
   String action = 'set';
   //The request must be expressed as string
   payload.addAll({'sessionID': sessionID});
+
+  payload.forEach((key, value) {
+    print("$key: $value");
+  });
 
   try {
     final response = await http.post(
@@ -564,9 +570,19 @@ Future<void> setSettings(
   }
 }
 
-Future<void> downloadExcel() async {
-  var url = 'https://$SERVER_URL/Database_esami.xlsx';
-  var response = await http.get(Uri.parse(url));
-  var bytes = response.bodyBytes;
-  await File('Database_esami.xlsx').writeAsBytes(bytes);
-}
+
+// Future<void> downloadExcel(sessionID) async {
+//   var url = 'https://$SERVER_URL/downloadExcel/$sessionID';
+//   var response = await http.get(Uri.parse(url));
+  
+//   if (response.statusCode == 200) {
+//     final bytes = response.bodyBytes;
+//     final appDir = await getApplicationDocumentsDirectory();
+//     final file = File('${appDir.path}/Database_esami.xlsx');
+//     await file.writeAsBytes(bytes);
+//   } else {
+//     // Handle the case when the file download fails (e.g., show an error message).
+//     print('Failed to download the file.');
+//   }
+// }
+

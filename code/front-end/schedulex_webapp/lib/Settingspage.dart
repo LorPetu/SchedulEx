@@ -17,10 +17,10 @@ class SettingsPage extends StatelessWidget {
       text: problemSessionState.numCalls.toString(),
     );
     final currSemestercontroller = TextEditingController(
-      text: problemSessionState.minDistanceExam.toString(),
+      text: problemSessionState.minDistanceExams.toString(),
     );
     final minDistanceExamController = TextEditingController(
-      text: problemSessionState.minDistanceExam.toString(),
+      text: problemSessionState.minDistanceExams.toString(),
     );
 
     final defaultDistanceController = TextEditingController(
@@ -84,9 +84,9 @@ class SettingsPage extends StatelessWidget {
     void saveForm() {
       problemSessionState.updateSettings({
         'minDistanceCallsDefault': defaultDistanceController.text,
-        'minDistanceExam': minDistanceExamController.text,
-        'currSemester': numCallsController.text,
-        'numCalls': currSemestercontroller.text
+        'minDistanceExams': minDistanceExamController.text,
+        'currSemester': currSemestercontroller.text,
+        'numCalls': numCallsController.text
       });
     }
 
@@ -150,7 +150,7 @@ class SettingsPage extends StatelessWidget {
                     controller: minDistanceExamController,
                     keyboardType: TextInputType.number,
                     decoration:
-                        const InputDecoration(labelText: 'minDistanceExam'),
+                        const InputDecoration(labelText: 'minDistanceExams'),
                     onSubmitted: (value) {
                       // Optionally, handle the submitted value if needed
                     },

@@ -22,7 +22,6 @@ class CalendarPage extends StatefulWidget {
 class _CalendarPageState extends State<CalendarPage> {
   String serverResponse = 'No response yet';
   late Timer _pollingTimer;
-  bool? isSolved;
 
   @override
   void initState() {
@@ -30,8 +29,7 @@ class _CalendarPageState extends State<CalendarPage> {
     final session = context.read<ProblemSessionState>();
     getStatus(sessionID: session.selectedSessionID!).then((value) {
       setState(() {
-        print(value);
-        isSolved = (value?['status'] == 'SOLVED');
+        session.setStatus(value?['status']);
         serverResponse = value?['progress'];
       });
     }); // Initial fetch
@@ -40,6 +38,7 @@ class _CalendarPageState extends State<CalendarPage> {
         (_) => getStatus(sessionID: session.selectedSessionID!).then((value) {
               setState(() {
                 print(value);
+                session.setStatus(value?['status']);
                 if (value?['status'] != 'STARTED') {
                   stopPolling();
                 }
@@ -72,9 +71,28 @@ class _CalendarPageState extends State<CalendarPage> {
           ),
         ],
       ),
-      body: ((session.status ?? 'STARTED') != 'STARTED') // isSolved ??
-          ? const TableResults()
-          : Center(child: Text('Server Response: $serverResponse')),
+      body: ((session.status ?? 'STARTED') == 'SOLVED')
+          ? Column(
+              children: [
+                ElevatedButton(
+                    onPressed: () {
+                      //downloadExcel(session.selectedSessionID);
+                    },
+                    child: Text('download Excel')),
+                Expanded(child: const TableResults()),
+              ],
+            )
+          : Center(
+              child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: CircularProgressIndicator(),
+                ),
+                Text('Server Response: $serverResponse'),
+              ],
+            )),
     );
   }
 }

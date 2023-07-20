@@ -16,7 +16,7 @@ class ProblemSessionState extends ChangeNotifier {
   String? status;
 
   //settings
-  int? minDistanceExam;
+  int? minDistanceExams;
   int? minDistanceCallsDefault;
   int? numCalls;
   int? currSemester;
@@ -29,7 +29,7 @@ class ProblemSessionState extends ChangeNotifier {
     school = 'Ing_Ind_Inf';
     sessionDates = null;
     unavailList = [];
-    minDistanceExam = null;
+    minDistanceExams = null;
     minDistanceCallsDefault = null;
     exceptions = [];
     numCalls = null;
@@ -38,10 +38,10 @@ class ProblemSessionState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // distance1 = minDistanceExam; distance2= minDistanceCallsDefault; Calls = numCalls; curr = currSemester;
+  // distance1 = minDistanceExams; distance2= minDistanceCallsDefault; Calls = numCalls; curr = currSemester;
   void updateSettings(payload) {
-    if (payload['minDistanceExam'] != null) {
-      minDistanceExam = int.tryParse(payload['minDistanceExam']);
+    if (payload['minDistanceExams'] != null) {
+      minDistanceExams = int.tryParse(payload['minDistanceExams']);
     }
     if (payload['minDistanceCallsDefault'] != null) {
       minDistanceCallsDefault =
@@ -56,35 +56,13 @@ class ProblemSessionState extends ChangeNotifier {
 
     // Create a new payload containing only the modified values
     Map<String, dynamic> modifiedPayload = {
-      'minDistanceExam': minDistanceExam,
+      'minDistanceExams': minDistanceExams,
       'minDistanceCallsDefault': minDistanceCallsDefault,
       'numCalls': numCalls,
       'currSemester': currSemester,
     };
 
     setSettings(sessionID: selectedSessionID!, payload: modifiedPayload);
-  }
-
-  void setMinDistanceExam(int newdistance) {
-    setSettings(
-        sessionID: selectedSessionID!,
-        payload: {'minDistanceExam': newdistance}).then((value) {
-      notifyListeners();
-      print('request done');
-    });
-    minDistanceExam = newdistance;
-    notifyListeners();
-  }
-
-  void setMinDistanceCallsDefault(int newdistance) {
-    setSettings(
-        sessionID: selectedSessionID!,
-        payload: {'minDistanceCalls': newdistance}).then((value) {
-      minDistanceCallsDefault = newdistance;
-      notifyListeners();
-    });
-
-    notifyListeners();
   }
 
   void insertException(String examID, int newdistance) {
@@ -130,8 +108,11 @@ class ProblemSessionState extends ChangeNotifier {
       dynamic settings = value['settings'];
       print(settings);
       if (settings != null) {
+        numCalls = settings['numCalls'];
+        currSemester = settings['currSemester'];
+
         minDistanceCallsDefault = settings['minDistanceCalls']['Default'];
-        minDistanceExam = settings['minDistanceExam'];
+        minDistanceExams = settings['minDistanceExams'];
         if (settings['minDistanceCalls']['Exceptions'] != null) {
           settings['minDistanceCalls']['Exceptions'].forEach((k, v) {
             exceptions.add(v);
@@ -218,5 +199,15 @@ class ProblemSessionState extends ChangeNotifier {
     });
 
     //appState.deleteUnavail(deletedUnavail);
+  }
+
+  void showToast(BuildContext context, String text) {
+    final scaffold = ScaffoldMessenger.of(context);
+    scaffold.showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 1),
+        content: Text(text),
+      ),
+    );
   }
 }

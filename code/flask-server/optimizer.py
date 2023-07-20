@@ -18,9 +18,8 @@ def solveScheduling(exams, problem_session, status):
         availDates.append(current_date)
         current_date += timedelta(days=1)
 
-    num_appelli = problem_session.callsNumber #input("NUMERO APPELLI: ")
-    distanza_1= problem_session.settings[0]
-    distanza_2 = problem_session.settings[1] # non stiamo considerando casi dove un esame ha la sua distanza specifica
+    num_appelli = int(problem_session.settings['numCalls']) #input("NUMERO APPELLI: ")
+    distanza_1= int(problem_session.settings['minDistanceExams'])
 
 
     # Creazione del problema di programmazione lineare
@@ -55,11 +54,11 @@ def solveScheduling(exams, problem_session, status):
                 for t, date_t in enumerate(availDates):
                     for k, date_k in enumerate(availDates):
                         if k < t:
-                            objective.append((exam_i.effortWeight*exam_j.effortWeight)*exam_i.effortWeight[k] * (t - k) * x[(i, k, j, t)])
+                            objective.append((exam_i.effortWeight*exam_j.effortWeight)*exam_i.timeWeight[j] * (t - k) * x[(i, k, j, t)])
 
     prob.objective += xsum(objective)
 
-    status.setStatus("Objective function created")
+    status.setProgress("Objective function created")
 
     # LOGIC Constraints: in this way we define the logical port AND for the x variables, and connect with the relative s variables
     for i, exam_i in enumerate(exams):
@@ -78,7 +77,7 @@ def solveScheduling(exams, problem_session, status):
         print(s[(i, k)])
         prob += xsum(s[(i, k)] for k, date_k in enumerate(availDates)) == num_appelli
 
-    status.setStatus("Logic constraints set")
+    status.setProgress("Logic constraints set")
 
     ## Time constraint
 
@@ -89,7 +88,7 @@ def solveScheduling(exams, problem_session, status):
                     for t, date_t in enumerate(availDates):                                
                         if t > k: 
                             # Check if exams are in the same semester
-                            if exam_i.exam.sem == exam_j.exam.sem:
+                            if exam_i.sem == exam_j.sem:
                                 if t-k!=distanza_1:
                                     # Set the distance greater than the minimum required for all the combinations of dates with these exams 
                                     # eq1 x_i_k_j_t*(t-k)>=x_i_k_j_t*(distanza_1)
@@ -111,11 +110,12 @@ def solveScheduling(exams, problem_session, status):
                                     #if t-k=distanza_1 the eq1 is always equal to zero, so we need to set this variable to zero
                                     prob += x[(i, k, i, t)]==0
 
-    status.setStatus("Time constraints set")
+    status.setProgress("Time constraints set")
 
     ## Unavailability constraints
 
     for k, date_k in enumerate(availDates):
+        
 
         #per ogni data indisponibilità poli e domeniche faccio la sommatoria per tutti gli esami
         if date_k.weekday()==6: 
@@ -125,18 +125,26 @@ def solveScheduling(exams, problem_session, status):
         for i, exam_i in enumerate(exams):
             if date_k in exam_i.unavailDates:
                prob += s[(i, k)] == 0
+            if exam_i.assignedDates!=[]:
+                print(type(date_k),type(exam_i.assignedDates[0]))
+            print('optimizer: exam inf',exam_i.course_name,)
+            if date_k in exam_i.assignedDates:
+                print('optimizer: if date_k in assignedDates',exam_i.course_name)
+                prob += s[(i, k)] == 1
 
-    status.setStatus("Unavailability constraints set")
+
+
+    status.setProgress("Unavailability constraints set")
 
     # Be careful, the output will be huge
     #print(prob)
     prob.write("ExamScheduler.lp")
-    status.setStatus('The problem has successfully formulated')
+    status.setProgress('The problem has successfully formulated')
     # Last updated objective and time
     # prob._cur_obj = float('inf')
     # prob._time = time.time()
     # Risoluzione del problema di programmazione lineare intera
-    status.setStatus('Start optimization')
+    status.setProgress('Start optimization')
     prob.optimize()
     prob.store_search_progress_log
     print(prob.status.value)
@@ -158,14 +166,14 @@ def solveScheduling(exams, problem_session, status):
     print(M)
     print("\n\n\n\n")
 
-    for i, exam_i in enumerate(unprocessedExams):
-        exam_i.assigned_dates=[]
+    for i, exam_i in enumerate(exams):
+        exam_i.assignedDates=[]
         for k, date_k in enumerate(availDates):
                 if M[i][k]==1:
-                    exam_i.assigned_dates.append(date_k) 
-    for exam_i in unprocessedExams:
-        assigned_dates_formatted = [date.strftime("%Y-%m-%d") for date in exam_i.assigned_dates]
-        exam_i.assigned_dates = assigned_dates_formatted
-        print(exam_i.assigned_dates)         
+                    exam_i.assignedDates.append(date_k) 
+    # for exam_i in exams:
+    #     assigned_dates_formatted = [date.strftime("%Y-%m-%d") for date in exam_i.assignedDates]
+    #     exam_i.assignedDates = assigned_dates_formatted
+    #     print(exam_i.assignedDates)         
           
     return [prob.status.value, exams]
