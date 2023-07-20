@@ -83,7 +83,7 @@ GoRouter router() {
           ),
           GoRoute(
             path: 'calendar',
-            builder: (context, state) => CalendarPage(),
+            builder: (context, state) => const CalendarPage(),
           )
         ],
       ),

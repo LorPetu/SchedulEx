@@ -99,4 +99,15 @@ class UnavailState extends ChangeNotifier {
       notifyListeners();
     });
   }
+
+  void deleteDate(DateTime dateTodelete) {
+    deleteDateToUnavail(
+            sessionID: sessionState.selectedSessionID!,
+            unavailID: id!,
+            datetoDelete: dateTodelete)
+        .then((value) {
+      dates.remove(dateTodelete);
+      notifyListeners();
+    });
+  }
 }

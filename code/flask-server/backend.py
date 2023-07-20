@@ -18,8 +18,7 @@ cred_obj = firebase_admin.credentials.Certificate("./schedulex-723a8-firebase-ad
 
 default_app = firebase_admin.initialize_app(cred_obj, {'databaseURL':'https://schedulex-723a8-default-rtdb.firebaseio.com/'})
 
-ref = db.reference("/") 
-
+ref = db.reference("/")
 status_data = {
        "progress": 'No progress yet',
        "status": '',
@@ -224,25 +223,36 @@ def saveUnavailability():
     txt='unavailability'
     action='saved'
     request_data = request.get_json()
-    print(request_data)
+    #print(request_data)
     
 
     unavail_node = ref.child(request_data['sessionID']).child('unavailList')
 
     if('unavailID' not in  request_data ):
         unavail_node = unavail_node.push()
-        print(unavail_node.key)
+        #print(unavail_node.key)
     else:
-        print(request_data['unavailID'])
+        #print(request_data['unavailID'])
         unavail_node = unavail_node.child(request_data['unavailID'])
         del request_data['unavailID']
 
     del request_data['sessionID']
 
+    #date check and modification  
     if('dates' in request_data):
-        date_list = request_data['dates'].split("/")
-        date_obj_list = [datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S.%f").isoformat() for date_str in date_list]
-        request_data['dates']= date_obj_list
+        date_list = unavail_node.child('dates').get()
+        print(f'date list : {date_list}')
+        if(date_list==None):
+            date_list=[]
+        
+        
+        for date_str in request_data['dates'].split("/"):
+            currDate = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S.%f").isoformat()
+            if(currDate not in date_list):
+                print('verified')
+                date_list.append(currDate)
+        print(date_list)
+        request_data['dates']= date_list
     print('Save unavailability: request data = ', request_data)
 
     if(request_data!={}): 
@@ -262,6 +272,30 @@ def deleteUnavailability(sessionID, unavailID):
     ref.child(sessionID).child('unavailList').child(unavailID).delete()
     
     return 'Unavailability deleted succesfully'
+
+@app.route("/deleteUnavailabilityDate", methods=['POST'])
+def deleteUnavailabilityDate():
+    txt='unavailability'
+    action='saved'
+    request_data = request.get_json()
+    unavail_node = ref.child(request_data['sessionID']).child('unavailList')
+    unavail_node = unavail_node.child(request_data['unavailID'])
+
+    if('date' in request_data):
+        date_list = unavail_node.child('dates').get()
+        print(f'date list : {date_list}')
+        if(date_list==None):
+            date_list=[]
+        
+        
+        date_list.remove( datetime.strptime(request_data['date'], "%Y-%m-%d %H:%M:%S.%f").isoformat())
+        print(f'date list : {date_list}')
+        unavail_node.update({
+            'dates': date_list
+        })
+        
+    return 'date deleted'
+
 
 @app.route("/getProfessorList")
 def getProfessorList():
@@ -327,7 +361,6 @@ def saveSession():
         del request_data['sessionID']
         
     if(request_data!={}):
-        print('sto qua')
         session_node.update(request_data)
     
 

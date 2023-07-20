@@ -8,12 +8,13 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:schedulex_webapp/model/ProblemSessionState.dart';
 import 'package:schedulex_webapp/utils.dart';
-import 'dart:convert';
 import 'dart:async';
 
 //import '../utils.dart';
 
 class CalendarPage extends StatefulWidget {
+  const CalendarPage({super.key});
+
   @override
   _CalendarPageState createState() => _CalendarPageState();
 }
@@ -59,7 +60,7 @@ class _CalendarPageState extends State<CalendarPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Calendar'),
+        title: const Text('Calendar'),
         actions: [
           IconButton(
             onPressed: () {
@@ -72,13 +73,15 @@ class _CalendarPageState extends State<CalendarPage> {
         ],
       ),
       body: isSolved ?? false
-          ? TableResults()
+          ? const TableResults()
           : Center(child: Text('Server Response: $serverResponse')),
     );
   }
 }
 
 class TableResults extends StatefulWidget {
+  const TableResults({super.key});
+
   @override
   _TableResultsState createState() => _TableResultsState();
 }
@@ -169,7 +172,7 @@ class _TableResultsState extends State<TableResults> {
           rangeSelectionMode: _rangeSelectionMode,
           eventLoader: _getExamsForDay,
           startingDayOfWeek: StartingDayOfWeek.monday,
-          calendarStyle: CalendarStyle(
+          calendarStyle: const CalendarStyle(
             // Use `CalendarStyle` to customize the UI
             outsideDaysVisible: false,
           ),

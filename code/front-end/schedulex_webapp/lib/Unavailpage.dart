@@ -142,7 +142,13 @@ class UnavailPageNEW extends StatelessWidget {
                     itemBuilder: (context, index) {
                       final dateTime = dates[index];
                       return ListTile(
-                        trailing: const Icon(Icons.delete_outlined),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete),
+                          onPressed: () {
+                            unavail.deleteDate(dateTime);
+                            //context.pushReplacement('/select/unavail');
+                          },
+                        ),
                         title: Text(
                             '${dateTime.day} - ${dateTime.month} - ${dateTime.year}'),
                       );
@@ -169,7 +175,7 @@ class AutoCompleteProfessor extends StatefulWidget {
   final String? name;
   final void Function(String) onNameSelected;
 
-  AutoCompleteProfessor({
+  const AutoCompleteProfessor({
     Key? key,
     this.name,
     required this.onNameSelected,

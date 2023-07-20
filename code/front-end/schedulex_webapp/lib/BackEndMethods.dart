@@ -1,4 +1,5 @@
 import 'dart:async';
+//import 'dart:js_interop';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -191,6 +192,42 @@ Future<List<DateTime>> addDatesToUnavail(
     print('Exception occurred while $action $txt: $e');
   }
   return [];
+}
+
+Future<void> deleteDateToUnavail(
+    {required String sessionID,
+    required String unavailID,
+    required DateTime datetoDelete}) async {
+  String url = 'http://$SERVER_URL/deleteUnavailabilityDate';
+  String txt = 'unavailability DATE';
+  String action = 'delete';
+
+  Map<String, String> requestbody = {};
+
+  if (sessionID.isNotEmpty) {
+    requestbody.addAll({'sessionID': sessionID});
+  }
+
+  if (unavailID.isNotEmpty) {
+    requestbody.addAll({'unavailID': unavailID});
+  }
+  requestbody.addAll({'date': datetoDelete.toString()});
+
+  try {
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(requestbody),
+    );
+
+    if (response.statusCode == 200) {
+      print('$action $txt successfully.');
+    } else {
+      print('Failed to $action $txt. Error: ${response.statusCode}');
+    }
+  } catch (e) {
+    print('Exception occurred while $action $txt: $e');
+  }
 }
 
 Future<void> deleteUnavailability(

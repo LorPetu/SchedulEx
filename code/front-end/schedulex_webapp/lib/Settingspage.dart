@@ -124,7 +124,7 @@ class SettingsPage extends StatelessWidget {
                     },
                   ),
                 ),
-                SizedBox(
+                const SizedBox(
                   width: 20,
                 ),
                 SizedBox(
@@ -156,7 +156,7 @@ class SettingsPage extends StatelessWidget {
                     },
                   ),
                 ),
-                SizedBox(
+                const SizedBox(
                   width: 20,
                 ),
                 SizedBox(
@@ -223,7 +223,7 @@ class AutoCompleteExams extends StatefulWidget {
   final String? name;
   final void Function(String) onNameSelected;
 
-  AutoCompleteExams({
+  const AutoCompleteExams({
     Key? key,
     this.name,
     required this.onNameSelected,

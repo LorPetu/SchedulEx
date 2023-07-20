@@ -141,6 +141,8 @@ class ProblemSessionState extends ChangeNotifier {
     //#####
   }
 
+  void setStatus(String newStatus) {}
+
   void setSchool(selectedSchool) {
     debugPrint(selectedSessionID);
     saveSession(
@@ -197,11 +199,15 @@ class ProblemSessionState extends ChangeNotifier {
     //appState.updateUnavail(newUnavail);
   }
 
-  void deleteUnavail(Unavail deletedUnavail) {
-    unavailList.removeWhere((element) => element.id == deletedUnavail.id);
+  void deleteUnavail(String idtodelete) {
+    int index = unavailList.indexWhere((element) => element.id == idtodelete);
     deleteUnavailability(
-        sessionID: selectedSessionID!, unavail: deletedUnavail);
-    notifyListeners();
+            sessionID: selectedSessionID!, unavail: unavailList[index])
+        .then((value) {
+      unavailList.removeWhere((element) => element.id == idtodelete);
+      notifyListeners();
+    });
+
     //appState.deleteUnavail(deletedUnavail);
   }
 }

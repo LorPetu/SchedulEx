@@ -124,7 +124,8 @@ class ProblemSessionPageNEW extends StatelessWidget {
                           onPressed: () {
                             print(
                                 '$userID delete unavail ${unavailList[index].id}');
-                            //appState.deleteUnavail(unavail);
+                            problemSessionState
+                                .deleteUnavail(unavailList[index].id);
                             //context.pushReplacement('/select/unavail');
                           },
                         ),
