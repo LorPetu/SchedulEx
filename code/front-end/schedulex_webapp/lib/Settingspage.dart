@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:schedulex_webapp/model/ProblemSessionState.dart';
+import 'package:schedulex_webapp/utils.dart';
+import 'package:schedulex_webapp/BackEndMethods.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -26,6 +28,7 @@ class SettingsPage extends StatelessWidget {
     );
 
     void addException() {
+      String exId = '';
       TextEditingController exIdController = TextEditingController();
       TextEditingController exDistanceController = TextEditingController();
 
@@ -37,6 +40,9 @@ class SettingsPage extends StatelessWidget {
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                AutoCompleteExams(onNameSelected: (value) {
+                  exId = value;
+                }),
                 TextField(
                   controller: exIdController,
                   keyboardType: TextInputType.number,
@@ -58,7 +64,6 @@ class SettingsPage extends StatelessWidget {
               ),
               ElevatedButton(
                 onPressed: () {
-                  String exId = exIdController.text;
                   int exDistance = int.tryParse(exDistanceController.text) ?? 0;
 
                   // Check if both values are provided before adding the exception
@@ -214,20 +219,93 @@ class SettingsPage extends StatelessWidget {
   }
 }
 
+class AutoCompleteExams extends StatefulWidget {
+  final String? name;
+  final void Function(String) onNameSelected;
 
+  AutoCompleteExams({
+    Key? key,
+    this.name,
+    required this.onNameSelected,
+  }) : super(key: key);
 
-/*Autocomplete<String>(
+  @override
+  State<AutoCompleteExams> createState() => _AutoCompleteExamsState();
+}
+
+class _AutoCompleteExamsState extends State<AutoCompleteExams> {
+  static List<Exam> _examList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    if (_examList.isEmpty) {
+      // Fetch the exam list only if _examList is empty
+      getExamList().then((value) {
+        setState(() {
+          _examList = value;
+        });
+      });
+    }
+  }
+
+  static String _displayStringForOption(Exam option) => option.id;
+
+  @override
+  Widget build(BuildContext context) {
+    final initialValue =
+        widget.name != null ? TextEditingValue(text: widget.name!) : null;
+
+    return Autocomplete<Exam>(
       initialValue: initialValue,
       optionsBuilder: (TextEditingValue textEditingValue) {
         if (textEditingValue.text == '') {
-          return const Iterable<String>.empty();
+          return const Iterable<Exam>.empty();
         }
-        return _profList.where((String option) {
-          return option.contains(textEditingValue.text.toLowerCase());
+        return _examList.where((Exam option) {
+          return option.name
+              .toString()
+              .toLowerCase()
+              .contains(textEditingValue.text.toLowerCase());
         });
       },
-      onSelected: (String selection) {
-        debugPrint('You just selected $selection');
-        onNameSelected(selection);
+      onSelected: (Exam selection) {
+        debugPrint('You just selected ${_displayStringForOption(selection)}');
+        widget.onNameSelected(selection.id);
       },
-    ) */
+    );
+  }
+}
+
+
+// class AutocompleteBasicUserExample extends StatelessWidget {
+//   const AutocompleteBasicUserExample({super.key});
+
+//   static const List<User> _userOptions = <User>[
+//     User(name: 'Alice', email: 'alice@example.com'),
+//     User(name: 'Bob', email: 'bob@example.com'),
+//     User(name: 'Charlie', email: 'charlie123@gmail.com'),
+//   ];
+
+//   static String _displayStringForOption(User option) => option.name;
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Autocomplete<User>(
+//       displayStringForOption: _displayStringForOption,
+//       optionsBuilder: (TextEditingValue textEditingValue) {
+//         if (textEditingValue.text == '') {
+//           return const Iterable<User>.empty();
+//         }
+//         return _userOptions.where((User option) {
+//           return option
+//               .toString()
+//               .contains(textEditingValue.text.toLowerCase());
+//         });
+//       },
+//       onSelected: (User selection) {
+//         debugPrint('You just selected ${_displayStringForOption(selection)}');
+//       },
+//     );
+//   }
+// }

@@ -69,22 +69,34 @@ class ProblemSession {
 }
 
 class Exam {
+  final String id;
   final String name;
   final List<DateTime> assignedDates;
 
-  Exam(this.name, this.assignedDates);
+  Exam(this.id, this.name, this.assignedDates);
 
   @override
-  String toString() => name;
+  String toString() => '$id - $name';
+
+  @override
+  bool operator ==(Object other) {
+    if (other.runtimeType != runtimeType) {
+      return false;
+    }
+    return other is Exam && other.name == name && other.id == id;
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name);
 }
 
 List<Exam> exams = [
-  Exam('Exam 1', [
+  Exam('Exam 1', '1', [
     DateTime.utc(2023, 7, 20),
     DateTime.utc(2023, 7, 22),
     DateTime.utc(2023, 7, 25),
   ]),
-  Exam('Exam 2', [
+  Exam('Exam 2', '2', [
     DateTime.utc(2023, 7, 21),
     DateTime.utc(2023, 7, 23),
     DateTime.utc(2023, 7, 26),
@@ -112,8 +124,8 @@ final _kExamSource = exams.fold<Map<DateTime, List<Exam>>>(
   },
 )..addAll({
     kToday: [
-      Exam('Today\'s Exam 1', [DateTime.now()]),
-      Exam('Today\'s Exam 2', [DateTime.now()]),
+      Exam('Today\'s Exam 1', '1', [DateTime.now()]),
+      Exam('Today\'s Exam 2', '2', [DateTime.now()]),
     ],
   });
 

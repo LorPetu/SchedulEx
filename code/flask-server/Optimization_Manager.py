@@ -109,10 +109,10 @@ def createOptExamList(ExamList, status_obj, percentage):
             "cfu": exam.cfu,
             "passed_percentage": exam.passed_percentage,
             "average_mark": exam.average_mark,
-            "unavailDates": 0,
+            "unavailDates": [],
             "effortWeight": 0,
-            "timeWeight": 0,
-            "minDistanceExams": [],
+            "timeWeight": [],
+            "minDistanceExams": 0,
             "minDistanceCalls": [],
             "assignedDates": [],
         }

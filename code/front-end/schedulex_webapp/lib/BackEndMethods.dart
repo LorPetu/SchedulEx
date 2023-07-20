@@ -447,6 +447,60 @@ Future<dynamic> getUnavailData(
   }
 }
 
+Future<List<String>> getProfessorList() async {
+  String url = 'http://$SERVER_URL/getProfessorList';
+
+  try {
+    final response = await http.get(Uri.parse(url));
+    print(response.request);
+
+    if (response.statusCode == 200) {
+      final responseData = json.decode(response.body);
+      if (responseData is List<dynamic>) {
+        List<String> professorList =
+            responseData.map((dynamic item) => item.toString()).toList();
+        return professorList;
+      } else {
+        throw Exception('Invalid response format: Expected List<dynamic>.');
+      }
+    } else {
+      print('Failed getProfessorList Error: ${response.statusCode}');
+      throw Exception('Failed getProfessorList. Error: ${response.statusCode}');
+    }
+  } catch (e) {
+    print('Exception occurred for getProfessorList: $e');
+    throw Exception('Exception occurred for getProfessorList: $e');
+  }
+}
+
+Future<List<Exam>> getExamList() async {
+  String url = 'http://$SERVER_URL/getExamList';
+
+  try {
+    final response = await http.get(Uri.parse(url));
+    print(response.request);
+
+    if (response.statusCode == 200) {
+      final responseData = json.decode(response.body);
+      if (responseData is List<dynamic>) {
+        List<Exam> professorList = responseData
+            .map((dynamic item) => item = Exam(item['id'], item['name'], []))
+            .toList();
+        print(professorList);
+        return professorList;
+      } else {
+        throw Exception('Invalid response format: Expected List<dynamic>.');
+      }
+    } else {
+      print('Failed getProfessorList Error: ${response.statusCode}');
+      throw Exception('Failed getProfessorList. Error: ${response.statusCode}');
+    }
+  } catch (e) {
+    print('Exception occurred for getProfessorList: $e');
+    throw Exception('Exception occurred for getProfessorList: $e');
+  }
+}
+
 Future<void> setSettings(
     {required String sessionID, required Map<String, dynamic> payload}) async {
   String url = 'http://$SERVER_URL/setSettings/';

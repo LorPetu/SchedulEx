@@ -224,9 +224,8 @@ def saveUnavailability():
     txt='unavailability'
     action='saved'
     request_data = request.get_json()
+    print(request_data)
     
-    date_list = request_data['dates'].split("/")
-    date_obj_list = [datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S.%f").isoformat() for date_str in date_list]
 
     unavail_node = ref.child(request_data['sessionID']).child('unavailList')
 
@@ -236,16 +235,24 @@ def saveUnavailability():
     else:
         print(request_data['unavailID'])
         unavail_node = unavail_node.child(request_data['unavailID'])
+        del request_data['unavailID']
 
-    unavail_node.update({
-        'name': request_data['name'],
-        'type': request_data['type'],
-        'dates': date_obj_list
-    })
+    del request_data['sessionID']
+
+    if('dates' in request_data):
+        date_list = request_data['dates'].split("/")
+        date_obj_list = [datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S.%f").isoformat() for date_str in date_list]
+        request_data['dates']= date_obj_list
+    print('Save unavailability: request data = ', request_data)
+
+    if(request_data!={}): 
+        unavail_node.update(
+        request_data
+    )
 
     #print('Sto salvando dati per: ' + sessionID)
 
-    return {'status': f'{txt} {action} successfully.', 'id':unavail_node.key}
+    return {'status': f'{txt} {action} successfully.','id': unavail_node.key, 'value':unavail_node.get()}
 
 ##IMPLEMENTED
 @app.route("/delete_unavail/<string:sessionID>/<string:unavailID>")
@@ -259,20 +266,50 @@ def deleteUnavailability(sessionID, unavailID):
 @app.route("/getProfessorList")
 def getProfessorList():
     # Carica il file Excel
-    df = pd.read_excel("C:\\Users\\Utente\\Desktop\\SchedulEx\\code\\flask-server\\Database esami.xlsx")
+    df = pd.read_excel('./Database esami_modificato.xlsx')
 
     # Cerca l'indice della colonna in cui l'elemento della sua prima riga è la parola "Docenti"
-    indice_docenti = df.columns.get_loc('Docenti')
+    indice_docenti = df.columns.get_loc('Professor')
 
     # Seleziona gli elementi dalla seconda riga in poi nella colonna "Docenti"
     elementi_docente = df.iloc[1:, indice_docenti].values.flatten()
-
-    # Rimuovi gli elementi duplicati e spazi bianchi iniziali/finali
-    elementi_unici = [docente.strip() for docente in elementi_docente if isinstance(docente, str)]
-    elementi_unici = list(set(elementi_unici)).tolist()
+    print(type(elementi_docente))
+    
+    elementi_unici=[]
+    for docente in elementi_docente:
+        docente.strip()
+        if('-' in docente):
+            multi_professors = docente.split('-')
+            for el in multi_professors:
+                elementi_unici.append(el.strip())
+        else:
+            elementi_unici.append(docente)
+    print(elementi_unici)
+    elementi_unici = list(set(elementi_unici))
 
     response = json.dumps(elementi_unici)  # Converti la lista in una stringa JSON
-    return response
+    return elementi_unici
+
+@app.route("/getExamList")
+def getExamList():
+    # Carica il file Excel
+    df = pd.read_excel('./Database esami_modificato.xlsx')
+
+    # Cerca l'indice della colonna in cui l'elemento della sua prima riga è la parola "Docenti"
+    indice_name = df.columns.get_loc('Course Name')
+    indice_id = df.columns.get_loc('Course Code')
+
+    # Seleziona gli elementi dalla seconda riga in poi nella colonna "Docenti"
+    exams_name = df.iloc[1:, indice_name].values.flatten()
+    exams_id = df.iloc[1:, indice_id].values.flatten()
+    print(exams_name)
+    print(exams_id)
+
+    results = [{'id': str(y), 'name': str(x)} for x, y in zip(exams_name, exams_id)]
+
+    print(results)
+  # Converti la lista in una stringa JSON
+    return results
 
 @app.route("/saveSession/",methods=['POST'])
 def saveSession():

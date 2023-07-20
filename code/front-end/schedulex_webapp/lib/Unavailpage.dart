@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:schedulex_webapp/BackEndMethods.dart';
 import 'package:schedulex_webapp/model/ProblemSessionState.dart';
 import 'package:schedulex_webapp/model/UnavailState.dart';
 
@@ -164,25 +165,40 @@ class UnavailPageNEW extends StatelessWidget {
   }
 }
 
-class AutoCompleteProfessor extends StatelessWidget {
+class AutoCompleteProfessor extends StatefulWidget {
   final String? name;
   final void Function(String) onNameSelected;
 
-  const AutoCompleteProfessor({
+  AutoCompleteProfessor({
     Key? key,
     this.name,
     required this.onNameSelected,
   }) : super(key: key);
 
-  static const List<String> _profList = <String>[
-    'aardvark',
-    'bobcat',
-    'chameleon',
-  ];
+  @override
+  State<AutoCompleteProfessor> createState() => _AutoCompleteProfessorState();
+}
+
+class _AutoCompleteProfessorState extends State<AutoCompleteProfessor> {
+  static List<String> _profList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    if (_profList.isEmpty) {
+      // Fetch the professor list only if _profList is empty
+      getProfessorList().then((value) {
+        setState(() {
+          _profList = value;
+        });
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final initialValue = name != null ? TextEditingValue(text: name!) : null;
+    final initialValue =
+        widget.name != null ? TextEditingValue(text: widget.name!) : null;
 
     return Autocomplete<String>(
       initialValue: initialValue,
@@ -191,12 +207,14 @@ class AutoCompleteProfessor extends StatelessWidget {
           return const Iterable<String>.empty();
         }
         return _profList.where((String option) {
-          return option.contains(textEditingValue.text.toLowerCase());
+          return option
+              .toLowerCase()
+              .contains(textEditingValue.text.toLowerCase());
         });
       },
       onSelected: (String selection) {
         debugPrint('You just selected $selection');
-        onNameSelected(selection);
+        widget.onNameSelected(selection);
       },
     );
   }
