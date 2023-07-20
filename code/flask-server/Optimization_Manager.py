@@ -2,7 +2,6 @@ from firebase_admin import db
 import pandas as pd
 from utils import *
 from optimizer import *
-from backend import handleOptimizationResults
 
 #FUNZIONA
 def getDatabaseProblemData(sessionID, ref, status_obj):

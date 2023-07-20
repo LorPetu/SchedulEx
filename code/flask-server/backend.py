@@ -1,7 +1,7 @@
 import json
 import os
 from utils import *
-from flask import Flask, request, send_file
+from flask import Flask, request #, send_file
 import firebase_admin
 from datetime import datetime
 from firebase_admin import db
@@ -14,10 +14,11 @@ from Optimization_Manager import *
 
 cred_obj = firebase_admin.credentials.Certificate("./schedulex-723a8-firebase-adminsdk-mau2x-c93019364b.json")
 
-#
 
 
-default_app = firebase_admin.initialize_app(cred_obj, {'databaseURL':'https://schedulex-723a8-default-rtdb.firebaseio.com/'})
+
+default_app = firebase_admin.initialize_app(cred_obj, {'appName':'SchedulEx','databaseURL':'https://schedulex-723a8-default-rtdb.firebaseio.com/'})
+app = Flask(__name__)
 
 ref = db.reference("/")
 status_data = {
@@ -31,7 +32,7 @@ status = optStatus(**status_data)
 print(status)
 
 
-app = Flask(__name__)
+
 
 
 ### IMPLEMENTED
@@ -390,11 +391,11 @@ def deleteSession(sessionID):
 
     return f'{txt} {sessionID} {action} successfully.'
 
-@app.route('/downloadExcel/<string:sessionID>')
-def downloadExcel (sessionID):
-    #For windows you need to use drive name [ex: F:/Example.pdf]
-    path = f"/download/Calendar_{sessionID}.xlsx"
-    return send_file(path, as_attachment=True)
+# @app.route('/downloadExcel/<string:sessionID>')
+# def downloadExcel (sessionID):
+#     #For windows you need to use drive name [ex: F:/Example.pdf]
+#     path = f"/download/Calendar_{sessionID}.xlsx"
+#     return send_file(path, as_attachment=True)
 
 if __name__== "__main__":
     app.run(debug=True)
