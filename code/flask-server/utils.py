@@ -1,5 +1,6 @@
 from firebase_admin import db
-
+import random
+from datetime import datetime, timedelta
 
 class Unavail:
     def __init__(self, id, type, dates, name):
@@ -23,9 +24,9 @@ class ProblemSession:
         self.callsNumber = callsNumber
 
 class Exam:
-    def __init__(self, school, course_code, me, course_name, semester, year, sem, location, exam_head, professor, section, enrolled_number, cfu, passed_percentage, average_mark):
+    def __init__(self, cds, course_code, me, course_name, semester, year, sem, location, exam_head, professor, section, enrolled_number, cfu, passed_percentage, average_mark):
 
-        self.school = school
+        self.cds = cds
         self.course_code = course_code
         self.me = me
         self.course_name = course_name
@@ -60,7 +61,7 @@ class optStatus:
     
     def getStatus(self)-> str:
         return self.__status
-    def getProgress(self)-> int:
+    def getProgress(self)-> str:
         return self.__progress
 
     def setStatus(self,new_status):
@@ -68,32 +69,12 @@ class optStatus:
         'status': new_status
     })
         self.__status=new_status
-    def setFlag(self,progress_update):
+    def setProgress(self,progress_update):
         self.__progress=progress_update
 
-    
-import random
-from datetime import datetime
 
-def create_random_optexams_list(size):
-    professors = ['Professor A', 'Professor B', 'Professor C', 'Professor D']  # Example list of professors
-    unavail_dates = [datetime(2023, 6, 1), datetime(2023, 6, 8), datetime(2023, 6, 15)]  # Example list of unavailable dates
-    effort_weights = [1, 2, 3, 4, 5]  # Example list of effort weights
-    assigned_dates = [None] * size  # Initialize with None values
 
-    optexams_list = []
-    for _ in range(size):
-        sem = random.randint(1, 6)
-        professor = random.choice(professors)
 
-        exam = Exam(sem, professor)
-        unavail_date = random.choices(unavail_dates, k=random.randint(1, len(unavail_dates)))
-        effort_weight = random.choice(effort_weights)
-        assigned_date = random.choices(assigned_dates, k=random.randint(1, len(assigned_dates)))
-
-        optexams = optExam(exam, unavail_date, effort_weight, assigned_date)
-        optexams_list.append(optexams)
-
-    return optexams_list
+# Ora random_opt_exams conterrà una lista di 5 elementi optExam con valori casuali per i campi.
 
 

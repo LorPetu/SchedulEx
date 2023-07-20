@@ -22,7 +22,7 @@ class CalendarPage extends StatefulWidget {
 class _CalendarPageState extends State<CalendarPage> {
   String serverResponse = 'No response yet';
   late Timer _pollingTimer;
-  bool? isSolved; // Replace this with your status logic
+  bool? isSolved;
 
   @override
   void initState() {
@@ -40,8 +40,7 @@ class _CalendarPageState extends State<CalendarPage> {
         (_) => getStatus(sessionID: session.selectedSessionID!).then((value) {
               setState(() {
                 print(value);
-                isSolved = (value?['status'] == 'SOLVED');
-                if (isSolved!) {
+                if (value?['status'] != 'STARTED') {
                   stopPolling();
                 }
                 serverResponse = value?['progress'];
@@ -66,13 +65,14 @@ class _CalendarPageState extends State<CalendarPage> {
             onPressed: () {
               stopPolling();
               context.pushReplacement('/select/session');
+              print(session.status);
               //reset value of ProblemSession selected
             },
             icon: const Icon(Icons.close),
           ),
         ],
       ),
-      body: isSolved ?? false
+      body: ((session.status ?? 'STARTED') != 'STARTED') // isSolved ??
           ? const TableResults()
           : Center(child: Text('Server Response: $serverResponse')),
     );

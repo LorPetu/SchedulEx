@@ -147,6 +147,8 @@ class ProblemSessionPageNEW extends StatelessWidget {
                 FloatingActionButton.small(
                     child: const Icon(Icons.add),
                     onPressed: () {
+                      //(problemSessionState.status != 'NOT STARTED') ? null :
+
                       debugPrint('new unavail to be created');
                       unavailState.setCurrID('').then((value) {
                         context.pushReplacement('/select/unavail');
@@ -172,7 +174,9 @@ class ProblemSessionPageNEW extends StatelessWidget {
                             sessionID: problemSessionState.selectedSessionID!);
                         saveSession(
                             sessionID: problemSessionState.selectedSessionID!,
-                            payload: {'status': 'STARTED'});
+                            payload: {'status': 'STARTED'}).then((value) {
+                          problemSessionState.setStatus('STARTED');
+                        });
                         print('startOptimization triggered');
                         context.pushReplacement('/select/calendar');
                       },

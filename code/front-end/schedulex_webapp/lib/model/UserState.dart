@@ -28,7 +28,8 @@ class UserState extends ChangeNotifier {
       payload: {'userID': userID, 'status': 'NOT STARTED'},
     ).then((value) {
       problemSessionID = value['id'];
-      problemSessionList.add(ProblemSession(id: problemSessionID, school: ''));
+      problemSessionList.add(ProblemSession(
+          id: problemSessionID, school: '', status: 'NOT STARTED'));
       debugPrint('new session created');
       notifyListeners();
       return problemSessionID;

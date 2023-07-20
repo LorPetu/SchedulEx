@@ -6,31 +6,22 @@ from utils import *
 
 GUROBI_HOME = 'C:/gurobi1001/'
 
-current_status= optStatus('null','123abc')
 
+def solveScheduling(exams, problem_session, status):
 
-def solveScheduling(exams: list, startDate: datetime, endDate: datetime, status: optStatus):
-
-    D = 15 # 25  # Numero di giorni disponibili # 51 giorni per la sessione estiva
     ## Define the days that are available from start to end date
     availDates = []
-    current_date=startDate
-    while current_date <= endDate:
+    current_date=problem_session.startDate
+    print(current_date)
+    print(problem_session.startDate)
+    while current_date <= problem_session.endDate:
         availDates.append(current_date)
         current_date += timedelta(days=1)
 
-    ## Define current semester in which session is scheduling
-    curr = 1  # Semestre corrente
+    num_appelli = problem_session.callsNumber #input("NUMERO APPELLI: ")
+    distanza_1= problem_session.settings[0]
+    distanza_2 = problem_session.settings[1] # non stiamo considerando casi dove un esame ha la sua distanza specifica
 
-    ## Create time weight respect all couples of exams
-    w = [[int(2**(-0.3*abs(exam_i.exam.sem - exam_j.exam.sem))*1000)/100 + 10*((exam_i.exam.sem==curr).real)*((exam_j.exam.sem==curr).real) for j,exam_j in enumerate(exams) ] for i,exam_i in enumerate(exams)]  
-    print(w)
-    print("parameters set ok")
-    num_appelli = 2#input("NUMERO APPELLI: ")
-    distanza_1= int(input("distanza esami: "))
-    distanza_2 = int(input("distanza appelli: "))
-
-    print("input parameters set ok")
 
     # Creazione del problema di programmazione lineare
     prob = Model("EsameScheduler", sense='maximize', solver_name='GUROBI')
@@ -54,7 +45,7 @@ def solveScheduling(exams: list, startDate: datetime, endDate: datetime, status:
 
                             x[(i, k, j, t)] = prob.add_var(var_type=BINARY, name='x_%i_%i_%i_%i' % (i, k, j, t))
     # Update the Status
-    status.setStatus("Variables created")
+    status.setProgress("Variables created")
 
     # Creazione della funzione obiettivo
     objective = []
@@ -64,7 +55,7 @@ def solveScheduling(exams: list, startDate: datetime, endDate: datetime, status:
                 for t, date_t in enumerate(availDates):
                     for k, date_k in enumerate(availDates):
                         if k < t:
-                            objective.append(w[i][j] * (t - k) * x[(i, k, j, t)])
+                            objective.append((exam_i.effortWeight*exam_j.effortWeight)*exam_i.effortWeight[k] * (t - k) * x[(i, k, j, t)])
 
     prob.objective += xsum(objective)
 
@@ -107,16 +98,15 @@ def solveScheduling(exams: list, startDate: datetime, endDate: datetime, status:
                                     #if t-k=distanza_1 the eq1 is always equal to zero, so we need to set this variable to zero
                                     prob += x[(i, k, j, t)]==0
 
-
     if num_appelli>1:
         for i, exam_i in enumerate(exams):
                 for k, date_k in enumerate(availDates):
                     for t, date_t in enumerate(availDates):                    
                             if t > k:
-                                if t-k!=distanza_2:
+                                if t-k!=exam_i.minDistanceCalls: #distanza_2: # 
                                     # Set the distance greater than the minimum required for all the combinations of dates with these exams 
                                     # eq1 x_i_k_j_t*(t-k)>=x_i_k_j_t*(distanza_1)
-                                    prob += x[(i, k, i, t)]*(t-k-distanza_2)>=0
+                                    prob += x[(i, k, i, t)]*(t-k-exam_i.minDistanceCalls)>=0 #distanza2 -> exam_iminDistanceCalls
                                 else:
                                     #if t-k=distanza_1 the eq1 is always equal to zero, so we need to set this variable to zero
                                     prob += x[(i, k, i, t)]==0
@@ -138,8 +128,6 @@ def solveScheduling(exams: list, startDate: datetime, endDate: datetime, status:
 
     status.setStatus("Unavailability constraints set")
 
-
-
     # Be careful, the output will be huge
     #print(prob)
     prob.write("ExamScheduler.lp")
@@ -149,7 +137,7 @@ def solveScheduling(exams: list, startDate: datetime, endDate: datetime, status:
     # prob._time = time.time()
     # Risoluzione del problema di programmazione lineare intera
     status.setStatus('Start optimization')
-    prob.optimize() #callback=mycallback)
+    prob.optimize()
     prob.store_search_progress_log
     print(prob.status.value)
 
@@ -160,33 +148,24 @@ def solveScheduling(exams: list, startDate: datetime, endDate: datetime, status:
     print("## MATRIX CALENDAR ##")
     for i, exam_i in enumerate(exams):
         for k, date_k in enumerate(availDates):
-            
             if date_k in exam_i.unavailDates:
-                
-                M[i][k]= '#' if s[(i, k)].x==1 else 0                
-
+                M[i][k]= '#' if s[(i, k)].x==1 else 0               
             if(date_k.weekday()!=6):
-                
                 M[i][k]= 1 if s[(i, k)].x==1 else 0
             else:
                 M[i][k]= 7
                 
     print(M)
-    print("\n\n\n\n\n\n")
+    print("\n\n\n\n")
 
-    
-    for i, exam_i in enumerate(exams):
+    for i, exam_i in enumerate(unprocessedExams):
+        exam_i.assigned_dates=[]
         for k, date_k in enumerate(availDates):
-            exam_i.assignedDates.append(date_k)            
-            
-            
-    return exams
-
-
-if __name__=="__main__":
-    unprocessedExams = create_random_optexams_list(5)
-    unprocessedExams[1].exam
-    results = solveScheduling(exams=unprocessedExams,startDate=datetime(2023,6,1),endDate=datetime(2023,6,16),status=current_status)
-    for optexam in results:
-        print(optexam.exam.sem, optexam.exam.professor, optexam.unavailDates, optexam.effortWeight, optexam.assignedDates)
-
+                if M[i][k]==1:
+                    exam_i.assigned_dates.append(date_k) 
+    for exam_i in unprocessedExams:
+        assigned_dates_formatted = [date.strftime("%Y-%m-%d") for date in exam_i.assigned_dates]
+        exam_i.assigned_dates = assigned_dates_formatted
+        print(exam_i.assigned_dates)         
+          
+    return [prob.status.value, exams]

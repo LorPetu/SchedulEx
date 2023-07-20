@@ -1,10 +1,12 @@
 from firebase_admin import db
 import pandas as pd
 from utils import *
+from optimizer import *
+from backend import handleOptimizationResults
 
 #FUNZIONA
 def getDatabaseProblemData(sessionID, ref, status_obj):
-    status_obj.setStatus('Gathering of data of Database Problem is running...')
+    status_obj.setProgress('Gathering of data of Database Problem is running...')
     
     session_data = ref.child(sessionID).get()
 
@@ -30,8 +32,8 @@ def getDatabaseProblemData(sessionID, ref, status_obj):
         "status": session_data.get('status'),
         "description": session_data.get('description'),
         "user": session_data.get('userID'),
-        "startDate": [],#session_data.get('startDate'),
-        "endDate": [],#session_data.get('endDate'),
+        "startDate": datetime.strptime(session_data.get('startDate'), "%Y-%m-%dT%H:%M:%S"),
+        "endDate": datetime.strptime(session_data.get('endDate'), "%Y-%m-%dT%H:%M:%S"),
         "unavailList": result_list,
         "settings": settings_list,
         "semester": [],#session_data.get('semester'),
@@ -46,15 +48,17 @@ def getDatabaseProblemData(sessionID, ref, status_obj):
 def getDatabaseExam(cds_id, status_obj, school, percentage):
     
     try:
-        status_obj.setStatus(percentage + ' Gathering of data of Database Exam is running...')
-        # Read data from the specified sheet of the Excel file
-        data = pd.read_excel('flask-server\Database esami_'+school+'.xlsx', sheet_name=cds_id)
-    except FileNotFoundError:
-        status_obj.setStatus(percentage + ' Excel file not found: flask-server\Database esami_'+school+'.xlsx')
-        return None
-    except ValueError:
-        status_obj.setStatus(percentage + f' Sheet "{cds_id}" not found in the Excel file.')
-        return None
+        status_obj.setProgress(percentage + ' Recupero dei dati del Database Esami in corso...')
+        # Leggi i dati dal foglio specificato del file Excel
+        data = pd.read_excel('Database esami_'+school+'.xlsx', sheet_name=cds_id)
+    except FileNotFoundError as e:
+        status_obj.setProgress(percentage + ' File Excel non trovato: flask-server\Database esami_'+school+'.xlsx')
+        #print('Errore:', e)
+        return 'file error'
+    except ValueError as e:
+        status_obj.setProgress(percentage + f' Foglio "{cds_id}" non trovato nel file Excel.')
+        #print('Errore:', e)
+        return 'sheet error'
 
     # Creates an empty list for Exam objects
     resultsExams1 = []
@@ -63,7 +67,7 @@ def getDatabaseExam(cds_id, status_obj, school, percentage):
     for _, row in data.iterrows():
         # Creates a dictionary for the data of the Exam object
         exam_data = {
-            "school": row['School'],
+            "cds": row['Cds'],
             "course_code": row['Course Code'],
             "me": row['M/E'],
             "course_name": row['Course Name'],
@@ -88,13 +92,13 @@ def getDatabaseExam(cds_id, status_obj, school, percentage):
 
 #FUNZIONA
 def createOptExamList(ExamList, status_obj, percentage):
-    status_obj.setStatus(percentage + ' Exam list creation is running...')
+    status_obj.setProgress(percentage + ' Exam list creation is running...')
     # Creates an empty list for optExam objects
     resultsExams2 = []
 
     for exam in ExamList:
         optexam_data = {
-            "school": exam.school,
+            "cds": exam.cds,
             "course_code": exam.course_code,
             "me": exam.me,
             "course_name": exam.course_name,
@@ -109,10 +113,10 @@ def createOptExamList(ExamList, status_obj, percentage):
             "cfu": exam.cfu,
             "passed_percentage": exam.passed_percentage,
             "average_mark": exam.average_mark,
-            "unavailDates": [],
+            "unavailDates": 0,
             "effortWeight": 0,
-            "timeWeight": [],
-            "minDistanceExams": 0,
+            "timeWeight": 0,
+            "minDistanceExams": [],
             "minDistanceCalls": [],
             "assignedDates": [],
         }
@@ -125,16 +129,17 @@ def createOptExamList(ExamList, status_obj, percentage):
 
 
 def createWeight(unprocessedExamList, semester, status_obj, percentage):
-    status_obj.setStatus(percentage + ' Weight creation is running')
+    status_obj.setProgress(percentage + ' Weight creation is running')
     # Creates weights for each optExam
-    # for exam in unprocessedExamList:
-    #     exam.effortWeight = exam.cfu * 3 + exam.passed_percentage * 4 + exam.average_mark * 4
-    #     exam.timeWeight = [int(2**(-0.3*abs(exam.sem - exam_j.exam.sem))*1000)/100 + 10*((exam.sem==semester).real)*((exam_j.exam.sem==semester).real) for exam_j in unprocessedExamList] 
+    for exam in unprocessedExamList:
+        exam.effortWeight = (exam.cfu * 3 + exam.passed_percentage * 4 + exam.average_mark * 4)/100
+        exam.timeWeight = [int(2**(-0.3 * abs(exam.sem - exam_j.exam.sem)) * 1000) / 100 + 10 * ((exam.sem == semester) * (exam_j.exam.sem == semester)) for exam_j in unprocessedExamList]
+        #exam.timeWeight = [int(2**(-0.3*abs(exam.sem - exam_j.exam.sem))*1000)/100 + 10*((exam.sem==semester).real)*((exam_j.exam.sem==semester).real) for exam_j in unprocessedExamList] 
     return unprocessedExamList  
 
 
 def addDistances(unprocessedExamList, problem_session, status_obj, percentage):
-    status_obj.setStatus(percentage + ' Distances adding is running...')
+    status_obj.setProgress(percentage + ' Distances adding is running...')
     for opt_exam in unprocessedExamList:
         opt_exam.minDistanceExams = problem_session.settings[0]
         for i in range(2, len(problem_session.settings)):
@@ -148,40 +153,34 @@ def addDistances(unprocessedExamList, problem_session, status_obj, percentage):
 
 #TESTARE IL MATCHING DI DATE
 def addUnavailability(unprocessedExamList, problem_session, status_obj, percentage):
-    status_obj.setStatus(percentage + ' Unavailability merging is running...')
-
-    professor_list = []
-    professors = opt_exam.professor.split('-')  #Divides the string into hyphenated names
-    professor_list.extend(professors)  # Adds names to the professor_list
-    #print(professor_list)
-
+    status_obj.setProgress(percentage + ' Unavailability merging is running...')
     for opt_exam in unprocessedExamList:
-        # for each unavail {id, name, type, dates} in problem_session that is considered 
-        # check if the unavail involves the professor of opt_exam 
-        for unavail in problem_session.unavailList:
-            if (unavail.name in opt_exam.professor):
-                opt_exam.unavailDates += unavail.dates
-            # if sublist[1] == 0:
-            #     opt_exam.unavailDates += sublist[2]
-            # elif sublist[1] == 1 and sublist[0] in professor_list:
-            #     opt_exam.unavailDates += sublist[2]
+        professor_list = []
+        professors = opt_exam.professor.split('-')  #Divides the string into hyphenated names
+        professor_list.extend(professors)  # Adds names to the professor_list
+        #print(professor_list)
+
+        for sublist in problem_session.unavailList:
+            if sublist[1] == 0:
+                opt_exam.unavailDates += sublist[2]
+            elif sublist[1] == 1 and sublist[0] in professor_list:
+                opt_exam.unavailDates += sublist[2]
 
     return unprocessedExamList
 
 
 def runOptimizationManager(status_obj, callback):
-    status_obj.setFlag(1)
     sessionID = status_obj.sessionID
-    status_obj.setStatus('Optimization flow started')
+    status_obj.setProgress('Optimization flow started')
     ref=status_obj.ref
     # Get according to sessionID database values Problem
-    status_obj.setStatus('Gathering of data of Database Problem will start shortly')
+    status_obj.setProgress('Gathering of data of Database Problem will start shortly')
     problem_session=getDatabaseProblemData(sessionID, ref, status_obj)
-    status_obj.setStatus('Database Problem data gathering completed')
+    status_obj.setProgress('Database Problem data gathering completed')
     #print(problem_session)
     ## Itera each school CdS
     if problem_session.school == 'Ing_Ind_Inf':
-        cds_list = ['ATM']#,'ELT', 'ELN', 'BIO', 'MTM', 'INF']
+        cds_list = ['ATM','ELT']#, 'ELN', 'BIO', 'MTM', 'INF']
     if problem_session.school == 'Design':
         cds_list = ['ATM']#,'ELT', 'ELN', 'BIO', 'MTM', 'INF']
     if problem_session.school == 'AUIC':
@@ -190,63 +189,45 @@ def runOptimizationManager(status_obj, callback):
     for index, cds_id in enumerate(cds_list, 1):
         total_cds = len(cds_list)  # Numero totale di cds nella lista
         percentage = f"Iterazione {index}/{total_cds}: {cds_id}"
-        status_obj.setStatus(percentage + ' Gathering of data of Database Exam will start shortly')
-        try:
-            ExamList = getDatabaseExam(cds_id, status_obj, problem_session.school, percentage)
-        except FileNotFoundError:
-            status_obj.setFlag(0)
-            break
-        except ValueError:
-            status_obj.setFlag(0)
-            break
-        status_obj.setStatus(percentage + ' Database Problem data gathering completed')
-        status_obj.setStatus(percentage + ' Exam list creation will start shortly')
+        status_obj.setProgress(percentage + ' Gathering of data of Database Exam will start shortly')
+        ExamList = getDatabaseExam(cds_id, status_obj, problem_session.school, percentage)
+        if ExamList=='file error':
+            status_obj.setProgress('DATABASE NOT FOUND')
+            return
+        if ExamList == 'sheet error':
+            status_obj.setProgress('SHEET NOT FOUND')
+            return
+        status_obj.setProgress(percentage + ' Database Problem data gathering completed')
+        status_obj.setProgress(percentage + ' Exam list creation will start shortly')
         optExamList=createOptExamList(ExamList, status_obj, percentage)
-        status_obj.setStatus(percentage + ' Exam list creation completed')
+        status_obj.setProgress(percentage + ' Exam list creation completed')
         unprocessedExamList=optExamList
-        for index1 in unprocessedExamList:
-             for index2 in resultsExams:
-                 if index1.course_code == index2.course_code:
-                     index1.assignedDates = index2.assignedDates
-        status_obj.setStatus(percentage + ' Weight creation will start shortly')
+       
+        for item_i in unprocessedExamList:
+             for item_j in resultsExams:
+                 if item_i.course_code == item_j.course_code:
+                        item_i.assignedDates = item_j.assignedDates
+        
+        status_obj.setProgress(percentage + ' Weight creation will start shortly')
         unprocessedExamList1=createWeight(unprocessedExamList, problem_session.semester, status_obj, percentage)
-        status_obj.setStatus(percentage + ' Weight creation completed')
-        status_obj.setStatus(percentage + ' Distances adding will start shortly')
+        status_obj.setProgress(percentage + ' Weight creation completed')
+        
+        status_obj.setProgress(percentage + ' Distances adding will start shortly')
         unprocessedExamList2=addDistances(unprocessedExamList1, problem_session, status_obj, percentage)
-        status_obj.setStatus(percentage + ' Distances adding completed')
-        status_obj.setStatus(percentage + ' Unavailability merging will start shortly')
+        status_obj.setProgress(percentage + ' Distances adding completed')
+        
+        status_obj.setProgress(percentage + ' Unavailability merging will start shortly')
         unprocessedExamList3=addUnavailability(unprocessedExamList2, problem_session, status_obj, percentage)
-        status_obj.setStatus(percentage + ' Unavailability merging completed')
-        print(unprocessedExamList3[0].minDistanceCalls)
-        #print(unprocessedExamList3[1].effortWeight)
-        #status_obj.setStatus(percentage + ' Optimization process will start shortly')
-        #resultsExams.add(startOptimization(unprocessedExamList3))
-        #status_obj.setStatus(percentage + ' Optimization process completed')
+        status_obj.setProgress(percentage + ' Unavailability merging completed')
         
-        unprocessedExamList3[1].assignedDates=['2023-06-02', '2023-06-03']
-        resultsExams.add(unprocessedExamList3[1])
-        callback(resultsExams)
-        status_obj.setFlag(0) # 0 se ha finito e può partire un'altra ottimizzazione
-    return resultsExams
-
-#if __name__== "__main__":
-#    runOptimizationManager('-N_TlgwdCqeEONkrZdPM')
- ## Ottieni esami del CdS list semplice
-            #-> get al database exam per CdS 
-
-            #-> per ognuno crea optExam(exam: exam, altri campi inizializzati vuoti)
-            #-> List<optExam> unprocessedExams = list.map(value=optExam(exam:value, ))
-
-        ## iter ogni exam di unprocessedExams 
-            ## if (exam in resultsExams) verifica codice insegnamento
-                #-> aggiorno l'elemento exam con resultExams[index] (elemnto trovato)
-            ## else
-                ## build unavailDates and update on exam
-                    #-> 
-                ## build effortWeight
-                    #-> call weightBuilder
+        status_obj.setProgress(percentage + ' Optimization process will start shortly')
+        [result, scheduledExam]=solveScheduling(unprocessedExamList3, problem_session, status_obj)
+        if result== 0:
+            resultsExams.add(scheduledExam)
+            status_obj.setProgress(percentage + ' Optimization process completed')
+            status_obj.setStatus('SOLVED')
         
-        ## resultExams.add(startOptimization(unprocessedList)) aggiungo al set gli elementi unici non schedulati precedentemente
-
-    ## Alla fine di tutti i CdS converto il risultato finale resultExams in json
-        ## aggiungo il json al Database problem in 'results': per il relativo sessionID
+            callback(resultsExams, problem_session)
+        elif result == 1:
+            status_obj.setProgress(percentage + ' Optimization process completed')
+            status_obj.setStatus('NOT SOLVED')

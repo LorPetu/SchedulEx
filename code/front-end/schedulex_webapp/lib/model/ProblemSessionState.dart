@@ -13,6 +13,7 @@ class ProblemSessionState extends ChangeNotifier {
   DateTimeRange? sessionDates;
   String school = 'Ing_Ind_Inf';
   List<Unavail> unavailList = [];
+  String? status;
 
   //settings
   int? minDistanceExam;
@@ -120,6 +121,11 @@ class ProblemSessionState extends ChangeNotifier {
       if (!value['problemsession'].school.isEmpty) {
         school = value['problemsession'].school;
       }
+
+      if (!value['problemsession'].status.isEmpty) {
+        status = value['problemsession'].status;
+      }
+
       unavailList = value['problemsession'].unavailList ?? [];
       dynamic settings = value['settings'];
       print(settings);
@@ -141,7 +147,10 @@ class ProblemSessionState extends ChangeNotifier {
     //#####
   }
 
-  void setStatus(String newStatus) {}
+  void setStatus(String newStatus) {
+    status = newStatus;
+    notifyListeners();
+  }
 
   void setSchool(selectedSchool) {
     debugPrint(selectedSessionID);

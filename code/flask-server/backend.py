@@ -1,19 +1,20 @@
 import json
+import os
 from utils import *
-from flask import Flask, request
+from flask import Flask, request, send_file
 import firebase_admin
 from datetime import datetime
 from firebase_admin import db
 import pandas as pd
 from threading  import Thread
+import openpyxl
 from Optimization_Manager import *
-from queueManager import flag_queue
+
 
 
 cred_obj = firebase_admin.credentials.Certificate("./schedulex-723a8-firebase-adminsdk-mau2x-c93019364b.json")
 
-# json_file_path = "C:\\Users\\Utente\\Desktop\\SchedulEx\\code\\flask-server\\schedulex-723a8-firebase-adminsdk-mau2x-c93019364b.json"
-# cred_obj = firebase_admin.credentials.Certificate(json_file_path)
+#
 
 
 default_app = firebase_admin.initialize_app(cred_obj, {'databaseURL':'https://schedulex-723a8-default-rtdb.firebaseio.com/'})
@@ -21,7 +22,7 @@ default_app = firebase_admin.initialize_app(cred_obj, {'databaseURL':'https://sc
 ref = db.reference("/")
 status_data = {
        "progress": 'No progress yet',
-       "status": '',
+       "status": 'NOT STARTED',
        "sessionID": [],
        "ref": [], 
     }
@@ -32,10 +33,6 @@ print(status)
 
 app = Flask(__name__)
 
-@app.route("/test")
-def test():
-    print('test ok')
-    return 'test'
 
 ### IMPLEMENTED
 @app.route("/startOptimization/<string:sessionID>")
@@ -50,30 +47,45 @@ def startOptimization(sessionID):
     optimization_thread.start()
     return 'Start process'
 
-def handleOptimizationResults(results):
+def handleOptimizationResults(results, problem_session):
     # Questa è la funzione di callback che verrà chiamata dal thread quando ha completato l'ottimizzazione
     for result in results:
         print("Risultati dell'ottimizzazione:", result.assignedDates)
     
-    import openpyxl
 
+    # Creazione della cartella download se non esiste
+    download_folder = 'download'
+    if not os.path.exists(download_folder):
+        os.makedirs(download_folder)
+
+    # Salvataggio della lista results in formato JSON
+    json_data = [result.__dict__ for result in results]
+    json_file_path = os.path.join(download_folder, f"Calendar_{problem_session.id}.json")
+    with open(json_file_path, 'w') as json_file:
+        json.dump(json_data, json_file)
+
+    
     # Creazione di un nuovo file Excel
     workbook = openpyxl.Workbook()
     sheet = workbook.active
 
     # Intestazione delle colonne
-    headers = ["Corso", "Date Esame"]  # Sostituisci con i nomi dei campi di result
+    headers = ["Cds", "Course Code", "Course Name", "Semester", "Year", "Location", "Professor", "Section", "Date"]  # Sostituisci con i nomi dei campi di result
     sheet.append(headers)
 
     for result in results:
-        row_values = [result.course_code, result.assignedDates]  # Sostituisci con i nomi dei campi corretti di result
+        for date in result.assignedDates:
+            row_values = [result.cds, result.course_code, result.course_name, result.semester, result.year, result.location, result.professor, result.section, date]
+            sheet.append(row_values)
+        
         # Converti la lista in una stringa separata da virgole
-        row_values = [','.join(map(str, item)) if isinstance(item, list) else item for item in row_values]
+        #row_values = [','.join(map(str, item)) if isinstance(item, list) else item for item in row_values]
         
         sheet.append(row_values)
-
+    
     # Salvataggio del file Excel
-    workbook.save("flask-server\calendario.xlsx")
+    excel_file_path = os.path.join(download_folder, f"Calendar_{problem_session.id}.xlsx")
+    workbook.save(excel_file_path)
 
 
 @app.route("/askStatus/<string:sessionID>")
@@ -378,6 +390,11 @@ def deleteSession(sessionID):
 
     return f'{txt} {sessionID} {action} successfully.'
 
+@app.route('/downloadExcel/<string:sessionID>')
+def downloadExcel (sessionID):
+    #For windows you need to use drive name [ex: F:/Example.pdf]
+    path = f"/download/Calendar_{sessionID}.xlsx"
+    return send_file(path, as_attachment=True)
 
 if __name__== "__main__":
     app.run(debug=True)
