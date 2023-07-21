@@ -5,9 +5,31 @@ import 'package:go_router/go_router.dart';
 import 'package:schedulex_webapp/model/ProblemSessionState.dart';
 import 'package:schedulex_webapp/model/UserState.dart';
 
-class SelectPage extends StatelessWidget {
+class SelectPage extends StatefulWidget {
   const SelectPage({Key? key}) : super(key: key);
-  //final String selected;
+
+  @override
+  State<SelectPage> createState() => _SelectPageState();
+}
+
+class _SelectPageState extends State<SelectPage> with TickerProviderStateMixin {
+  late AnimationController _rotationController;
+  @override
+  void initState() {
+    super.initState();
+    _rotationController = AnimationController(
+      duration: Duration(
+          seconds: 2), // You can adjust the duration as per your preference.
+      vsync: this,
+    )..repeat(); // This will make the animation loop infinitely.
+  }
+
+  @override
+  void dispose() {
+    _rotationController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final userState = context.watch<UserState>();
@@ -56,12 +78,32 @@ class SelectPage extends StatelessWidget {
                       itemBuilder: (context, index) {
                         final element = problemSessionList[index];
                         return ListTile(
-                          leading: (element.status == 'NOT STARTED')
-                              ? const Icon(Icons.not_started,
-                                  color: Colors.yellow)
-                              : const Icon(
-                                  Icons.settings_backup_restore_outlined,
-                                  color: Colors.green),
+                          leading: (() {
+                            switch (element.status) {
+                              case 'NOT STARTED':
+                                return const Icon(Icons.not_started_outlined,
+                                    color: Colors.yellow);
+                              case 'STARTED':
+                                return RotationTransition(
+                                  turns: _rotationController,
+                                  child: const Icon(Icons.rotate_right_outlined,
+                                      color: Colors.blue),
+                                );
+                              case 'SOLVED':
+                                return const Icon(
+                                    Icons.check_circle_outline_outlined,
+                                    color: Colors.green);
+                              case 'NOT SOLVED':
+                                return const Icon(Icons.not_interested_outlined,
+                                    color: Colors.red);
+                              case 'PENDING':
+                                return const Icon(
+                                    Icons.pause_circle_outline_rounded,
+                                    color: Colors.orange);
+                              default:
+                                return null;
+                            }
+                          })(),
                           trailing: IconButton(
                             icon: const Icon(Icons.delete),
                             onPressed: () {

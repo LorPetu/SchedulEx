@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+//import 'package:path_provider/path_provider.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'utils.dart';
@@ -297,6 +298,7 @@ Future<Map<String, dynamic>?> getStatus({required String sessionID}) async {
   } catch (e) {
     print('Exception occurred while getting status: $e');
   }
+  return null;
 }
 
 Future<dynamic> saveSession(
@@ -570,11 +572,10 @@ Future<void> setSettings(
   }
 }
 
-
 // Future<void> downloadExcel(sessionID) async {
 //   var url = 'https://$SERVER_URL/downloadExcel/$sessionID';
 //   var response = await http.get(Uri.parse(url));
-  
+
 //   if (response.statusCode == 200) {
 //     final bytes = response.bodyBytes;
 //     final appDir = await getApplicationDocumentsDirectory();
@@ -585,4 +586,3 @@ Future<void> setSettings(
 //     print('Failed to download the file.');
 //   }
 // }
-

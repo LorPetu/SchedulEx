@@ -1,7 +1,7 @@
 import json
 import os
 from utils import *
-from flask import Flask, request , send_file
+from flask import Flask, request , send_file, Response
 import firebase_admin
 from datetime import datetime
 from firebase_admin import db
@@ -15,43 +15,54 @@ from Optimization_Manager import *
 cred_obj = firebase_admin.credentials.Certificate("./schedulex-723a8-firebase-adminsdk-mau2x-c93019364b.json")
 
 
-default_app = firebase_admin.initialize_app(cred_obj, {'appName':'SchedulEx','databaseURL':'https://schedulex-723a8-default-rtdb.firebaseio.com/'})
+default_app = firebase_admin.initialize_app(cred_obj, {'appName':'Scstatus_listhedulEx','databaseURL':'https://schedulex-723a8-default-rtdb.firebaseio.com/'})
 app = Flask(__name__)
 
 ref = db.reference("/")
-status_data = {
-       "progress": 'No progress yet',
-       "status": 'NOT STARTED',
-       "sessionID": '',
-    }
-    # Create an Exam object using the data dictionary
-status = optStatus(**status_data)
 
-status_list = []
 
 ### IMPLEMENTED
 @app.route("/startOptimization/<string:sessionID>")
 def startOptimization(sessionID):
-    
-    # problem_session=ref.get().key()
-    # for id in problem_session:
-    #   for item in status_list
-    #       if item.sessioID in problem_session && item.status == 'STARTED'
-    #           item.progress = 'Another problem session i'
-    #           return
-    # if sessionID == id:
-    #        
+    global status_list
+    updatelist=[]
+    sessionID_list= list(ref.get().keys())
+    print(sessionID_list)
+    for el in sessionID_list:
+        # print(f' el in sessionID_LIST{el}')
+        status_data = {
+       "progress": 'No progress yet',
+       "status": ref.child(el).child('status').get(),
+       "sessionID": el,
+        }
+        status = optStatus(**status_data)
+        updatelist.append(status)
+    status_list.list=updatelist
+    print('Status list is:\n')
+    print(status_list.toString())
 
-    
-    status.sessionID = sessionID
-    status.setStatus('STARTED')
-    
+    StartedPresent=False
 
-    # Crea un oggetto thread e passa gli argomenti come argomenti posizionali
-    optimization_thread = Thread(target=runOptimizationManager, args=(status, handleOptimizationResults))
+   # Controlla se l'oggetto con lo stesso sessionID è già presente in status_list.list
+    for existing_status in status_list.list:
+        if existing_status.getStatus() == "STARTED" and existing_status.sessionID != sessionID : 
+            StartedPresent=True        
+            
+    print(StartedPresent)
+    if not StartedPresent:
+            status_list.setStatus(sessionID,'STARTED')
+            # Avvia l'ottimizzazione per la sessione esistente
+            optimization_thread = Thread(target=runOptimizationManager, args=(sessionID, handleOptimizationResults))
+            optimization_thread.start()
+            
+    else:
+        status_list.setStatus(sessionID,'NOT STARTED')
+        status_list.setProgress(sessionID, 'Another scheduling process is running. please wait until is finished.')
+    
+    return {'status': status_list.getStatus(sessionID), 'progress': status_list.getProgress(sessionID)}
+ 
 
-    optimization_thread.start()
-    return 'Start process'
+
 
 def handleOptimizationResults(results, problem_session):
     for element in results:
@@ -99,12 +110,13 @@ def handleOptimizationResults(results, problem_session):
 
 @app.route("/askStatus/<string:sessionID>")
 def askStatus(sessionID):
-    ## Ottieni l'oggetto status_obj da qualche parte, ad esempio passandolo come argomento
-    result = {'status': status.getStatus(), 'progress' : status.getProgress()}
+    global status_list
+    print(status_list)
     
+    ## Ottieni l'oggetto status_obj da qualche parte, ad esempio passandolo come argomento
+    return {'status': status_list.getStatus(sessionID), 'progress' : status_list.getProgress(sessionID)}
 
-    # Restituisci la risposta HTTP al browser
-    return result
+
 
 ### IMPLEMENTED
 @app.route("/setUserID/<string:sessionID>/<string:userID>", methods=['POST'])
@@ -189,7 +201,7 @@ def getUnavailabilityData(sessionID, unavailID):
         }
 
 
-@app.route("/set /", methods=['POST'])
+@app.route("/setSettings/", methods=['POST'])
 def setSettings():
     txt='settings'
     action='saved'
@@ -376,16 +388,6 @@ def saveSession():
     if('sessionID' not in  request_data ):
         session_node = ref.push() #create the new child for the corresponding sessionID
         print(session_node.key)
-
-        #creo nuova sessione
-        status_data = {
-       "progress": 'No progress yet',
-       "status": 'NOT STARTED',
-       "sessionID": session_node.key,
-        }
-        # Create an Exam object using the data dictionary
-        status = optStatus(**status_data)
-        status_list.append(status)
     else:
         print(request_data['sessionID'])
         session_node = ref.child(request_data['sessionID'])
@@ -410,10 +412,10 @@ def deleteSession(sessionID):
     return f'{txt} {sessionID} {action} successfully.'
 
 @app.route('/downloadExcel/<string:sessionID>')
-def downloadExcel (sessionID):
-    #For windows you need to use drive name [ex: F:/Example.pdf]
-    path = f"/download/Calendar_{sessionID}.xlsx"
-    return send_file(path, as_attachment=True)
+def downloadExcel(sessionID):
+    # For windows you need to use the drive name [ex: F:/Example.pdf]
+    path = f"./download/Calendar_{sessionID}.xlsx"
+    return send_file(path, as_attachment=True, attachment_filename=f"Calendar_{sessionID}.xlsx")
 
 # @app.route('/getJSONresults/<string:sessionID>')
 

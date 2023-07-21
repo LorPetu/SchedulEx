@@ -172,7 +172,7 @@ class ProblemSessionPageNEW extends StatelessWidget {
                       onPressed: (problemSessionState.status == 'STARTED')
                           ? null
                           : () {
-                              if (!problemSessionState.school.isEmpty &&
+                              if (problemSessionState.school.isNotEmpty &&
                                   problemSessionState.sessionDates != null &&
                                   problemSessionState.numCalls != null &&
                                   problemSessionState.currSemester != null &&
@@ -181,16 +181,11 @@ class ProblemSessionPageNEW extends StatelessWidget {
                                   problemSessionState.minDistanceCallsDefault !=
                                       null) {
                                 startOptimization(
-                                    sessionID:
-                                        problemSessionState.selectedSessionID!);
-                                saveSession(
                                         sessionID: problemSessionState
-                                            .selectedSessionID!,
-                                        payload: {'status': 'STARTED'})
-                                    .then((value) {
-                                  problemSessionState.setStatus('STARTED');
-                                  context.pushReplacement('/select/calendar');
-                                });
+                                            .selectedSessionID!)
+                                    .then((value) => context
+                                        .pushReplacement('/select/calendar'));
+
                                 problemSessionState.showToast(
                                     context, 'Optimization started');
                               } else if (problemSessionState.school.isEmpty) {

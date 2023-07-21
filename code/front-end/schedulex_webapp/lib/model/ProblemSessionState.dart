@@ -129,6 +129,7 @@ class ProblemSessionState extends ChangeNotifier {
   }
 
   void setStatus(String newStatus) {
+    user.update({'id': selectedSessionID!, 'status': newStatus});
     status = newStatus;
     notifyListeners();
   }

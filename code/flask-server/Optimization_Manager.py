@@ -3,11 +3,16 @@ import pandas as pd
 from utils import *
 from optimizer import *
 from datetime import datetime
+import time
+
+
+
 
 
 #FUNZIONA
-def getDatabaseProblemData(sessionID, status_obj):
-    status_obj.setProgress('Gathering of data of Database Problem is running...')
+def getDatabaseProblemData(sessionID):
+    global status_list
+    status_list.setProgress(sessionID, 'Gathering of data of Database Problem is running...')
     ref=db.reference('/')
     session_data = ref.child(sessionID).get()
 
@@ -53,18 +58,19 @@ def getDatabaseProblemData(sessionID, status_obj):
     return problem_session
 
 #FUNZIONA
-def getDatabaseExam(cds_id, status_obj, school, percentage):
-    
+def getDatabaseExam(cds_id, sessionID, school, percentage):
+    global status_list
+
     try:
-        status_obj.setProgress(percentage + ' Recupero dei dati del Database Esami in corso...')
+        status_list.setProgress(sessionID, percentage + ' Recupero dei dati del Database Esami in corso...')
         # Leggi i dati dal foglio specificato del file Excel
         data = pd.read_excel('Database esami_'+school+'.xlsx', sheet_name=cds_id)
     except FileNotFoundError as e:
-        status_obj.setProgress(percentage + ' File Excel non trovato: flask-server\Database esami_'+school+'.xlsx')
+        status_list.setProgress(sessionID, percentage + ' File Excel non trovato: flask-server\Database esami_'+school+'.xlsx')
         #print('Errore:', e)
         return 'file error'
     except ValueError as e:
-        status_obj.setProgress(percentage + f' Foglio "{cds_id}" non trovato nel file Excel.')
+        status_list.setProgress(sessionID, percentage + f' Foglio "{cds_id}" non trovato nel file Excel.')
         #print('Errore:', e)
         return 'sheet error'
 
@@ -104,8 +110,9 @@ def getDatabaseExam(cds_id, status_obj, school, percentage):
     return resultsExams1
 
 #FUNZIONA
-def createOptExamList(ExamList, status_obj, percentage):
-    status_obj.setProgress(percentage + ' Exam list creation is running...')
+def createOptExamList(ExamList, sessionID, percentage):
+    global status_list
+    status_list.setProgress(sessionID, percentage + ' Exam list creation is running...')
     # Creates an empty list for optExam objects
     resultsExams2 = []
 
@@ -141,8 +148,9 @@ def createOptExamList(ExamList, status_obj, percentage):
     return resultsExams2
 
 
-def createWeight(unprocessedExamList, semester, status_obj, percentage):
-    status_obj.setProgress(percentage + ' Weight creation is running')
+def createWeight(unprocessedExamList, semester, sessionID, percentage):
+    global status_list
+    status_list.setProgress(sessionID, percentage + ' Weight creation is running')
     # Creates weights for each optExam
     for exam in unprocessedExamList:
         exam.effortWeight = (exam.cfu * 3 + exam.passed_percentage * 4 + exam.average_mark * 4)/100
@@ -151,8 +159,9 @@ def createWeight(unprocessedExamList, semester, status_obj, percentage):
     return unprocessedExamList  
 
 
-def addDistances(unprocessedExamList, problem_session, status_obj, percentage):
-    status_obj.setProgress(percentage + ' Distances adding is running...')
+def addDistances(unprocessedExamList, problem_session, sessionID, percentage):
+    global status_list
+    status_list.setProgress(sessionID, percentage + ' Distances adding is running...')
 
     if 'minDistanceCalls' in problem_session.settings and problem_session.settings['minDistanceCalls'].get('Exceptions') is not None:
         exceptions = problem_session.settings['minDistanceCalls']['Exceptions'].items()
@@ -179,8 +188,9 @@ def addDistances(unprocessedExamList, problem_session, status_obj, percentage):
     return unprocessedExamList
 
 #TESTARE IL MATCHING DI DATE
-def addUnavailability(unprocessedExamList, problem_session, status_obj, percentage):
-    status_obj.setProgress(percentage + ' Unavailability merging is running...')
+def addUnavailability(unprocessedExamList, problem_session, sessionID, percentage):
+    global status_list
+    status_list.setProgress(sessionID, percentage + ' Unavailability merging is running...')
     for opt_exam in unprocessedExamList:
         professor_list = []
         professors = opt_exam.professor.split('-')  #Divides the string into hyphenated names
@@ -199,13 +209,14 @@ def addUnavailability(unprocessedExamList, problem_session, status_obj, percenta
     return unprocessedExamList
 
 
-def runOptimizationManager(status_obj, callback):
-    sessionID = status_obj.sessionID
-    status_obj.setProgress('Optimization flow started')
+def runOptimizationManager(sessionID, callback):
+    global status_list
+    
+    status_list.setProgress(sessionID, 'Optimization flow started')
     # Get according to sessionID database values Problem
-    status_obj.setProgress('Gathering of data of Database Problem will start shortly')
-    problem_session=getDatabaseProblemData(sessionID, status_obj)
-    status_obj.setProgress('Database Problem data gathering completed')
+    status_list.setProgress(sessionID, 'Gathering of data of Database Problem will start shortly')
+    problem_session=getDatabaseProblemData(sessionID)
+    status_list.setProgress(sessionID, 'Database Problem data gathering completed')
     #print(problem_session)
     ## Itera each school CdS
     if problem_session.school == 'Ing_Ind_Inf':
@@ -221,18 +232,18 @@ def runOptimizationManager(status_obj, callback):
     for index, cds_id in enumerate(cds_list, 1):
         total_cds = len(cds_list)  # Numero totale di cds nella lista
         percentage = f"Iterazione {index}/{total_cds}: {cds_id}"
-        status_obj.setProgress(percentage + ' Gathering of data of Database Exam will start shortly')
-        ExamList = getDatabaseExam(cds_id, status_obj, problem_session.school, percentage)
+        status_list.setProgress(sessionID, percentage + ' Gathering of data of Database Exam will start shortly')
+        ExamList = getDatabaseExam(cds_id, sessionID, problem_session.school, percentage)
         if ExamList=='file error':
-            status_obj.setProgress('DATABASE NOT FOUND')
+            status_list.setProgress(sessionID, 'DATABASE NOT FOUND')
             return
         if ExamList == 'sheet error':
-            status_obj.setProgress('SHEET NOT FOUND')
+            status_list.setProgress(sessionID, 'SHEET NOT FOUND')
             return
-        status_obj.setProgress(percentage + ' Database Problem data gathering completed')
-        status_obj.setProgress(percentage + ' Exam list creation will start shortly')
-        optExamList=createOptExamList(ExamList, status_obj, percentage)
-        status_obj.setProgress(percentage + ' Exam list creation completed')
+        status_list.setProgress(sessionID, percentage + ' Database Problem data gathering completed')
+        status_list.setProgress(sessionID, percentage + ' Exam list creation will start shortly')
+        optExamList=createOptExamList(ExamList, sessionID, percentage)
+        status_list.setProgress(sessionID, percentage + ' Exam list creation completed')
         unprocessedExamList=optExamList
        
         for item_i in unprocessedExamList:
@@ -244,25 +255,27 @@ def runOptimizationManager(status_obj, callback):
         # for el in resultsExams:
         #     print(el.toString())
         
-        status_obj.setProgress(percentage + ' Weight creation will start shortly')
-        unprocessedExamList1=createWeight(unprocessedExamList, problem_session.settings['currSemester'], status_obj, percentage)
-        status_obj.setProgress(percentage + ' Weight creation completed')
+        status_list.setProgress(sessionID, percentage + ' Weight creation will start shortly')
+        unprocessedExamList1=createWeight(unprocessedExamList, problem_session.settings['currSemester'], sessionID, percentage)
+        status_list.setProgress(sessionID, percentage + ' Weight creation completed')
         
-        status_obj.setProgress(percentage + ' Distances adding will start shortly')
-        unprocessedExamList2=addDistances(unprocessedExamList1, problem_session, status_obj, percentage)
-        status_obj.setProgress(percentage + ' Distances adding completed')
+        status_list.setProgress(sessionID, percentage + ' Distances adding will start shortly')
+        unprocessedExamList2=addDistances(unprocessedExamList1, problem_session, sessionID, percentage)
+        status_list.setProgress(sessionID, percentage + ' Distances adding completed')
         
         
-        status_obj.setProgress(percentage + ' Unavailability merging will start shortly')
-        unprocessedExamList3=addUnavailability(unprocessedExamList2, problem_session, status_obj, percentage)
-        status_obj.setProgress(percentage + ' Unavailability merging completed')
+        status_list.setProgress(sessionID, percentage + ' Unavailability merging will start shortly')
+        unprocessedExamList3=addUnavailability(unprocessedExamList2, problem_session, sessionID, percentage)
+        status_list.setProgress(sessionID, percentage + ' Unavailability merging completed')
 
-        status_obj.setProgress(percentage + ' Optimization process will start shortly')
-        [result, scheduledExam]=solveScheduling(unprocessedExamList3, problem_session, status_obj)
-       
+        status_list.setProgress(sessionID, percentage + ' Optimization process will start shortly')
+        [result, scheduledExam]=solveScheduling(unprocessedExamList3, problem_session)
+
+        ### HO INSERITO DEL TEMPO NULLO PER RIUSCIRE A FAR PARTIRE UN ALTRO SCHEDULING E OTTENERE LA RISPOSTA
+        time.sleep(5)
         if result == 1:
-            status_obj.setProgress(percentage + ' Optimization process completed')
-            status_obj.setStatus('NOT SOLVED')
+            status_list.setProgress(sessionID, percentage + ' Optimization process completed')
+            status_list.setStatus(sessionID,'NOT SOLVED')
         if result == 0:
             results_course_codes = {exam.course_code for exam in resultsExams}
             for element in scheduledExam:
@@ -271,8 +284,8 @@ def runOptimizationManager(status_obj, callback):
                 else:
                     resultsExams.add(element)
                     # print(element.toString())
-            status_obj.setProgress(percentage + ' Optimization process completed')
+            status_list.setProgress(sessionID, percentage + ' Optimization process completed')
     if result== 0:        
-        status_obj.setStatus('SOLVED')
+        status_list.setStatus(sessionID,'SOLVED')
         
         callback(resultsExams, problem_session)

@@ -7,9 +7,11 @@ from utils import *
 GUROBI_HOME = 'C:/gurobi1001/'
 
 
-def solveScheduling(exams, problem_session, status):
+def solveScheduling(exams, problem_session):
+    global status_list
 
     ## Define the days that are available from start to end date
+    sessionID = problem_session.id
     availDates = []
     current_date=problem_session.startDate
     print(current_date)
@@ -44,7 +46,7 @@ def solveScheduling(exams, problem_session, status):
 
                             x[(i, k, j, t)] = prob.add_var(var_type=BINARY, name='x_%i_%i_%i_%i' % (i, k, j, t))
     # Update the Status
-    status.setProgress("Variables created")
+    status_list.setProgress(sessionID,"Variables created")
 
     # Creazione della funzione obiettivo
     objective = []
@@ -58,7 +60,7 @@ def solveScheduling(exams, problem_session, status):
 
     prob.objective += xsum(objective)
 
-    status.setProgress("Objective function created")
+    status_list.setProgress(sessionID,"Objective function created")
 
     # LOGIC Constraints: in this way we define the logical port AND for the x variables, and connect with the relative s variables
     for i, exam_i in enumerate(exams):
@@ -77,7 +79,7 @@ def solveScheduling(exams, problem_session, status):
         print(s[(i, k)])
         prob += xsum(s[(i, k)] for k, date_k in enumerate(availDates)) == num_appelli
 
-    status.setProgress("Logic constraints set")
+    status_list.setProgress(sessionID,"Logic constraints set")
 
     ## Time constraint
 
@@ -110,7 +112,7 @@ def solveScheduling(exams, problem_session, status):
                                     #if t-k=distanza_1 the eq1 is always equal to zero, so we need to set this variable to zero
                                     prob += x[(i, k, i, t)]==0
 
-    status.setProgress("Time constraints set")
+    status_list.setProgress(sessionID,"Time constraints set")
 
     ## Unavailability constraints
 
@@ -134,17 +136,17 @@ def solveScheduling(exams, problem_session, status):
 
 
 
-    status.setProgress("Unavailability constraints set")
+    status_list.setProgress(sessionID,"Unavailability constraints set")
 
     # Be careful, the output will be huge
     #print(prob)
     prob.write("ExamScheduler.lp")
-    status.setProgress('The problem has successfully formulated')
+    status_list.setProgress(sessionID,'The problem has successfully formulated')
     # Last updated objective and time
     # prob._cur_obj = float('inf')
     # prob._time = time.time()
     # Risoluzione del problema di programmazione lineare intera
-    status.setProgress('Start optimization')
+    status_list.setProgress(sessionID,'Start optimization')
     prob.optimize()
     prob.store_search_progress_log
     print(prob.status.value)

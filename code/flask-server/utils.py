@@ -2,6 +2,8 @@ from firebase_admin import db
 import random
 from datetime import datetime, timedelta
 
+
+
 class Unavail:
     def __init__(self, id, type, dates, name):
         self.id = id
@@ -77,8 +79,50 @@ class optStatus:
         self.__status=new_status
     def setProgress(self,progress_update):
         self.__progress=progress_update
+    
+    def toString(self):
+        return f'status: {self.__status} || progress:{self.__progress} || id:{self.sessionID}'
 
+class Sessions_status_list:
+    def __init__(self, lst):
+        for item in lst:
+            if not isinstance(item, optStatus):
+                raise ValueError("Each item in the list must be an instance of optStatus")
+        self.list = lst
 
+    def getStatus(self, sessionID) -> str:
+        for item in self.list:
+            if item.sessionID == sessionID:
+                return item.getStatus()
+        raise ValueError(f"No optStatus with sessionID '{sessionID}' found in the list.")
+
+    def getProgress(self, sessionID) -> str:
+        for item in self.list:
+            if item.sessionID == sessionID:
+                return item.getProgress()
+        raise ValueError(f"No optStatus with sessionID '{sessionID}' found in the list.")
+
+    def setStatus(self, sessionID, new_status):
+        for item in self.list:
+            if item.sessionID == sessionID:
+                item.setStatus(new_status)
+                return
+        raise ValueError(f"No optStatus with sessionID '{sessionID}' found in the list.")
+
+    def setProgress(self, sessionID, progress_update):
+        for item in self.list:
+            if item.sessionID == sessionID:
+                item.setProgress(progress_update)
+                return
+        raise ValueError(f"No optStatus with sessionID '{sessionID}' found in the list.")
+    
+    def toString(self):
+        printedString=''
+        for item in self.list:
+            printedString+=f'{item.toString()}\n' 
+        return printedString
+
+status_list=Sessions_status_list([])
 
 
 # Ora random_opt_exams conterrà una lista di 5 elementi optExam con valori casuali per i campi.

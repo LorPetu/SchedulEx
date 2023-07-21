@@ -30,6 +30,7 @@ class _CalendarPageState extends State<CalendarPage> {
     getStatus(sessionID: session.selectedSessionID!).then((value) {
       setState(() {
         session.setStatus(value?['status']);
+        print(session.status);
         serverResponse = value?['progress'];
       });
     }); // Initial fetch
@@ -78,16 +79,16 @@ class _CalendarPageState extends State<CalendarPage> {
                     onPressed: () {
                       //downloadExcel(session.selectedSessionID);
                     },
-                    child: Text('download Excel')),
-                Expanded(child: const TableResults()),
+                    child: const Text('download Excel')),
+                const Expanded(child: TableResults()),
               ],
             )
           : Center(
               child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
+                const Padding(
+                  padding: EdgeInsets.all(8.0),
                   child: CircularProgressIndicator(),
                 ),
                 Text('Server Response: $serverResponse'),
