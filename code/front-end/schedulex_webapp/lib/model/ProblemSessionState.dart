@@ -101,6 +101,8 @@ class ProblemSessionState extends ChangeNotifier {
       }
 
       if (!value['problemsession'].status.isEmpty) {
+        print('Problem session status in set ProblemSessionID' +
+            value['problemsession'].status);
         status = value['problemsession'].status;
       }
 
@@ -118,6 +120,7 @@ class ProblemSessionState extends ChangeNotifier {
             exceptions.add(v);
           });
         }
+        user.update({'id': selectedSessionID!, 'status': status});
       }
 
       notifyListeners();

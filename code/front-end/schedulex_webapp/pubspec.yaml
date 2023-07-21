@@ -25,12 +25,14 @@ dependencies:
   flutter:
     sdk: flutter
 
-  english_words: ^4.0.0
+  file_saver: any
+  permission_handler: any
   provider: ^6.0.0 
   flutter_datetime_picker: ^1.5.1
   http: ^1.1.0
   go_router: any
   table_calendar: ^3.0.9
+  file_picker: ^5.3.2
   
 
 dev_dependencies:

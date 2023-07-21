@@ -1,7 +1,7 @@
 import json
 import os
 from utils import *
-from flask import Flask, request , send_file, Response
+from flask import Flask, request , send_file, jsonify
 import firebase_admin
 from datetime import datetime
 from firebase_admin import db
@@ -111,7 +111,21 @@ def handleOptimizationResults(results, problem_session):
 @app.route("/askStatus/<string:sessionID>")
 def askStatus(sessionID):
     global status_list
-    print(status_list)
+    if status_list.list ==[]:
+        updatelist=[]
+        sessionID_list= list(ref.get().keys())
+        print(sessionID_list)
+        for el in sessionID_list:
+            # print(f' el in sessionID_LIST{el}')
+            status_data = {
+        "progress": 'No progress yet',
+        "status": ref.child(el).child('status').get(),
+        "sessionID": el,
+            }
+            status = optStatus(**status_data)
+            updatelist.append(status)
+        status_list.list=updatelist
+    print(status_list.toString())
     
     ## Ottieni l'oggetto status_obj da qualche parte, ad esempio passandolo come argomento
     return {'status': status_list.getStatus(sessionID), 'progress' : status_list.getProgress(sessionID)}
@@ -415,9 +429,25 @@ def deleteSession(sessionID):
 def downloadExcel(sessionID):
     # For windows you need to use the drive name [ex: F:/Example.pdf]
     path = f"./download/Calendar_{sessionID}.xlsx"
-    return send_file(path, as_attachment=True, attachment_filename=f"Calendar_{sessionID}.xlsx")
+    return send_file(path, as_attachment=True) #attachment_filename=f"Calendar_{sessionID}.xlsx")
 
-# @app.route('/getJSONresults/<string:sessionID>')
+@app.route('/getJSONresults/<string:sessionID>')
+def getJSONresults(sessionID):
+    # Get the path to the "download" folder in your Flask app
+    download_folder = os.path.join(app.root_path, 'download')
+
+    # Construct the path to the "data.json" file
+    json_file_path = os.path.join(download_folder, f'Calendar_{sessionID}.json')
+
+    # Check if the file exists
+    if os.path.exists(json_file_path):
+        # Read the JSON data from the file
+        with open(json_file_path, 'r') as file:
+            data = json.load(file)
+            return jsonify(data)
+    else:
+        # Return a 404 Not Found response if the file doesn't exist
+        return jsonify({'error': 'JSON data file not found'}), 404
 
 if __name__== "__main__":
     app.run(debug=True)

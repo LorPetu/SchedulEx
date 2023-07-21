@@ -1,6 +1,3 @@
-// Copyright 2019 Aleksander Woźniak
-// SPDX-License-Identifier: Apache-2.0
-
 import 'package:flutter/material.dart';
 import 'package:schedulex_webapp/BackEndMethods.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -9,8 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:schedulex_webapp/model/ProblemSessionState.dart';
 import 'package:schedulex_webapp/utils.dart';
 import 'dart:async';
-
-//import '../utils.dart';
 
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});
@@ -27,6 +22,7 @@ class _CalendarPageState extends State<CalendarPage> {
   void initState() {
     super.initState();
     final session = context.read<ProblemSessionState>();
+
     getStatus(sessionID: session.selectedSessionID!).then((value) {
       setState(() {
         session.setStatus(value?['status']);
@@ -56,6 +52,11 @@ class _CalendarPageState extends State<CalendarPage> {
   @override
   Widget build(BuildContext context) {
     final session = context.watch<ProblemSessionState>();
+    DateTime firstDay =
+        session.sessionDates?.end.subtract(const Duration(days: 10)) ??
+            kFirstDay;
+    DateTime lastDay =
+        session.sessionDates?.start.add(const Duration(days: 10)) ?? kLastDay;
 
     return Scaffold(
       appBar: AppBar(
@@ -77,10 +78,24 @@ class _CalendarPageState extends State<CalendarPage> {
               children: [
                 ElevatedButton(
                     onPressed: () {
-                      //downloadExcel(session.selectedSessionID);
+                      downloadExcel(session.selectedSessionID!)
+                          .then((value) => session.showToast(context, value!));
                     },
-                    child: const Text('download Excel')),
-                const Expanded(child: TableResults()),
+                    child: SizedBox(
+                      width: 150,
+                      child: Row(
+                        children: [
+                          const Text('download Excel'),
+                          Icon(Icons.download)
+                        ],
+                      ),
+                    )),
+                Expanded(
+                    child: TableResults(
+                  firstDay: firstDay,
+                  lastDay: lastDay,
+                  sessionID: session.selectedSessionID!,
+                )),
               ],
             )
           : Center(
@@ -99,7 +114,16 @@ class _CalendarPageState extends State<CalendarPage> {
 }
 
 class TableResults extends StatefulWidget {
-  const TableResults({super.key});
+  final DateTime firstDay; // First day of the calendar
+  final DateTime lastDay; // Last day of the calendar
+  final String sessionID;
+
+  const TableResults({
+    required this.firstDay,
+    required this.lastDay,
+    required this.sessionID,
+    Key? key,
+  }) : super(key: key);
 
   @override
   _TableResultsState createState() => _TableResultsState();
@@ -107,10 +131,11 @@ class TableResults extends StatefulWidget {
 
 class _TableResultsState extends State<TableResults> {
   late final ValueNotifier<List<Exam>> _selectedExams;
+  dynamic JSONResults;
   CalendarFormat _calendarFormat = CalendarFormat.month;
   RangeSelectionMode _rangeSelectionMode = RangeSelectionMode
       .toggledOff; // Can be toggled on/off by longpressing a date
-  DateTime _focusedDay = DateTime.now();
+  late DateTime _focusedDay = widget.firstDay.add(const Duration(days: 2));
   DateTime? _selectedDay;
   DateTime? _rangeStart;
   DateTime? _rangeEnd;
@@ -118,7 +143,7 @@ class _TableResultsState extends State<TableResults> {
   @override
   void initState() {
     super.initState();
-
+    getJsonResults(widget.sessionID).then((value) => JSONResults = value);
     _selectedDay = _focusedDay;
     _selectedExams = ValueNotifier(_getExamsForDay(_selectedDay!));
   }
@@ -131,13 +156,29 @@ class _TableResultsState extends State<TableResults> {
 
   List<Exam> _getExamsForDay(DateTime day) {
     // Implementation example
-    return kExams[day] ?? [];
+    List<Exam> examsInaDay = [];
+    if (JSONResults != null) {
+      for (dynamic exam in JSONResults) {
+        print("## course name: ${exam['course_name']} ##");
+
+        for (DateTime call in convertStrToDateList(exam['assignedDates'])) {
+          print("day inspected: ${call.isAtSameMomentAs(day)}");
+          if (isSameDay(day, call)) {
+            print('if verified');
+            examsInaDay.add(Exam(exam['course_code'], exam['course_name'],
+                convertStrToDateList(exam['assignedDates'])));
+          }
+        }
+      }
+    }
+
+    return examsInaDay;
   }
 
   List<Exam> _getExamsForRange(DateTime start, DateTime end) {
-    // Implementation example
+    // get all days between start and end date
     final days = daysInRange(start, end);
-
+    //for each of them obtain the Exam that are in this day
     return [
       for (final d in days) ..._getExamsForDay(d),
     ];
@@ -181,9 +222,9 @@ class _TableResultsState extends State<TableResults> {
     return Column(
       children: [
         TableCalendar<Exam>(
-          firstDay: kFirstDay,
-          lastDay: kLastDay,
-          focusedDay: _focusedDay,
+          firstDay: widget.firstDay,
+          lastDay: widget.lastDay,
+          focusedDay: widget.firstDay.add(const Duration(days: 2)),
           selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
           rangeStartDay: _rangeStart,
           rangeEndDay: _rangeEnd,

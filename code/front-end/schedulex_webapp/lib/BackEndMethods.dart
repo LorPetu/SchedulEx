@@ -3,9 +3,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-//import 'package:path_provider/path_provider.dart';
-import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'dart:convert';
 import 'utils.dart';
 
 const SERVER_URL = "127.0.0.1:5000";
@@ -572,17 +572,52 @@ Future<void> setSettings(
   }
 }
 
-// Future<void> downloadExcel(sessionID) async {
-//   var url = 'https://$SERVER_URL/downloadExcel/$sessionID';
-//   var response = await http.get(Uri.parse(url));
+Future<dynamic> getJsonResults(sessionID) async {
+  final url = 'http://$SERVER_URL/getJSONresults/$sessionID';
 
-//   if (response.statusCode == 200) {
-//     final bytes = response.bodyBytes;
-//     final appDir = await getApplicationDocumentsDirectory();
-//     final file = File('${appDir.path}/Database_esami.xlsx');
-//     await file.writeAsBytes(bytes);
-//   } else {
-//     // Handle the case when the file download fails (e.g., show an error message).
-//     print('Failed to download the file.');
-//   }
-// }
+  String txt = 'JSON';
+  String action = 'get';
+  try {
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      print('$txt $action successfully.');
+      //print(response.body);
+
+      return jsonDecode(response.body);
+    } else {
+      print('Failed to $action $txt. Error: ${response.statusCode}');
+    }
+  } catch (e) {
+    print('Exception occurred while $action $txt: $e');
+  }
+}
+
+Future<String?> downloadExcel(String sessionID) async {
+  final String url = 'http://$SERVER_URL/downloadExcel/$sessionID';
+  final String saveDirectory =
+      r'C:\Users\lopet\OneDrive\Desktop\new'; // Replace with your desired directory path.
+
+  try {
+    // Make the HTTP request to download the file.
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      // File download successful.
+      final String fileName =
+          'CalendarSession$sessionID.xlsx'; // Replace with the desired filename for the Excel file.
+      final File file = File('$saveDirectory\\$fileName');
+
+      // Write the downloaded file to the specified directory.
+      await file.writeAsBytes(response.bodyBytes);
+
+      return 'File downloaded and saved successfully in folder: $saveDirectory.';
+    } else {
+      // Handle the error if the file download request failed.
+      return 'Failed to download the file. Status code: ${response.statusCode}';
+    }
+  } catch (e) {
+    // Handle any other exceptions that might occur during the process.
+    return 'Error: $e';
+  }
+}

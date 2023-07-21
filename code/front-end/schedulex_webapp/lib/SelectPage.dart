@@ -18,7 +18,7 @@ class _SelectPageState extends State<SelectPage> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _rotationController = AnimationController(
-      duration: Duration(
+      duration: const Duration(
           seconds: 2), // You can adjust the duration as per your preference.
       vsync: this,
     )..repeat(); // This will make the animation loop infinitely.
@@ -115,7 +115,8 @@ class _SelectPageState extends State<SelectPage> with TickerProviderStateMixin {
                               : const Text('School not selected'),
                           onTap: () {
                             problemSessionState.setProblemSessionID(element.id);
-                            if (element.status == 'STARTED') {
+                            if (element.status == 'STARTED' ||
+                                element.status == 'SOLVED') {
                               context.pushReplacement('/select/calendar');
                             } else {
                               context.pushReplacement('/select/session');
