@@ -8,9 +8,8 @@ import 'package:schedulex_webapp/model/ProblemSessionState.dart';
 import 'package:schedulex_webapp/model/UnavailState.dart';
 import 'package:schedulex_webapp/model/UserState.dart';
 import 'package:schedulex_webapp/CalendarPage.dart';
-import 'SelectPage.dart';
-
-import 'Unavailpage.dart';
+import 'package:schedulex_webapp/SelectPage.dart';
+import 'package:schedulex_webapp/Unavailpage.dart';
 
 void main() {
   runApp(const MyApp());

@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -8,10 +9,13 @@ import 'package:schedulex_webapp/model/UnavailState.dart';
 class UnavailPageNEW extends StatelessWidget {
   const UnavailPageNEW({super.key});
 
+  //int selectedDayIndex = 0;
+
   @override
   Widget build(BuildContext context) {
     final sessiondates = context.select<ProblemSessionState, DateTimeRange>(
         (value) => value.sessionDates!);
+
     final unavailState = context.watch<UnavailState>();
 
     void addSingleDay(DateTime date) {
@@ -32,8 +36,29 @@ class UnavailPageNEW extends StatelessWidget {
     void addRecurrentDaysOfWeek(
         DateTime startDate, DateTime endDate, int dayOfWeek) {
       List<DateTime> newDates = [];
+      for (var date = startDate;
+          date.isBefore(endDate.add(const Duration(days: 1)));
+          date = date.add(const Duration(days: 1))) {
+        if (date.weekday == dayOfWeek) {
+          newDates.add(date);
+        }
+        print(newDates);
+      }
 
       unavailState.addDates(newDates);
+    }
+
+    String getDayOfWeek(int index) {
+      final List<String> daysOfWeek = [
+        'Sunday',
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday',
+      ];
+      return daysOfWeek[index];
     }
 
     return Scaffold(
@@ -100,6 +125,17 @@ class UnavailPageNEW extends StatelessWidget {
                         builder: (context, child) {
                           return Column(
                             children: <Widget>[
+                              DropdownButton<int>(
+                                value: 0,
+                                onChanged: (int? newValue) {},
+                                items: List<DropdownMenuItem<int>>.generate(7,
+                                    (int index) {
+                                  return DropdownMenuItem<int>(
+                                    value: index,
+                                    child: Text(getDayOfWeek(index)),
+                                  );
+                                }),
+                              ),
                               Padding(
                                 padding: const EdgeInsets.only(top: 50.0),
                                 child: SizedBox(
@@ -119,18 +155,99 @@ class UnavailPageNEW extends StatelessWidget {
                     child: const Text('Date Range'),
                   ),
                   ElevatedButton(
-                    onPressed: () {
-                      final daysOfWeek = [
-                        DateTime.monday,
-                        DateTime.wednesday,
-                        DateTime.friday
-                      ];
+                    onPressed: () async {
+                      DateTimeRange? recurrentPeriod;
+                      int selectedDayIndex = 0;
 
-                      addRecurrentDaysOfWeek(
-                          sessiondates.start, sessiondates.end, daysOfWeek[0]);
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return StatefulBuilder(
+                            // Use StatefulBuilder for the dialog content
+                            builder: (context, setState) {
+                              return AlertDialog(
+                                title: const Text(
+                                  'Select Recurrent Day of Week in a specific range',
+                                  style: TextStyle(fontSize: 14),
+                                ),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ElevatedButton(
+                                      onPressed: () async {
+                                        final DateTimeRange? dateTimeRange =
+                                            await showDateRangePicker(
+                                          context: context,
+                                          firstDate: sessiondates.start,
+                                          lastDate: sessiondates.end,
+                                        );
+
+                                        if (dateTimeRange != null) {
+                                          setState(() {
+                                            // Update the state to trigger a rebuild
+                                            recurrentPeriod = dateTimeRange;
+                                          });
+                                        }
+                                      },
+                                      child: const Text('Select Date Range'),
+                                    ),
+                                    const SizedBox(height: 20),
+                                    DropdownButton<int>(
+                                      value: selectedDayIndex,
+                                      onChanged: (int? newValue) {
+                                        setState(() {
+                                          // Update the state to trigger a rebuild
+                                          selectedDayIndex = newValue!;
+                                        });
+                                      },
+                                      items:
+                                          List<DropdownMenuItem<int>>.generate(
+                                              7, (int index) {
+                                        return DropdownMenuItem<int>(
+                                          value: index,
+                                          child: Text(getDayOfWeek(index)),
+                                        );
+                                      }),
+                                    ),
+                                  ],
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context)
+                                          .pop(); // Close the dialog without saving
+                                    },
+                                    child: const Text('Cancel'),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      if (recurrentPeriod != null) {
+                                        print(
+                                            'you\'re trying to save: ${recurrentPeriod!.start}, ${recurrentPeriod!.end} and $selectedDayIndex');
+                                        // Call your function here to save the data
+                                        Navigator.of(context).pop();
+                                      } else {
+                                        final scaffold =
+                                            ScaffoldMessenger.of(context);
+                                        scaffold.showSnackBar(const SnackBar(
+                                          duration: Duration(seconds: 1),
+                                          content: Text(
+                                              'Please select a date range in which consider te selected recurrent day'),
+                                        ));
+                                      }
+                                      // Close the dialog after saving
+                                    },
+                                    child: const Text('Save'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                      );
                     },
-                    child: const Text('Recurrent Day'),
-                  ),
+                    child: const Text('Open Recurrent Date Picker'),
+                  )
                 ]),
                 const SizedBox(height: 16),
                 const Text('DateTime List:'),

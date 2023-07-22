@@ -419,8 +419,13 @@ Future<dynamic> getSessionData({required String sessionId}) async {
       } else {
         results = [];
       }
+      print(responseData);
 
-      print(results);
+      print(responseData['startDate'].runtimeType);
+      print(responseData['endDate'].runtimeType);
+      print(responseData['settings'].runtimeType);
+      print(responseData['school'].runtimeType);
+      print(responseData['status'].runtimeType);
 
       DateTime? startDate = responseData['startDate'] != null
           ? DateTime.tryParse(responseData['startDate'].toString())
@@ -429,18 +434,20 @@ Future<dynamic> getSessionData({required String sessionId}) async {
           ? DateTime.tryParse(responseData['endDate'].toString())
           : null;
 
-      print("retrieve of: ${responseData['settings']}");
+      Map<String, dynamic> settingsData = responseData['settings'] != null
+          ? Map<String, dynamic>.from(responseData['settings'])
+          : {};
 
       return {
         'problemsession': ProblemSession(
           id: sessionId,
-          school: responseData['school'],
+          school: responseData['school'] ?? '',
           status: responseData['status'],
           startDate: startDate,
           endDate: endDate,
           unavailList: results,
         ),
-        'settings': responseData['settings']
+        'settings': settingsData
       };
     } else {
       print('Failed getSessionData. Error: ${response.statusCode}');
@@ -525,7 +532,8 @@ Future<List<Exam>> getExamList() async {
       final responseData = json.decode(response.body);
       if (responseData is List<dynamic>) {
         List<Exam> professorList = responseData
-            .map((dynamic item) => item = Exam(item['id'], item['name'], []))
+            .map((dynamic item) =>
+                item = Exam(item['id'], item['name'], item['cds'], []))
             .toList();
         print(professorList);
         return professorList;
@@ -595,8 +603,7 @@ Future<dynamic> getJsonResults(sessionID) async {
 
 Future<String?> downloadExcel(String sessionID) async {
   final String url = 'http://$SERVER_URL/downloadExcel/$sessionID';
-  final String saveDirectory =
-      r'C:\Users\lopet\OneDrive\Desktop\new'; // Replace with your desired directory path.
+  // Replace with your desired directory path.
 
   try {
     // Make the HTTP request to download the file.
@@ -606,12 +613,12 @@ Future<String?> downloadExcel(String sessionID) async {
       // File download successful.
       final String fileName =
           'CalendarSession$sessionID.xlsx'; // Replace with the desired filename for the Excel file.
-      final File file = File('$saveDirectory\\$fileName');
+      final File file = File('$FOLDER_PATH\\$fileName');
 
       // Write the downloaded file to the specified directory.
       await file.writeAsBytes(response.bodyBytes);
 
-      return 'File downloaded and saved successfully in folder: $saveDirectory.';
+      return 'File downloaded and saved successfully in folder: $FOLDER_PATH.';
     } else {
       // Handle the error if the file download request failed.
       return 'Failed to download the file. Status code: ${response.statusCode}';

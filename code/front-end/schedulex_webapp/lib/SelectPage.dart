@@ -114,13 +114,16 @@ class _SelectPageState extends State<SelectPage> with TickerProviderStateMixin {
                               ? Text(element.school)
                               : const Text('School not selected'),
                           onTap: () {
-                            problemSessionState.setProblemSessionID(element.id);
-                            if (element.status == 'STARTED' ||
-                                element.status == 'SOLVED') {
-                              context.pushReplacement('/select/calendar');
-                            } else {
-                              context.pushReplacement('/select/session');
-                            }
+                            problemSessionState
+                                .setProblemSessionID(element.id)
+                                .then((value) {
+                              if (element.status == 'STARTED' ||
+                                  element.status == 'SOLVED') {
+                                context.pushReplacement('/select/calendar');
+                              } else {
+                                context.pushReplacement('/select/session');
+                              }
+                            });
                           },
                         );
                       },

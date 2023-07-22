@@ -83,7 +83,7 @@ class ProblemSessionState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setProblemSessionID(String id) {
+  Future<void> setProblemSessionID(String id) async {
     selectedSessionID = id;
 
     debugPrint('${user.userID} select $selectedSessionID');
@@ -108,8 +108,8 @@ class ProblemSessionState extends ChangeNotifier {
 
       unavailList = value['problemsession'].unavailList ?? [];
       dynamic settings = value['settings'];
-      print(settings);
-      if (settings != null) {
+
+      if (!settings.isEmpty) {
         numCalls = settings['numCalls'];
         currSemester = settings['currSemester'];
 

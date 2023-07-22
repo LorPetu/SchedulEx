@@ -1,9 +1,7 @@
 // Copyright 2019 Aleksander Woźniak
 // SPDX-License-Identifier: Apache-2.0
 
-import 'dart:collection';
-
-import 'package:table_calendar/table_calendar.dart';
+const String FOLDER_PATH = r'C:\Users\lopet\OneDrive\Desktop\new';
 
 class Unavail {
   String id;
@@ -71,10 +69,11 @@ class ProblemSession {
 class Exam {
   final String id;
   final String name;
+  final String cds;
   //final String professor;
   final List<DateTime> assignedDates;
 
-  Exam(this.id, this.name, this.assignedDates); //this.professor
+  Exam(this.id, this.name, this.cds, this.assignedDates); //this.professor
 
   @override
   String toString() => '$id - $name';
@@ -92,7 +91,7 @@ class Exam {
 }
 
 List<DateTime> convertStrToDateList(List<dynamic> strList) {
-  List<DateTime> dateTimeList = (strList as List<dynamic>).map((dynamic item) {
+  List<DateTime> dateTimeList = (strList).map((dynamic item) {
     if (item is DateTime) {
       return item;
     } else if (item is String) {

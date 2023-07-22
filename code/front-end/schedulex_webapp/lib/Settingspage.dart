@@ -208,7 +208,8 @@ class SettingsPage extends StatelessWidget {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                saveForm(); // Call the _saveForm method to save the entered values
+                saveForm();
+                context.pushReplacement('/select/session');
               },
               child: const Text('Save'),
             ),

@@ -53,10 +53,10 @@ class _CalendarPageState extends State<CalendarPage> {
   Widget build(BuildContext context) {
     final session = context.watch<ProblemSessionState>();
     DateTime firstDay =
-        session.sessionDates?.end.subtract(const Duration(days: 10)) ??
+        session.sessionDates?.end.subtract(const Duration(days: 12)) ??
             kFirstDay;
     DateTime lastDay =
-        session.sessionDates?.start.add(const Duration(days: 10)) ?? kLastDay;
+        session.sessionDates?.start.add(const Duration(days: 12)) ?? kLastDay;
 
     return Scaffold(
       appBar: AppBar(
@@ -81,11 +81,11 @@ class _CalendarPageState extends State<CalendarPage> {
                       downloadExcel(session.selectedSessionID!)
                           .then((value) => session.showToast(context, value!));
                     },
-                    child: SizedBox(
+                    child: const SizedBox(
                       width: 150,
                       child: Row(
                         children: [
-                          const Text('download Excel'),
+                          Text('download Excel'),
                           Icon(Icons.download)
                         ],
                       ),
@@ -98,17 +98,33 @@ class _CalendarPageState extends State<CalendarPage> {
                 )),
               ],
             )
-          : Center(
-              child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: CircularProgressIndicator(),
-                ),
-                Text('Server Response: $serverResponse'),
-              ],
-            )),
+          : Center(child: (() {
+              switch (session.status) {
+                case 'NOT SOLVED':
+                  return const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child:
+                            Icon(Icons.dangerous_outlined, color: Colors.red),
+                      ),
+                      Text('The scheduling problem is not feasible'),
+                    ],
+                  );
+                default:
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: CircularProgressIndicator(),
+                      ),
+                      Text('Server Response: $serverResponse'),
+                    ],
+                  );
+              }
+            })()),
     );
   }
 }
@@ -159,14 +175,10 @@ class _TableResultsState extends State<TableResults> {
     List<Exam> examsInaDay = [];
     if (JSONResults != null) {
       for (dynamic exam in JSONResults) {
-        print("## course name: ${exam['course_name']} ##");
-
         for (DateTime call in convertStrToDateList(exam['assignedDates'])) {
-          print("day inspected: ${call.isAtSameMomentAs(day)}");
           if (isSameDay(day, call)) {
-            print('if verified');
             examsInaDay.add(Exam(exam['course_code'], exam['course_name'],
-                convertStrToDateList(exam['assignedDates'])));
+                exam['cds'], convertStrToDateList(exam['assignedDates'])));
           }
         }
       }
@@ -269,6 +281,8 @@ class _TableResultsState extends State<TableResults> {
                     child: ListTile(
                       onTap: () => print('${value[index]}'),
                       title: Text('${value[index]}'),
+                      subtitle: Text('${value[index].assignedDates}'),
+                      trailing: Text('${value[index].cds}'),
                     ),
                   );
                 },

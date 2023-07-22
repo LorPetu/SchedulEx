@@ -119,8 +119,8 @@ def solveScheduling(exams, problem_session):
     for k, date_k in enumerate(availDates):
         
 
-        #per ogni data indisponibilità poli e domeniche faccio la sommatoria per tutti gli esami
-        if date_k.weekday()==6: 
+        #per ogni data indisponibilità poli e domeniche (Sunday 0) faccio la sommatoria per tutti gli esami
+        if date_k.weekday()==0: 
             prob += xsum(s[(i, k)] for i, exam_i in enumerate(exams)) == 0
             
         #per ogni esame, controllo se la data corrente appartiene all'array delle indisponibilità del prof

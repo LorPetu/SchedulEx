@@ -145,15 +145,18 @@ class ProblemSessionPageNEW extends StatelessWidget {
                   ),
                 ),
                 FloatingActionButton.small(
-                    child: const Icon(Icons.add),
-                    onPressed: () {
-                      //(problemSessionState.status != 'NOT STARTED') ? null :
+                    onPressed: (problemSessionState.school.isNotEmpty &&
+                            problemSessionState.sessionDates != null)
+                        ? () {
+                            //(problemSessionState.status != 'NOT STARTED') ? null :
 
-                      debugPrint('new unavail to be created');
-                      unavailState.setCurrID('').then((value) {
-                        context.pushReplacement('/select/unavail');
-                      });
-                    }),
+                            debugPrint('new unavail to be created');
+                            unavailState.setCurrID('').then((value) {
+                              context.pushReplacement('/select/unavail');
+                            });
+                          }
+                        : null,
+                    child: const Icon(Icons.add)),
               ],
             ),
             Padding(
