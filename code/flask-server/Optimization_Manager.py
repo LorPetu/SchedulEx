@@ -20,6 +20,7 @@ def getDatabaseProblemData(sessionID):
         return None
 
     unavail_list = session_data.get('unavailList', {})
+    print(unavail_list)
     # Estrai le date dal dizionario utilizzando la chiave 'dates'
     dates_dict = unavail_list.get(sessionID, {}).get('dates', {})
 
@@ -49,7 +50,7 @@ def getDatabaseProblemData(sessionID):
         "user": session_data.get('userID'),
         "startDate": datetime.strptime(session_data.get('startDate'), "%Y-%m-%dT%H:%M:%S"),
         "endDate": datetime.strptime(session_data.get('endDate'), "%Y-%m-%dT%H:%M:%S"),
-        "unavailList": datetime_list,
+        "unavailList": unavail_list,
         "settings": settings_data #session_data.get('semester'),
     }
 
@@ -193,19 +194,22 @@ def addUnavailability(unprocessedExamList, problem_session, sessionID, percentag
     status_list.setProgress(sessionID, percentage + ' Unavailability merging is running...')
     for opt_exam in unprocessedExamList:
         professor_list = []
+        print(opt_exam.professor)
         professors = opt_exam.professor.split('-')  #Divides the string into hyphenated names
         professor_list.extend(professors)  # Adds names to the professor_list
-        #print(professor_list)
-
-        for k, value in problem_session.unavailList:
-            #print(f'{k} : {value}')
+        print(professor_list)
+        
+        for k, value in problem_session.unavailList.items():
+            print(f'{k} : {value}')
+            
 
             if value['name'] in professor_list:
-                opt_exam.unavailDates.append(value['dates']) #qui carica una lista di liste, deve appendere solo gli elementi
+                opt_exam.unavailDates.extend(value['dates']) #qui carica una lista di liste, deve appendere solo gli elementi
                 # print('addUnavail:'+ str(opt_exam.unavailDates))
             if value['type']==1:
-                opt_exam.unavailDates.append(value['dates'])
+                opt_exam.unavailDates.extend(value['dates'])
         # print('addUnavail: assegnazione indisponibilità')
+        print(opt_exam.unavailDates)
     return unprocessedExamList
 
 

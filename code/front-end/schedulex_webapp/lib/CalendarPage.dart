@@ -34,7 +34,6 @@ class _CalendarPageState extends State<CalendarPage> {
         const Duration(seconds: 10),
         (_) => getStatus(sessionID: session.selectedSessionID!).then((value) {
               setState(() {
-                print(value);
                 session.setStatus(value?['status']);
                 if (value?['status'] != 'STARTED') {
                   stopPolling();
@@ -76,20 +75,27 @@ class _CalendarPageState extends State<CalendarPage> {
       body: ((session.status ?? 'STARTED') == 'SOLVED')
           ? Column(
               children: [
-                ElevatedButton(
-                    onPressed: () {
-                      downloadExcel(session.selectedSessionID!)
-                          .then((value) => session.showToast(context, value!));
-                    },
-                    child: const SizedBox(
-                      width: 150,
-                      child: Row(
-                        children: [
-                          Text('download Excel'),
-                          Icon(Icons.download)
-                        ],
-                      ),
-                    )),
+                Padding(
+                  padding: const EdgeInsets.all(15.0),
+                  child: ElevatedButton(
+                      onPressed: () {
+                        downloadExcel(session.selectedSessionID!).then(
+                            (value) => session.showToast(context, value!));
+                      },
+                      child: const SizedBox(
+                        width: 140,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('download Excel'),
+                            SizedBox(
+                              width: 15,
+                            ),
+                            Icon(Icons.download)
+                          ],
+                        ),
+                      )),
+                ),
                 Expanded(
                     child: TableResults(
                   firstDay: firstDay,

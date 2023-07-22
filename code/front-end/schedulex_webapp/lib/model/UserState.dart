@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:schedulex_webapp/model/ProblemSessionState.dart';
 import 'package:schedulex_webapp/utils.dart';
 import 'package:schedulex_webapp/BackEndMethods.dart';
 
 class UserState extends ChangeNotifier {
-  late ProblemSessionState session;
   String userID = '';
   String problemSessionID = '';
 
   List<ProblemSession> problemSessionList = [];
 
+  //Set the value of user and get all the sessions
   void setUserID(String id) {
     userID = id;
-    debugPrint('$userID logged in');
+    //Backend call to retrieve all the sessions
     getSessionList().then((value) {
       problemSessionList = List<ProblemSession>.from(value);
       print(problemSessionList);
@@ -39,11 +38,14 @@ class UserState extends ChangeNotifier {
     });
   }
 
+  //This function responsible only of the updating to visualize the element
+  // without refereshing the page
+
   void update(Map<String, dynamic> update) {
     final index =
         problemSessionList.indexWhere((element) => element.id == update['id']);
     if (index != -1) {
-      debugPrint('ProblemSessionState: update an already existing session');
+      //update an already existing session
       (update['school'] != null)
           ? problemSessionList[index].setSchool(update['school'])
           : null;
@@ -51,15 +53,17 @@ class UserState extends ChangeNotifier {
           ? problemSessionList[index].setStatus(update['status'])
           : null;
     } else {
-      debugPrint('ProblemSessionState: update a new session');
+      //add the new session to the list
       problemSessionList.add(ProblemSession(id: update['id']));
     }
 
     notifyListeners();
   }
 
+  //Delete a session
+
   void delete(String sessionID) {
-    print('session to delete $sessionID');
+    //Backend Call to the delete the specified session from the database
     deleteSession(sessionID: sessionID).then((value) {
       problemSessionList.removeWhere((element) => element.id == sessionID);
       notifyListeners();

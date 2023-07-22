@@ -533,7 +533,7 @@ Future<List<Exam>> getExamList() async {
       if (responseData is List<dynamic>) {
         List<Exam> professorList = responseData
             .map((dynamic item) =>
-                item = Exam(item['id'], item['name'], item['cds'], []))
+                item = Exam(item['id'], item['name'], item['cds'] ?? '', []))
             .toList();
         print(professorList);
         return professorList;

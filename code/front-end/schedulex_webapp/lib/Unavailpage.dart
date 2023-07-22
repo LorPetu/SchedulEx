@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -125,17 +124,6 @@ class UnavailPageNEW extends StatelessWidget {
                         builder: (context, child) {
                           return Column(
                             children: <Widget>[
-                              DropdownButton<int>(
-                                value: 0,
-                                onChanged: (int? newValue) {},
-                                items: List<DropdownMenuItem<int>>.generate(7,
-                                    (int index) {
-                                  return DropdownMenuItem<int>(
-                                    value: index,
-                                    child: Text(getDayOfWeek(index)),
-                                  );
-                                }),
-                              ),
                               Padding(
                                 padding: const EdgeInsets.only(top: 50.0),
                                 child: SizedBox(

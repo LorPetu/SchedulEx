@@ -170,7 +170,7 @@ def setStartEndDate(sessionID, startDate, endDate):
 ### IMPLEMENTED
 @app.route("/getSessionList")
 def getSessionList():
-    session_list = list(ref.get().keys())  # Get per sessionID
+    session_list = list(ref.get().keys()) if (ref.get()!=None) else []  # Get per sessionID
 
     problem_sessions = []
     for session_id in session_list:
