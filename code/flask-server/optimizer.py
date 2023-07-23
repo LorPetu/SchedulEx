@@ -14,11 +14,11 @@ def solveScheduling(exams, problem_session):
     sessionID = problem_session.id
     availDates = []
     current_date=problem_session.startDate
-    print(current_date)
-    print(problem_session.startDate)
+
     while current_date <= problem_session.endDate:
         availDates.append(current_date)
         current_date += timedelta(days=1)
+    #print(availDates)
 
     num_appelli = int(problem_session.settings['numCalls']) #input("NUMERO APPELLI: ")
     distanza_1= int(problem_session.settings['minDistanceExams'])
@@ -76,7 +76,6 @@ def solveScheduling(exams, problem_session):
     
     # Here we set that for each exam we want to have just num_appelli of date assignation
     for i, exam_i in enumerate(exams):
-        print(s[(i, k)])
         prob += xsum(s[(i, k)] for k, date_k in enumerate(availDates)) == num_appelli
 
     status_list.setProgress(sessionID,"Logic constraints set")
@@ -120,7 +119,8 @@ def solveScheduling(exams, problem_session):
         
 
         #per ogni data indisponibilità poli e domeniche (Sunday 0) faccio la sommatoria per tutti gli esami
-        if date_k.weekday()==0: 
+        #IN PYTHON LA DOMENICA 
+        if date_k.weekday()==6: 
             prob += xsum(s[(i, k)] for i, exam_i in enumerate(exams)) == 0
             
         #per ogni esame, controllo se la data corrente appartiene all'array delle indisponibilità del prof
@@ -128,11 +128,9 @@ def solveScheduling(exams, problem_session):
             if date_k in exam_i.unavailDates:
                prob += s[(i, k)] == 0
             if exam_i.assignedDates!=[]:
-                print(type(date_k),type(exam_i.assignedDates[0]))
-            print('optimizer: exam inf',exam_i.course_name,)
-            if date_k in exam_i.assignedDates:
-                print('optimizer: if date_k in assignedDates',exam_i.course_name)
-                prob += s[(i, k)] == 1
+                if date_k in exam_i.assignedDates:
+                    print('optimizer: if date_k in assignedDates',exam_i.course_name)
+                    prob += s[(i, k)] == 1
 
 
 
@@ -158,11 +156,14 @@ def solveScheduling(exams, problem_session):
     print("## MATRIX CALENDAR ##")
     for i, exam_i in enumerate(exams):
         for k, date_k in enumerate(availDates):
-            if date_k in exam_i.unavailDates:
-                M[i][k]= '#' if s[(i, k)].x==1 else 0               
+                        
             if(date_k.weekday()!=6):
+
                 M[i][k]= 1 if s[(i, k)].x==1 else 0
-            else:
+
+                if date_k in exam_i.unavailDates:
+                    M[i][k]= 3                   
+            else:    
                 M[i][k]= 7
                 
     print(M)
@@ -172,10 +173,7 @@ def solveScheduling(exams, problem_session):
         exam_i.assignedDates=[]
         for k, date_k in enumerate(availDates):
                 if M[i][k]==1:
-                    exam_i.assignedDates.append(date_k) 
-    # for exam_i in exams:
-    #     assigned_dates_formatted = [date.strftime("%Y-%m-%d") for date in exam_i.assignedDates]
-    #     exam_i.assignedDates = assigned_dates_formatted
-    #     print(exam_i.assignedDates)         
+                    print(type(date_k))
+                    exam_i.assignedDates.append(date_k)     
           
     return [prob.status.value, exams]

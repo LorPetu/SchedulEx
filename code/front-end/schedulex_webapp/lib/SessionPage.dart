@@ -59,7 +59,7 @@ class ProblemSessionPageNEW extends StatelessWidget {
                   ),
                 ],
                 onChanged: (newValue) {
-                  problemSessionState.setSchool(newValue);
+                  problemSessionState.setSchool(newValue!);
                 }),
             Center(
               child: Column(

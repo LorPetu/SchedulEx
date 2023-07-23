@@ -87,12 +87,18 @@ class UnavailPageNEW extends StatelessWidget {
             ),
             Padding(
               padding: const EdgeInsets.all(10.0),
-              child: AutoCompleteProfessor(
-                name: name,
-                onNameSelected: (String selection) {
-                  unavailState.setName(selection);
-                },
-              ),
+              child: (type == 0)
+                  ? AutoCompleteProfessor(
+                      name: name,
+                      onNameSelected: (String selection) {
+                        unavailState.setName(selection);
+                      },
+                    )
+                  : TextField(
+                      onSubmitted: (value) {
+                        unavailState.setName(value);
+                      },
+                    ),
             ),
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -212,7 +218,10 @@ class UnavailPageNEW extends StatelessWidget {
                                       if (recurrentPeriod != null) {
                                         print(
                                             'you\'re trying to save: ${recurrentPeriod!.start}, ${recurrentPeriod!.end} and $selectedDayIndex');
-                                        // Call your function here to save the data
+                                        addRecurrentDaysOfWeek(
+                                            recurrentPeriod!.start,
+                                            recurrentPeriod!.end,
+                                            selectedDayIndex);
                                         Navigator.of(context).pop();
                                       } else {
                                         final scaffold =
@@ -251,7 +260,6 @@ class UnavailPageNEW extends StatelessWidget {
                           icon: const Icon(Icons.delete),
                           onPressed: () {
                             unavail.deleteDate(dateTime);
-                            //context.pushReplacement('/select/unavail');
                           },
                         ),
                         title: Text(
@@ -263,10 +271,16 @@ class UnavailPageNEW extends StatelessWidget {
               ],
             ),
             ElevatedButton(
-              onPressed: () {
-                unavailState.reset();
-                context.pushReplacement('/select/session');
-              },
+              onPressed: ((dates.isNotEmpty))
+                  ? () {
+                      unavailState.reset();
+                      context.pushReplacement('/select/session');
+                    }
+                  : () {
+                      unavailState.sessionState.showToast(
+                          context, "Please complete all the input field");
+                      return;
+                    },
               child: const Text('Save'),
             ),
           ],

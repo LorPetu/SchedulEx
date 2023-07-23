@@ -66,7 +66,9 @@ def startOptimization(sessionID):
 
 def handleOptimizationResults(results, problem_session):
     for element in results:
+        print(type(element.assignedDates[0]))
         element.assignedDates= [date.strftime("%Y-%m-%d") for date in element.assignedDates]
+        element.unavailDates= [date.strftime("%Y-%m-%d") for date in element.unavailDates]
     
     # Questa è la funzione di callback che verrà chiamata dal thread quando ha completato l'ottimizzazione
     print('#### handleOptimization Results ####\n')

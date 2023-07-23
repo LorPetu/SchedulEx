@@ -27,8 +27,8 @@ class UnavailState extends ChangeNotifier {
         type = value.type;
         name = value.name;
         dates = value.dates;
-        sessionState
-            .update({'id': id!, 'name': name, 'type': type, 'dates': dates});
+        sessionState.updateUnavail(
+            {'id': id!, 'name': name, 'type': type, 'dates': dates});
         notifyListeners();
       }).catchError((error) {
         debugPrint('UnavailState Error: $error');
@@ -39,8 +39,8 @@ class UnavailState extends ChangeNotifier {
       return createUnavail().then((value) {
         id = value['id'];
         notifyListeners();
+
         return null;
-        // Return null explicitly
       });
     }
   }
@@ -52,8 +52,8 @@ class UnavailState extends ChangeNotifier {
         payload: {}).then((value) {
       print(value);
       id = value['id'];
-      sessionState
-          .update({'id': id!, 'name': name, 'type': type, 'dates': dates});
+      sessionState.updateUnavail(
+          {'id': id!, 'name': name, 'type': type, 'dates': dates});
       notifyListeners();
       print(value);
       return value;
@@ -75,13 +75,12 @@ class UnavailState extends ChangeNotifier {
   }
 
   void setName(String newName) {
-    //TODO:
     saveUnavailability(
         sessionID: sessionState.selectedSessionID!,
         unavailID: id!,
         payload: {'name': newName}).then((value) {
       name = newName;
-      sessionState.update({'id': id!, 'name': name});
+      sessionState.updateUnavail({'id': id!, 'name': name});
       notifyListeners();
     });
   }

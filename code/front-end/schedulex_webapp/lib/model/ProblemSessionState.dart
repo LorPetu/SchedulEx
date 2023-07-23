@@ -9,21 +9,22 @@ import 'package:schedulex_webapp/BackEndMethods.dart';
 
 class ProblemSessionState extends ChangeNotifier {
   late UserState appState;
+  UserState get user => appState;
+  //session scheduling variables
   String? selectedSessionID;
   DateTimeRange? sessionDates;
   String school = 'Ing_Ind_Inf';
-  List<Unavail> unavailList = [];
   String? status;
+  List<Unavail> unavailList = [];
 
-  //settings
+  //settings variables
   int? minDistanceExams;
   int? minDistanceCallsDefault;
   int? numCalls;
   int? currSemester;
   List<dynamic> exceptions = [];
 
-  UserState get user => appState;
-
+  //Reset value to the initial value
   void resetProblemSessionID() {
     selectedSessionID = '';
     school = 'Ing_Ind_Inf';
@@ -65,6 +66,7 @@ class ProblemSessionState extends ChangeNotifier {
     setSettings(sessionID: selectedSessionID!, payload: modifiedPayload);
   }
 
+  //insert a new exception in the exception list
   void insertException(String examID, int newdistance) {
     setSettings(
         sessionID: selectedSessionID!,
@@ -86,9 +88,10 @@ class ProblemSessionState extends ChangeNotifier {
   Future<void> setProblemSessionID(String id) async {
     selectedSessionID = id;
 
-    debugPrint('${user.userID} select $selectedSessionID');
+    //debugPrint('${user.userID} select $selectedSessionID');
 
     getSessionData(sessionId: id).then((value) {
+      //Check and association of values to state variables of scheduling session
       if (value['problemsession'].startDate != null &&
           value['problemsession'].endDate != null) {
         sessionDates = DateTimeRange(
@@ -101,8 +104,6 @@ class ProblemSessionState extends ChangeNotifier {
       }
 
       if (!value['problemsession'].status.isEmpty) {
-        print('Problem session status in set ProblemSessionID' +
-            value['problemsession'].status);
         status = value['problemsession'].status;
       }
 
@@ -126,18 +127,18 @@ class ProblemSessionState extends ChangeNotifier {
       notifyListeners();
     }).catchError((error) {
       // Handle any error that occurred during the Future execution
-      print('Error: $error');
+      debugPrint('Error: $error');
     });
-    //#####
   }
 
   void setStatus(String newStatus) {
+    //The status is update on the database only by the backend. This is only for visualization
     user.update({'id': selectedSessionID!, 'status': newStatus});
     status = newStatus;
     notifyListeners();
   }
 
-  void setSchool(selectedSchool) {
+  void setSchool(String selectedSchool) {
     debugPrint(selectedSessionID);
     saveSession(
         sessionID: selectedSessionID!,
@@ -166,7 +167,8 @@ class ProblemSessionState extends ChangeNotifier {
     }
   }
 
-  void update(Map<String, dynamic> update) {
+  //Functions to manage the unavail list
+  void updateUnavail(Map<String, dynamic> update) {
     final index =
         unavailList.indexWhere((element) => element.id == update['id']);
     debugPrint('ProblemSessionState: update[id] ${update['id']}');
@@ -186,13 +188,6 @@ class ProblemSessionState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addUnavail(Unavail newUnavail) {
-    unavailList.add(newUnavail);
-    debugPrint('ProblemSessionState: adding new');
-    notifyListeners();
-    //appState.updateUnavail(newUnavail);
-  }
-
   void deleteUnavail(String idtodelete) {
     int index = unavailList.indexWhere((element) => element.id == idtodelete);
     deleteUnavailability(
@@ -201,8 +196,6 @@ class ProblemSessionState extends ChangeNotifier {
       unavailList.removeWhere((element) => element.id == idtodelete);
       notifyListeners();
     });
-
-    //appState.deleteUnavail(deletedUnavail);
   }
 
   void showToast(BuildContext context, String text) {

@@ -288,7 +288,7 @@ class _TableResultsState extends State<TableResults> {
                       onTap: () => print('${value[index]}'),
                       title: Text('${value[index]}'),
                       subtitle: Text('${value[index].assignedDates}'),
-                      trailing: Text('${value[index].cds}'),
+                      trailing: Text(value[index].cds),
                     ),
                   );
                 },

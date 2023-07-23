@@ -125,6 +125,4 @@ class Sessions_status_list:
 status_list=Sessions_status_list([])
 
 
-# Ora random_opt_exams conterrà una lista di 5 elementi optExam con valori casuali per i campi.
-
 

@@ -21,26 +21,16 @@ def getDatabaseProblemData(sessionID):
 
     unavail_list = session_data.get('unavailList', {})
     print(unavail_list)
-    # Estrai le date dal dizionario utilizzando la chiave 'dates'
-    dates_dict = unavail_list.get(sessionID, {}).get('dates', {})
 
-    # Converti le date da stringhe a oggetti datetime
-    datetime_list = [datetime.fromisoformat(date_string) for date_string in dates_dict.values()]
-
+    # Convert each unavail instance from string to correct type
+    for key,unavail in unavail_list.items():
+        print(unavail)
+        unavail['dates']=[datetime.fromisoformat(date_string) for date_string in unavail['dates']]
+        unavail['type'] = int(unavail['type'])
+        print(unavail['dates'])
+        
 
     settings_data = session_data.get('settings', {})
-    print('Settings data:\n',settings_data)
-    #print('exceptions: \n', settings_data['minDistanceCalls']['Exceptions'])
-    # min_distance_exams = settings_data.get('minDistanceExams')
-    # min_distance_calls_default = settings_data.get('minDistanceCalls', {}).get('Default')
-    # exceptions = settings_data['minDistanceCalls']['Exceptions']
-
-    # settings_list = [min_distance_exams, min_distance_calls_default]
-
-    # for key, value in exceptions.items():
-    #     settings_list.append([key, value])
-
-    # result_list = [[item.get('name'), item.get('type'), item.get('dates', [])] for item in unavail_list.values()]
 
     session_data = {
         "id": sessionID,
@@ -205,8 +195,9 @@ def addUnavailability(unprocessedExamList, problem_session, sessionID, percentag
 
             if value['name'] in professor_list:
                 opt_exam.unavailDates.extend(value['dates']) #qui carica una lista di liste, deve appendere solo gli elementi
-                # print('addUnavail:'+ str(opt_exam.unavailDates))
+                print(f'addUnavail:{opt_exam.unavailDates} list of: {type(opt_exam.unavailDates[0])}')
             if value['type']==1:
+                print(f" aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa {value['dates']}")
                 opt_exam.unavailDates.extend(value['dates'])
         # print('addUnavail: assegnazione indisponibilità')
         print(opt_exam.unavailDates)
@@ -274,7 +265,7 @@ def runOptimizationManager(sessionID, callback):
 
         status_list.setProgress(sessionID, percentage + ' Optimization process will start shortly')
         [result, scheduledExam]=solveScheduling(unprocessedExamList3, problem_session)
-
+        print(scheduledExam[0].assignedDates)
         ### HO INSERITO DEL TEMPO NULLO PER RIUSCIRE A FAR PARTIRE UN ALTRO SCHEDULING E OTTENERE LA RISPOSTA
         time.sleep(5)
         if result == 1:
