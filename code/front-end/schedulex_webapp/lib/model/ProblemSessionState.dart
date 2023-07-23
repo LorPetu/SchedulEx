@@ -90,45 +90,41 @@ class ProblemSessionState extends ChangeNotifier {
 
     //debugPrint('${user.userID} select $selectedSessionID');
 
-    getSessionData(sessionId: id).then((value) {
-      //Check and association of values to state variables of scheduling session
-      if (value['problemsession'].startDate != null &&
-          value['problemsession'].endDate != null) {
-        sessionDates = DateTimeRange(
-            start: value['problemsession'].startDate!,
-            end: value['problemsession'].endDate!);
+    dynamic value = await getSessionData(sessionId: id);
+    //Check and association of values to state variables of scheduling session
+    if (value['problemsession'].startDate != null &&
+        value['problemsession'].endDate != null) {
+      sessionDates = DateTimeRange(
+          start: value['problemsession'].startDate!,
+          end: value['problemsession'].endDate!);
+    }
+
+    if (!value['problemsession'].school.isEmpty) {
+      school = value['problemsession'].school;
+    }
+
+    if (!value['problemsession'].status.isEmpty) {
+      status = value['problemsession'].status;
+    }
+
+    unavailList = value['problemsession'].unavailList ?? [];
+    dynamic settings = value['settings'];
+
+    if (!settings.isEmpty) {
+      numCalls = settings['numCalls'];
+      currSemester = settings['currSemester'];
+
+      minDistanceCallsDefault = settings['minDistanceCalls']['Default'];
+      minDistanceExams = settings['minDistanceExams'];
+      if (settings['minDistanceCalls']['Exceptions'] != null) {
+        settings['minDistanceCalls']['Exceptions'].forEach((k, v) {
+          exceptions.add(v);
+        });
       }
+      user.update({'id': selectedSessionID!, 'status': status});
+    }
 
-      if (!value['problemsession'].school.isEmpty) {
-        school = value['problemsession'].school;
-      }
-
-      if (!value['problemsession'].status.isEmpty) {
-        status = value['problemsession'].status;
-      }
-
-      unavailList = value['problemsession'].unavailList ?? [];
-      dynamic settings = value['settings'];
-
-      if (!settings.isEmpty) {
-        numCalls = settings['numCalls'];
-        currSemester = settings['currSemester'];
-
-        minDistanceCallsDefault = settings['minDistanceCalls']['Default'];
-        minDistanceExams = settings['minDistanceExams'];
-        if (settings['minDistanceCalls']['Exceptions'] != null) {
-          settings['minDistanceCalls']['Exceptions'].forEach((k, v) {
-            exceptions.add(v);
-          });
-        }
-        user.update({'id': selectedSessionID!, 'status': status});
-      }
-
-      notifyListeners();
-    }).catchError((error) {
-      // Handle any error that occurred during the Future execution
-      debugPrint('Error: $error');
-    });
+    notifyListeners();
   }
 
   void setStatus(String newStatus) {

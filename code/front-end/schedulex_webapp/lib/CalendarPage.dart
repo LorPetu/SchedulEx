@@ -17,11 +17,15 @@ class CalendarPage extends StatefulWidget {
 class _CalendarPageState extends State<CalendarPage> {
   String serverResponse = 'No response yet';
   late Timer _pollingTimer;
+  DateTime? firstDay;
+  DateTime? lastDay;
 
   @override
   void initState() {
     super.initState();
     final session = context.read<ProblemSessionState>();
+    firstDay = session.sessionDates!.start ?? kFirstDay;
+    lastDay = session.sessionDates!.end ?? kLastDay;
 
     getStatus(sessionID: session.selectedSessionID!).then((value) {
       setState(() {
@@ -51,11 +55,6 @@ class _CalendarPageState extends State<CalendarPage> {
   @override
   Widget build(BuildContext context) {
     final session = context.watch<ProblemSessionState>();
-    DateTime firstDay =
-        session.sessionDates?.end.subtract(const Duration(days: 12)) ??
-            kFirstDay;
-    DateTime lastDay =
-        session.sessionDates?.start.add(const Duration(days: 12)) ?? kLastDay;
 
     return Scaffold(
       appBar: AppBar(
@@ -98,8 +97,8 @@ class _CalendarPageState extends State<CalendarPage> {
                 ),
                 Expanded(
                     child: TableResults(
-                  firstDay: firstDay,
-                  lastDay: lastDay,
+                  firstDay: firstDay!,
+                  lastDay: lastDay!,
                   sessionID: session.selectedSessionID!,
                 )),
               ],
@@ -157,7 +156,7 @@ class _TableResultsState extends State<TableResults> {
   CalendarFormat _calendarFormat = CalendarFormat.month;
   RangeSelectionMode _rangeSelectionMode = RangeSelectionMode
       .toggledOff; // Can be toggled on/off by longpressing a date
-  late DateTime _focusedDay = widget.firstDay.add(const Duration(days: 2));
+  late DateTime _focusedDay = widget.firstDay;
   DateTime? _selectedDay;
   DateTime? _rangeStart;
   DateTime? _rangeEnd;
@@ -166,7 +165,10 @@ class _TableResultsState extends State<TableResults> {
   void initState() {
     super.initState();
     getJsonResults(widget.sessionID).then((value) => JSONResults = value);
+    print('widget.firstdday ${widget.firstDay}');
     _selectedDay = _focusedDay;
+    print('selected day $_selectedDay');
+    print('focusedDay $_focusedDay');
     _selectedExams = ValueNotifier(_getExamsForDay(_selectedDay!));
   }
 
@@ -242,8 +244,8 @@ class _TableResultsState extends State<TableResults> {
         TableCalendar<Exam>(
           firstDay: widget.firstDay,
           lastDay: widget.lastDay,
-          focusedDay: widget.firstDay.add(const Duration(days: 2)),
-          selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+          focusedDay: _focusedDay,
+          selectedDayPredicate: (day) => isSameDay(day, _selectedDay),
           rangeStartDay: _rangeStart,
           rangeEndDay: _rangeEnd,
           calendarFormat: _calendarFormat,
@@ -287,7 +289,11 @@ class _TableResultsState extends State<TableResults> {
                     child: ListTile(
                       onTap: () => print('${value[index]}'),
                       title: Text('${value[index]}'),
-                      subtitle: Text('${value[index].assignedDates}'),
+                      subtitle: Text(value[index]
+                          .assignedDates
+                          .map((dateTime) =>
+                              '${dateTime.day}/${dateTime.month}/${dateTime.year}')
+                          .join(', ')),
                       trailing: Text(value[index].cds),
                     ),
                   );
