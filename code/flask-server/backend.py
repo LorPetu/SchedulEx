@@ -15,7 +15,7 @@ from Optimization_Manager import *
 cred_obj = firebase_admin.credentials.Certificate("./schedulex-723a8-firebase-adminsdk-mau2x-c93019364b.json")
 
 
-default_app = firebase_admin.initialize_app(cred_obj, {'appName':'Scstatus_listhedulEx','databaseURL':'https://schedulex-723a8-default-rtdb.firebaseio.com/'})
+default_app = firebase_admin.initialize_app(cred_obj, {'appName':'SchedulEx','databaseURL':'https://schedulex-723a8-default-rtdb.firebaseio.com/'})
 app = Flask(__name__)
 
 ref = db.reference("/")
