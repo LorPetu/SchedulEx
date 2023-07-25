@@ -9,7 +9,11 @@ class LoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     //var userID = context.select<UserState, void>((user) => user.userID);
+
     var userState = context.watch<UserState>();
+    final serverURLcontroller =
+        TextEditingController(text: userState.customServerUrl);
+
     String inputUsername = '';
     return Scaffold(
       appBar: AppBar(
@@ -40,14 +44,64 @@ class LoginPage extends StatelessWidget {
                   },
                 ),
                 const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    // Get the user ID from the text field
-                    //and set in the userState
-                    userState.setUserID(inputUsername);
-                    context.pushReplacement('/select');
-                  },
-                  child: const Text('Login'),
+                Row(
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        // Get the user ID from the text field
+                        //and set in the userState
+                        userState.setUserID(inputUsername);
+                        context.pushReplacement('/select');
+                      },
+                      child: const Text('Login'),
+                    ),
+                    IconButton(
+                        onPressed: () {
+                          String? customServerURL;
+
+                          showDialog(
+                              context: context,
+                              builder: (ctx) {
+                                return StatefulBuilder(
+                                    builder: (context, setState) {
+                                  return AlertDialog(
+                                    title: const Text('SERVER settings'),
+                                    content: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Text(
+                                          'Specify your server URL',
+                                          style: TextStyle(fontSize: 14),
+                                        ),
+                                        TextField(
+                                          controller: serverURLcontroller,
+                                          keyboardType: TextInputType.number,
+                                          decoration: const InputDecoration(
+                                              labelText: 'url'),
+                                        ),
+                                      ],
+                                    ),
+                                    actions: [
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: const Text('Cancel'),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          print(serverURLcontroller.text);
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: const Text('Add'),
+                                      ),
+                                    ],
+                                  );
+                                });
+                              });
+                        },
+                        icon: const Icon(Icons.settings))
+                  ],
                 ),
               ],
             ),

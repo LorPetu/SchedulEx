@@ -175,7 +175,11 @@ class ProblemSessionState extends ChangeNotifier {
               startDate: sessionDates!.start.toString(),
               endDate: sessionDates!.end.toString())
           .then((value) {
-        //
+        user.update({
+          'id': selectedSessionID!,
+          'startDate': sessionDates!.start,
+          'endDate': sessionDates!.end
+        });
         notifyListeners();
         //
       });

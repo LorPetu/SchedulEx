@@ -5,6 +5,7 @@ import 'package:schedulex_webapp/BackEndMethods.dart';
 class UserState extends ChangeNotifier {
   String userID = '';
   String problemSessionID = '';
+  String customServerUrl = '';
 
   List<ProblemSession> problemSessionList = [];
 
@@ -54,6 +55,12 @@ class UserState extends ChangeNotifier {
           : null;
       (update['description'] != null)
           ? problemSessionList[index].setDescription(update['description'])
+          : null;
+      (update['startDate'] != null && update['endDate'] != null)
+          ? () {
+              problemSessionList[index].startDate = update['startDate'];
+              problemSessionList[index].endDate = update['endDate'];
+            }
           : null;
     } else {
       //add the new session to the list
