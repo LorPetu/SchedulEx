@@ -133,7 +133,6 @@ def askStatus(sessionID):
     return {'status': status_list.getStatus(sessionID), 'progress' : status_list.getProgress(sessionID)}
 
 
-
 ### IMPLEMENTED
 @app.route("/setUserID/<string:sessionID>/<string:userID>", methods=['POST'])
 def setUserID(sessionID, userID):
@@ -176,13 +175,15 @@ def getSessionList():
 
     problem_sessions = []
     for session_id in session_list:
-        
+        session_node= ref.child(session_id)
         session_data = {
             "id": session_id,
-            "school": ref.child(session_id).child('school').get(),
-            "status": ref.child(session_id).child('status').get(),
-            "description": ref.child(session_id).child('description').get(),
-            "user": ref.child(session_id).child('userID').get(),
+            "school": session_node.child('school').get(),
+            "status": session_node.child('status').get(),
+            "description": session_node.child('description').get(),
+            "user": session_node.child('userID').get(),
+            "startDate": session_node.child('startDate').get(),
+            "endDate": session_node.child('endDate').get()
         }
         #problem_session = ProblemSession(**session_data)  # Create a ProblemSession object
         problem_sessions.append(session_data)

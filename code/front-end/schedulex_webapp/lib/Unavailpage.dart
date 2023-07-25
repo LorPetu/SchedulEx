@@ -5,10 +5,8 @@ import 'package:schedulex_webapp/BackEndMethods.dart';
 import 'package:schedulex_webapp/model/ProblemSessionState.dart';
 import 'package:schedulex_webapp/model/UnavailState.dart';
 
-class UnavailPageNEW extends StatelessWidget {
-  const UnavailPageNEW({super.key});
-
-  //int selectedDayIndex = 0;
+class UnavailPage extends StatelessWidget {
+  const UnavailPage({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -18,22 +18,18 @@ class UnavailState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<dynamic> setCurrID(String newId) {
-    if (newId.isNotEmpty) {
-      return getUnavailData(
-              sessionId: sessionState.selectedSessionID!, unavailID: newId)
-          .then((value) {
-        id = newId;
-        type = value.type;
-        name = value.name;
-        dates = value.dates;
-        sessionState.updateUnavail(
-            {'id': id!, 'name': name, 'type': type, 'dates': dates});
-        notifyListeners();
-      }).catchError((error) {
-        debugPrint('UnavailState Error: $error');
-        notifyListeners();
-      });
+  //Set the id of the current Unavail that the user is viewing
+  Future<void> setCurrID(String newID) async {
+    if (newID.isNotEmpty) {
+      dynamic value = await getUnavailData(
+          sessionID: sessionState.selectedSessionID!, unavailID: newID);
+      id = newID;
+      type = value.type;
+      name = value.name;
+      dates = value.dates;
+      sessionState.updateUnavail(
+          {'id': id!, 'name': name, 'type': type, 'dates': dates});
+      notifyListeners();
     } else {
       debugPrint('UnavailState: createUnavail');
       return createUnavail().then((value) {
@@ -45,23 +41,16 @@ class UnavailState extends ChangeNotifier {
     }
   }
 
-  Future<dynamic> createUnavail() {
-    return saveUnavailability(
-        sessionID: sessionState.selectedSessionID!,
-        unavailID: '',
-        payload: {}).then((value) {
-      print(value);
-      id = value['id'];
-      sessionState.updateUnavail(
-          {'id': id!, 'name': name, 'type': type, 'dates': dates});
-      notifyListeners();
-      print(value);
-      return value;
-    }).catchError((error) {
-      debugPrint(' Create UnavailStateError: $error');
-      notifyListeners();
-      return '';
-    });
+  //Create a new Unavail and await for the results
+  Future<dynamic> createUnavail() async {
+    dynamic value = await saveUnavailability(
+        sessionID: sessionState.selectedSessionID!, unavailID: '', payload: {});
+    id = value['id'];
+    sessionState
+        .updateUnavail({'id': id!, 'name': name, 'type': type, 'dates': dates});
+
+    notifyListeners();
+    return value;
   }
 
   void setType(int newtype) {

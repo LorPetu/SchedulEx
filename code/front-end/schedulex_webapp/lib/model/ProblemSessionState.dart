@@ -10,11 +10,13 @@ import 'package:schedulex_webapp/BackEndMethods.dart';
 class ProblemSessionState extends ChangeNotifier {
   late UserState appState;
   UserState get user => appState;
+
   //session scheduling variables
   String? selectedSessionID;
   DateTimeRange? sessionDates;
-  String school = 'Ing_Ind_Inf';
+  String school = '';
   String? status;
+  String? description;
   List<Unavail> unavailList = [];
 
   //settings variables
@@ -27,9 +29,10 @@ class ProblemSessionState extends ChangeNotifier {
   //Reset value to the initial value
   void resetProblemSessionID() {
     selectedSessionID = '';
-    school = 'Ing_Ind_Inf';
+    school = '';
     sessionDates = null;
     unavailList = [];
+    description = '';
     minDistanceExams = null;
     minDistanceCallsDefault = null;
     exceptions = [];
@@ -88,9 +91,7 @@ class ProblemSessionState extends ChangeNotifier {
   Future<void> setProblemSessionID(String id) async {
     selectedSessionID = id;
 
-    //debugPrint('${user.userID} select $selectedSessionID');
-
-    dynamic value = await getSessionData(sessionId: id);
+    dynamic value = await getSessionData(sessionID: id);
     //Check and association of values to state variables of scheduling session
     if (value['problemsession'].startDate != null &&
         value['problemsession'].endDate != null) {
@@ -104,7 +105,14 @@ class ProblemSessionState extends ChangeNotifier {
     }
 
     if (!value['problemsession'].status.isEmpty) {
+      print(value['problemsession'].status);
       status = value['problemsession'].status;
+    }
+    value['problemsession'].description;
+    if (!value['problemsession'].description.isEmpty) {
+      print(value['problemsession'].description);
+      description = value['problemsession'].description;
+      print(description);
     }
 
     unavailList = value['problemsession'].unavailList ?? [];
@@ -132,6 +140,17 @@ class ProblemSessionState extends ChangeNotifier {
     user.update({'id': selectedSessionID!, 'status': newStatus});
     status = newStatus;
     notifyListeners();
+  }
+
+  void setDescription(String newDescription) {
+    saveSession(
+        sessionID: selectedSessionID!,
+        payload: {'description': newDescription}).then((value) {
+      //
+      user.update({'id': selectedSessionID!, 'description': newDescription});
+      description = newDescription;
+      notifyListeners();
+    });
   }
 
   void setSchool(String selectedSchool) {

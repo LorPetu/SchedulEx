@@ -1,6 +1,8 @@
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import 'package:schedulex_webapp/model/ProblemSessionState.dart';
 import 'package:schedulex_webapp/model/UserState.dart';
@@ -14,12 +16,12 @@ class SelectPage extends StatefulWidget {
 
 class _SelectPageState extends State<SelectPage> with TickerProviderStateMixin {
   late AnimationController _rotationController;
+  //When the widget is build the AnimationController is intialized
   @override
   void initState() {
     super.initState();
     _rotationController = AnimationController(
-      duration: const Duration(
-          seconds: 2), // You can adjust the duration as per your preference.
+      duration: const Duration(seconds: 2),
       vsync: this,
     )..repeat(); // This will make the animation loop infinitely.
   }
@@ -32,12 +34,9 @@ class _SelectPageState extends State<SelectPage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    //Connect to upper-level state
     final userState = context.watch<UserState>();
     final problemSessionState = context.watch<ProblemSessionState>();
-    /*context.select<ProblemSessionState, String>(
-        (session) => session.selectedSessionID! );
-        final problemSessionState_set = context.select<ProblemSessionState, void>(
-        (session) {session.setProblemSessionID(id)} );*/
 
     return Scaffold(
       appBar: AppBar(
@@ -49,6 +48,7 @@ class _SelectPageState extends State<SelectPage> with TickerProviderStateMixin {
           Padding(
             padding: const EdgeInsets.all(10.0),
             child: ElevatedButton(
+              //New session button
               child: const SizedBox(
                 width: 100,
                 child: Row(
@@ -56,13 +56,12 @@ class _SelectPageState extends State<SelectPage> with TickerProviderStateMixin {
                 ),
               ),
               onPressed: () {
-                // Set the ProblemSessionID in MyuserState
+                // Set the ProblemSessionID in userState
                 userState.createSession().then((value) {
                   problemSessionState.setProblemSessionID(value);
                   context.pushReplacement('/select/session');
                   print('${userState.userID} create a new session');
                 });
-                //context.pushReplacement('/Session');
               },
             ),
           ),
@@ -77,6 +76,7 @@ class _SelectPageState extends State<SelectPage> with TickerProviderStateMixin {
                       itemCount: problemSessionList.length,
                       itemBuilder: (context, index) {
                         final element = problemSessionList[index];
+                        final DateFormat formatter = DateFormat('dd/MM/yy');
                         return ListTile(
                           leading: (() {
                             switch (element.status) {
@@ -96,10 +96,6 @@ class _SelectPageState extends State<SelectPage> with TickerProviderStateMixin {
                               case 'NOT SOLVED':
                                 return const Icon(Icons.not_interested_outlined,
                                     color: Colors.red);
-                              case 'PENDING':
-                                return const Icon(
-                                    Icons.pause_circle_outline_rounded,
-                                    color: Colors.orange);
                               default:
                                 return null;
                             }
@@ -111,8 +107,37 @@ class _SelectPageState extends State<SelectPage> with TickerProviderStateMixin {
                             },
                           ),
                           title: element.school.isNotEmpty
-                              ? Text(element.school)
+                              ? Row(
+                                  children: [
+                                    SizedBox(
+                                      width: 100,
+                                      child: Text(
+                                        element.school,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.w600),
+                                      ),
+                                    ),
+                                    Flexible(
+                                      child: Tooltip(
+                                        message: element.description,
+                                        child: Text(
+                                          element.description,
+                                          overflow: TextOverflow.fade,
+                                          maxLines: 1,
+                                          softWrap: false,
+                                          style: const TextStyle(
+                                              fontStyle: FontStyle.italic),
+                                        ),
+                                      ),
+                                    )
+                                  ],
+                                )
                               : const Text('School not selected'),
+                          subtitle: (element.startDate != null &&
+                                  element.endDate != null)
+                              ? Text(
+                                  'From: ${formatter.format(element.startDate!)}     To: ${formatter.format(element.endDate!)}')
+                              : null,
                           onTap: () {
                             problemSessionState
                                 .setProblemSessionID(element.id)

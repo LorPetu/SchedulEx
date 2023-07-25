@@ -24,8 +24,8 @@ class _CalendarPageState extends State<CalendarPage> {
   void initState() {
     super.initState();
     final session = context.read<ProblemSessionState>();
-    firstDay = session.sessionDates!.start ?? kFirstDay;
-    lastDay = session.sessionDates!.end ?? kLastDay;
+    firstDay = session.sessionDates!.start;
+    lastDay = session.sessionDates!.end;
 
     getStatus(sessionID: session.selectedSessionID!).then((value) {
       setState(() {

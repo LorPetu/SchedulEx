@@ -52,6 +52,9 @@ class UserState extends ChangeNotifier {
       (update['status'] != null)
           ? problemSessionList[index].setStatus(update['status'])
           : null;
+      (update['description'] != null)
+          ? problemSessionList[index].setDescription(update['description'])
+          : null;
     } else {
       //add the new session to the list
       problemSessionList.add(ProblemSession(id: update['id']));

@@ -31,8 +31,9 @@ class LoginPage extends StatelessWidget {
                     inputUsername = value;
                   },
                   onFieldSubmitted: (value) {
+                    //In this way i can press Enter to logged into the app and
+                    //navigate to other page
                     userState.setUserID(inputUsername);
-                    //debugPrint(userID);
 
                     // Set the user ID in MyAppState
                     context.pushReplacement('/select');
@@ -42,15 +43,9 @@ class LoginPage extends StatelessWidget {
                 ElevatedButton(
                   onPressed: () {
                     // Get the user ID from the text field
-                    //debugPrint(userID);
+                    //and set in the userState
                     userState.setUserID(inputUsername);
-                    //debugPrint(userID);
-
-                    // Set the user ID in MyAppState
                     context.pushReplacement('/select');
-
-                    // Navigate to the Select Page
-                    //Navigator.pushNamed(context, '/select');
                   },
                   child: const Text('Login'),
                 ),

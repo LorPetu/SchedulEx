@@ -6,10 +6,26 @@ import 'package:schedulex_webapp/model/UnavailState.dart';
 import 'package:schedulex_webapp/model/UserState.dart';
 import 'package:schedulex_webapp/BackEndMethods.dart';
 
-import 'package:schedulex_webapp/utils.dart';
+class ProblemSessionPage extends StatefulWidget {
+  const ProblemSessionPage({super.key});
 
-class ProblemSessionPageNEW extends StatelessWidget {
-  const ProblemSessionPageNEW({super.key});
+  @override
+  State<ProblemSessionPage> createState() => _ProblemSessionPageState();
+}
+
+class _ProblemSessionPageState extends State<ProblemSessionPage> {
+  bool _canEdit = true;
+
+  @override
+  void initState() {
+    super.initState();
+    final problemSessionState = context.read<ProblemSessionState>();
+    if (problemSessionState.school.isNotEmpty) {
+      setState(() {
+        _canEdit = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +41,9 @@ class ProblemSessionPageNEW extends StatelessWidget {
             onPressed: () {
               context.pushReplacement('/select');
               //reset value of ProblemSession selected
+              /*setState(() {
+                _canEdit = true; // Reset _canEdit to true when school is reset
+              });*/
               problemSessionState.resetProblemSessionID();
             },
             icon: const Icon(Icons.close),
@@ -33,13 +52,18 @@ class ProblemSessionPageNEW extends StatelessWidget {
       ),
       body: Consumer<ProblemSessionState>(
           builder: (context, problemSessionState, _) {
-        final school = problemSessionState.school;
+        final school = problemSessionState.school != ''
+            ? problemSessionState.school
+            : "Ing_Ind_Inf";
         final sessionDates = problemSessionState.sessionDates;
         final unavailList = problemSessionState.unavailList;
+        final descriptionController = TextEditingController(
+          text: problemSessionState.description.toString(),
+        );
         return Column(
           children: [
             DropdownButton(
-                value: school.isEmpty ? 'Ing_Ind_inf' : school,
+                value: school.isEmpty ? "Ing_Ind_Inf" : school,
                 items: const [
                   DropdownMenuItem(
                     value: 'AUIC',
@@ -47,7 +71,7 @@ class ProblemSessionPageNEW extends StatelessWidget {
                   ),
                   DropdownMenuItem(
                     value: 'Ing_Ind_Inf',
-                    child: Text('Ing Ind Inf'),
+                    child: Text('Ing_Ind_Inf'),
                   ),
                   DropdownMenuItem(
                     value: 'ICAT',
@@ -58,9 +82,14 @@ class ProblemSessionPageNEW extends StatelessWidget {
                     child: Text('Design'),
                   ),
                 ],
-                onChanged: (newValue) {
-                  problemSessionState.setSchool(newValue!);
-                }),
+                onChanged: (_canEdit)
+                    ? (newValue) {
+                        problemSessionState.setSchool(newValue.toString());
+                        setState(() {
+                          _canEdit = false;
+                        });
+                      }
+                    : null),
             Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -114,7 +143,7 @@ class ProblemSessionPageNEW extends StatelessWidget {
             Column(
               children: [
                 SizedBox(
-                  height: 300,
+                  height: 250,
                   child: ListView.builder(
                     itemCount: unavailList.length,
                     itemBuilder: (context, index) {
@@ -126,7 +155,6 @@ class ProblemSessionPageNEW extends StatelessWidget {
                                 '$userID delete unavail ${unavailList[index].id}');
                             problemSessionState
                                 .deleteUnavail(unavailList[index].id);
-                            //context.pushReplacement('/select/unavail');
                           },
                         ),
                         title: Text(unavailList[index].name),
@@ -138,7 +166,6 @@ class ProblemSessionPageNEW extends StatelessWidget {
                               .then((value) {
                             context.pushReplacement('/select/unavail');
                           });
-                          //context.pushReplacement('/select/unavail');
                         },
                       );
                     },
@@ -209,56 +236,37 @@ class ProblemSessionPageNEW extends StatelessWidget {
                       child: const Text('start')),
                 ],
               ),
-            )
+            ),
+            const Text('Description'),
+            Container(
+              margin: const EdgeInsets.symmetric(
+                horizontal: 12.0,
+                vertical: 4.0,
+              ),
+              decoration: BoxDecoration(
+                border: Border.all(),
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextField(
+                  controller: descriptionController,
+                  maxLines: 6,
+                  decoration: const InputDecoration.collapsed(
+                      hintText: "Enter your text here"),
+                ),
+              ),
+            ),
+            ElevatedButton(
+                onPressed: () {
+                  print(descriptionController.text);
+                  problemSessionState
+                      .setDescription(descriptionController.text);
+                },
+                child: const Text('save'))
           ],
         );
       }),
-    );
-  }
-}
-
-class UnavailViewer extends StatelessWidget {
-  final List<Unavail> unavailList;
-  final Function(Unavail) onItemClick;
-  final Function(Unavail) onItemDelete;
-
-  const UnavailViewer(
-      {super.key,
-      required this.unavailList,
-      required this.onItemClick,
-      required this.onItemDelete});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        SizedBox(
-          height: 300,
-          child: ListView.builder(
-            itemCount: unavailList.length,
-            itemBuilder: (context, index) {
-              return ListTile(
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () {
-                    onItemDelete(unavailList[index]);
-                  },
-                ),
-                title: Text(unavailList[index].name),
-                onTap: () {
-                  onItemClick(unavailList[index]);
-                },
-              );
-            },
-          ),
-        ),
-        FloatingActionButton.small(
-            child: const Icon(Icons.add),
-            onPressed: () {
-              debugPrint('new unavail to be created');
-              //context.pushReplacement('/select/unavail');
-            }),
-      ],
     );
   }
 }

@@ -18,7 +18,7 @@ def solveScheduling(exams, problem_session):
     while current_date <= problem_session.endDate:
         availDates.append(current_date)
         current_date += timedelta(days=1)
-    #print(availDates)
+    print(availDates)
 
     num_appelli = int(problem_session.settings['numCalls']) #input("NUMERO APPELLI: ")
     distanza_1= int(problem_session.settings['minDistanceExams'])
@@ -32,11 +32,12 @@ def solveScheduling(exams, problem_session):
     x = {}  # Slot per assegnare due esami diversi
 
     for i, exam_i in enumerate(exams): 
+        variables=[]
         for k, date_k in enumerate(availDates): 
             # VARIABLE s_i_k: indicates if the exam i has a date assigned in the day k. BINARY    
 
             s[(i, k)] = prob.add_var(var_type=BINARY, name='s_%i_%i' % (i, k))
-
+            
             # Now i'm interested in all the possible couple of exam and their assigned dates
             for j, exam_j in enumerate(exams):
                 #if j != i:
@@ -45,6 +46,8 @@ def solveScheduling(exams, problem_session):
                             # VARIABLE x_i_k_j_t: indicates if the exam i is assigned in day k AND exam j in day t. BINARY
 
                             x[(i, k, j, t)] = prob.add_var(var_type=BINARY, name='x_%i_%i_%i_%i' % (i, k, j, t))
+            variables.append(f'||{s[(i, k)]} : {str(date_k)}||')
+        print(f'{variables}\n')
     # Update the Status
     status_list.setProgress(sessionID,"Variables created")
 
@@ -119,7 +122,7 @@ def solveScheduling(exams, problem_session):
         
 
         #per ogni data indisponibilità poli e domeniche (Sunday 0) faccio la sommatoria per tutti gli esami
-        #IN PYTHON LA DOMENICA 
+        #IN PYTHON LA DOMENICA È diversa da javascri
         if date_k.weekday()==6: 
             prob += xsum(s[(i, k)] for i, exam_i in enumerate(exams)) == 0
             

@@ -245,10 +245,6 @@ def runOptimizationManager(sessionID, callback):
              for item_j in resultsExams:
                  if item_i.course_code == item_j.course_code:
                         item_i.assignedDates = item_j.assignedDates
-
-        # print(f'resultExams after {cds_id} check: ')
-        # for el in resultsExams:
-        #     print(el.toString())
         
         status_list.setProgress(sessionID, percentage + ' Weight creation will start shortly')
         unprocessedExamList1=createWeight(unprocessedExamList, problem_session.settings['currSemester'], sessionID, percentage)

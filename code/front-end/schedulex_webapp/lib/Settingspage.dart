@@ -10,7 +10,6 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    //final userID = context.select<UserState, String>((value) => value.userID);
     final problemSessionState = context.watch<ProblemSessionState>();
 
     final numCallsController = TextEditingController(
@@ -29,7 +28,6 @@ class SettingsPage extends StatelessWidget {
 
     void addException() {
       String exId = '';
-      TextEditingController exIdController = TextEditingController();
       TextEditingController exDistanceController = TextEditingController();
 
       showDialog(
@@ -40,14 +38,13 @@ class SettingsPage extends StatelessWidget {
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                const Text(
+                  'Insert name of the exam:',
+                  style: TextStyle(fontSize: 14),
+                ),
                 AutoCompleteExams(onNameSelected: (value) {
                   exId = value;
                 }),
-                TextField(
-                  controller: exIdController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'ID'),
-                ),
                 TextField(
                   controller: exDistanceController,
                   keyboardType: TextInputType.number,
@@ -103,12 +100,10 @@ class SettingsPage extends StatelessWidget {
         ],
       ),
       body: Consumer<ProblemSessionState>(builder: (context, session, _) {
-        final school = session.school;
+        //final school = session.school;
 
         return Column(
           children: [
-            Text(
-                'You select settings for ${session.selectedSessionID} school: $school'),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -277,36 +272,3 @@ class _AutoCompleteExamsState extends State<AutoCompleteExams> {
     );
   }
 }
-
-
-// class AutocompleteBasicUserExample extends StatelessWidget {
-//   const AutocompleteBasicUserExample({super.key});
-
-//   static const List<User> _userOptions = <User>[
-//     User(name: 'Alice', email: 'alice@example.com'),
-//     User(name: 'Bob', email: 'bob@example.com'),
-//     User(name: 'Charlie', email: 'charlie123@gmail.com'),
-//   ];
-
-//   static String _displayStringForOption(User option) => option.name;
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Autocomplete<User>(
-//       displayStringForOption: _displayStringForOption,
-//       optionsBuilder: (TextEditingValue textEditingValue) {
-//         if (textEditingValue.text == '') {
-//           return const Iterable<User>.empty();
-//         }
-//         return _userOptions.where((User option) {
-//           return option
-//               .toString()
-//               .contains(textEditingValue.text.toLowerCase());
-//         });
-//       },
-//       onSelected: (User selection) {
-//         debugPrint('You just selected ${_displayStringForOption(selection)}');
-//       },
-//     );
-//   }
-// }

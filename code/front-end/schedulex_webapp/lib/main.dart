@@ -70,11 +70,11 @@ GoRouter router() {
         routes: [
           GoRoute(
             path: 'session',
-            builder: (context, state) => const ProblemSessionPageNEW(),
+            builder: (context, state) => const ProblemSessionPage(),
           ),
           GoRoute(
             path: 'unavail',
-            builder: (context, state) => const UnavailPageNEW(),
+            builder: (context, state) => const UnavailPage(),
           ),
           GoRoute(
             path: 'settings',
