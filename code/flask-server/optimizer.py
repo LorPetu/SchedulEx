@@ -1,3 +1,4 @@
+# Import necessary libraries
 from mip import Model, xsum, BINARY
 import numpy as np
 import pandas as pd
@@ -6,31 +7,31 @@ from utils import *
 
 GUROBI_HOME = 'C:/gurobi1001/'
 
-
+# Function to solve the exam scheduling problem using mixed-integer programming
 def solveScheduling(exams, problem_session):
     global status_list
 
-    ## Define the days that are available from start to end date
+    # Define the days that are available from start to end date
     sessionID = problem_session.id
     availDates = []
     current_date=problem_session.startDate
-
+    # Create a list of available dates from start to end date
     while current_date <= problem_session.endDate:
         availDates.append(current_date)
         current_date += timedelta(days=1)
     print(availDates)
 
-    num_appelli = int(problem_session.settings['numCalls']) #input("NUMERO APPELLI: ")
-    distanza_1= int(problem_session.settings['minDistanceExams'])
+    num_appelli = int(problem_session.settings['numCalls']) # Number of exam dates per exam
+    distanza_1= int(problem_session.settings['minDistanceExams']) # Minimum distance between two exams
 
-
-    # Creazione del problema di programmazione lineare
+    # Create a MIP (Mixed-Integer Programming) model
     prob = Model("EsameScheduler", sense='maximize', solver_name='GUROBI')
 
     # Optimization problme variables initialization
     s = {}  # Slot per assegnare agli esami
     x = {}  # Slot per assegnare due esami diversi
 
+    # Loop to create variables for each exam and date combination
     for i, exam_i in enumerate(exams): 
         variables=[]
         for k, date_k in enumerate(availDates): 
@@ -51,7 +52,7 @@ def solveScheduling(exams, problem_session):
     # Update the Status
     status_list.setProgress(sessionID,"Variables created")
 
-    # Creazione della funzione obiettivo
+    # Objective function creation
     objective = []
     for i, exam_i in enumerate(exams):
         for j, exam_j in enumerate(exams):
@@ -121,12 +122,12 @@ def solveScheduling(exams, problem_session):
     for k, date_k in enumerate(availDates):
         
 
-        #per ogni data indisponibilità poli e domeniche (Sunday 0) faccio la sommatoria per tutti gli esami
-        #IN PYTHON LA DOMENICA È diversa da javascri
+        # For each PoliMi and Sunday unavailability date (Sunday 0) I do the summation for all exams
+        # IN PYTHON LA DOMENICA È diversa da javascri
         if date_k.weekday()==6: 
             prob += xsum(s[(i, k)] for i, exam_i in enumerate(exams)) == 0
             
-        #per ogni esame, controllo se la data corrente appartiene all'array delle indisponibilità del prof
+        # For each examination, I check whether the current date belongs to the prof's unavailability array
         for i, exam_i in enumerate(exams):
             if date_k in exam_i.unavailDates:
                prob += s[(i, k)] == 0
@@ -152,9 +153,7 @@ def solveScheduling(exams, problem_session):
     prob.store_search_progress_log
     print(prob.status.value)
 
-    #for i in range(len(prob.vars)):
-    #    print(f"{prob.vars[i].name} = {prob.vars[i].x}")
-    # Stampa dei risultati
+    
     M=np.zeros([len(exams),len(availDates)])
     print("## MATRIX CALENDAR ##")
     for i, exam_i in enumerate(exams):
